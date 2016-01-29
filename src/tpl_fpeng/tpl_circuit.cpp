@@ -48,9 +48,11 @@ namespace tpl {
         netlist.clear();
     }
 
+    TplDB* TplDB::_instance = NULL;
+
     TplDB *TplDB::db()
     {
-        if(_instance == nullptr) {
+        if(_instance == NULL) {
             _instance = new TplDB;
         }
         return _instance;
@@ -76,8 +78,8 @@ namespace tpl {
             iter = storage.begin();
             end  = storage.end();
 
-            BookshelfNodes nodes;
-            parse_bookshelf_node(iter, end, nodes); 
+            BookshelfNodes bnodes;
+            parse_bookshelf_node(iter, end, bnodes); 
 
             //parse .pl file
             path pl_file_path(benchmark_path);
@@ -87,8 +89,8 @@ namespace tpl {
             iter = storage.begin();
             end  = storage.end();
 
-            BookshelfPls pls;
-            parse_bookshelf_pl(iter, end, pls); 
+            BookshelfPls bpls;
+            parse_bookshelf_pl(iter, end, bpls); 
 
             //parse .nets file
             path net_file_path(benchmark_path);
@@ -98,52 +100,54 @@ namespace tpl {
             iter = storage.begin();
             end  = storage.end();
 
-            BookshelfNets nets;
-            parse_bookshelf_net(iter, end, nets); 
+            BookshelfNets bnets;
+            parse_bookshelf_net(iter, end, bnets); 
 
             //clear old circuit data
             _modules.clear();
             _nets.clear();
 
-            NUM_FREE_MODULE = nodes.num_nodes-nodes.num_terminals;
 
-            //scanning nodes
+            //filling modules
+            _modules.num_nodes = bnodes.num_nodes;
+            _modules.num_free  = bnodes.num_nodes - bnodes.num_terminals;
+
             deque<Id>         tids;
             deque<Coordinate> txcs, tycs;
             deque<Length>     twds, thts;
             deque<bool>      tflgs;
-            size_t cur_terminal_idx=NUM_FREE_MODULE;
-            for(size_t i=0; i<nodes.num_nodes; ++i) {
+            size_t cur_terminal_idx = _modules.num_free;
+            for(size_t i=0; i<bnodes.num_nodes; ++i) {
 
-                const BookshelfNode &node = nodes.data[i];
-                const BookshelfPl   &pl   = pls.data[i];
-                assert( node.id == pl.id );
+                const BookshelfNode &bnode = bnodes.data[i];
+                const BookshelfPl   &bpl   = bpls.data[i];
+                assert( bnode.id == bpl.id );
 
-                if( node.fixed ) {
-                    MODULE_ID_INDEX_MAP.insert( make_pair(node.id, cur_terminal_idx++) );
+                if( bnode.fixed ) {
+                    _module_id_index_map.insert( make_pair(bnode.id, cur_terminal_idx++) );
                     
-                    tids.push_back(node.id);
-                    txcs.push_back(pl.x);
-                    tycs.push_back(pl.y);
-                    twds.push_back(node.width);
-                    thts.push_back(node.height);
-                    tflgs.push_back(node.fixed);
+                    tids.push_back(bnode.id);
+                    txcs.push_back(bpl.x);
+                    tycs.push_back(bpl.y);
+                    twds.push_back(bnode.width);
+                    thts.push_back(bnode.height);
+                    tflgs.push_back(bnode.fixed);
 
                 } else {
-                    MODULE_ID_INDEX_MAP.insert( make_pair(node.id, _modules.ids.size()) );
+                    _module_id_index_map.insert( make_pair(bnode.id, _modules.ids.size()) );
 
-                    _modules.ids.push_back(node.id);
-                    _modules.xcs.push_back(pl.x);
-                    _modules.ycs.push_back(pl.y);
-                    _modules.wds.push_back(node.width);
-                    _modules.hts.push_back(node.height);
-                    _modules.flgs.push_back(node.fixed);
+                    _modules.ids.push_back(bnode.id);
+                    _modules.xcs.push_back(bpl.x);
+                    _modules.ycs.push_back(bpl.y);
+                    _modules.wds.push_back(bnode.width);
+                    _modules.hts.push_back(bnode.height);
+                    _modules.flgs.push_back(bnode.fixed);
                 }
 
                 //update chip width and height
-                double right_border = pl.x + node.width; 
+                double right_border = bpl.x + bnode.width; 
                 if(right_border>_chip_width) _chip_width  = right_border;
-                double top_border = pl.y + node.height; 
+                double top_border = bpl.y + bnode.height; 
                 if(top_border>_chip_height) _chip_height = top_border;
             }
 
@@ -153,31 +157,34 @@ namespace tpl {
             _modules.wds.insert( _modules.wds.end(),  twds.begin(),  twds.end() );
             _modules.hts.insert( _modules.hts.end(),  thts.begin(),  thts.end() );
             _modules.flgs.insert(_modules.flgs.end(), tflgs.begin(), tflgs.end());
-            //end scanning nodes
+            //end filling modules
 
-            //scanning nets and pins
-            map<string, TplPin*> pin_add_map;
-            _nets.pinstore.reserve(nets.num_pins);
-            for(vector<BookshelfNet>::iterator nit=nets.data.begin(); nit!=nets.data.end(); ++nit) {
+            //filling nets and pins
+            _nets.num_nets = bnets.num_nets;
+            _nets.num_pins = bnets.num_pins;
+
+            map<string, TplPin*> pin_address_map;
+            _nets.pinstore.reserve(bnets.num_pins);
+            for(vector<BookshelfNet>::iterator nit=bnets.data.begin(); nit!=bnets.data.end(); ++nit) {
                 TplNet net;
                 net.id = nit->id;
 
                 for(vector<BookshelfPin>::iterator pit=nit->pins.begin(); pit!=nit->pins.end(); ++pit) {
-                    if( pin_add_map.count(pit->id) == 0 ) {
+                    if( pin_address_map.count(pit->id) == 0 ) {
                         TplPin pin;
                         pin.id = pit->id;
                         pin.dx = pit->dx;
                         pin.dy = pit->dy;
 
-                        pin_add_map.insert( make_pair(pin.id, &_nets.pinstore+_nets.pinstore.size()) );
+                        pin_address_map.insert( make_pair(pin.id, &_nets.pinstore[0]+_nets.pinstore.size()) );
                         _nets.pinstore.push_back(pin);
                     }
-                    net.pins.push_back( pin_add_map[pit->id] );
+                    net.pins.push_back( pin_address_map[pit->id] );
                 }
 
                 _nets.netlist.push_back(net);
             }
-            //end scanning nets and pins
+            //end filling nets and pins
 
             _grid_size = 100;
 
@@ -187,6 +194,49 @@ namespace tpl {
         }
     }//end TplDB::load_circuit
 
+    //define quering methods
+    const double &TplDB::get_chip_width()  const
+    {
+        return _chip_width;
+    }
+
+    const double &TplDB::get_chip_height() const
+    {
+        return _chip_height;
+    }
+
+    TplModule TplDB::get_module(const std::string &id) const
+    {
+        size_t idx = _module_id_index_map.at(id);
+        return _modules[idx];
+    }
+
+    size_t TplDB::get_module_index(const std::string &id) const
+    {
+        return _module_id_index_map.at(id);
+    }
+
+    unsigned int TplDB::get_number_of_free_modules() const
+    {
+        return _modules.num_free;
+    }
+
+    bool TplDB::is_module_fixed(const std::string &id) const
+    {
+        return _modules.flgs[_module_id_index_map.at(id)];
+    }
+
+    TplDB::net_iterator TplDB::net_begin()
+    {
+        return _nets.begin();
+    }
+
+    TplDB::net_iterator TplDB::net_end()
+    {
+        return _nets.end();
+    }
+
+    //private routines
     TplDB::TplDB()
     {
     }
