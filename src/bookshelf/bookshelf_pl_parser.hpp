@@ -51,7 +51,7 @@ BOOST_FUSION_ADAPT_STRUCT(
          * header_rule        := "^UCLA\s*pl\s*1.0"
          * comment_rule       := "^#.*$"
          * id_rule            := [^\s]*
-         * pl_rule            := id_rule uint_ uint_ ":\sN"| id unit_ unit_ ":\sN\s\/FIXED$"
+         * pl_rule            := id_rule double_ double_ ":\sN"| id double_ double_ ":\sN\s\/FIXED$"
          * pls_rule           := pl_rule*
          * start              := header_rule comment_rule* pls_rule
          * \endcode
@@ -61,7 +61,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
                 BookshelfPlParser() : BookshelfPlParser::base_type(start) {
 
-                    using qi::uint_;
+                    using qi::double_;
                     using qi::lit;
                     using qi::lexeme;
 
@@ -70,7 +70,7 @@ BOOST_FUSION_ADAPT_STRUCT(
                     comment_rule = lexeme[lit("#") >> *~lit('\n') ];
 
                     id_rule     %= lexeme[+~qi::space];
-                    pl_rule     %= id_rule >> uint_ >> uint_ >> lit(":") >> lit("N") >> -pl_move_type_symbol;
+                    pl_rule     %= id_rule >> double_ >> double_ >> lit(":") >> lit("N") >> -pl_move_type_symbol;
                     pls_rule    %= *pl_rule;
 
                     start       %= 
@@ -79,7 +79,7 @@ BOOST_FUSION_ADAPT_STRUCT(
                         pls_rule;
                 }
 
-                static PlMoveTypeSymbolTable  pl_move_type_symbol;
+                static PlMoveTypeSymbolTable  pl_move_type_symbol;                        //!< Pl file symbol table
 
                 qi::rule<Iterator, qi::unused_type(), asc::space_type>       header_rule; //!< escape headers
                 qi::rule<Iterator, qi::unused_type(), asc::space_type>      comment_rule; //!< escapte comments
@@ -93,6 +93,20 @@ BOOST_FUSION_ADAPT_STRUCT(
         template<typename Iterator>
             PlMoveTypeSymbolTable BookshelfPlParser<Iterator>::pl_move_type_symbol;
 
+        /*! 
+         * \fn bool parse_bookshelf_pl(Iterator &iter, Iterator &end, BookshelfPls &pls);
+         * 
+         */
+        template<typename Iterator>
+            bool parse_bookshelf_pl(Iterator &iter, Iterator &end, BookshelfPls &pls) {
+
+                BookshelfPlParser<Iterator> p;
+                bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), pls);
+
+                return ret;
+            }
+
     }//end namespace thueda
 
 #endif  
+

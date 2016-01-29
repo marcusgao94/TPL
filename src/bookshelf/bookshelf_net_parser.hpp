@@ -100,7 +100,7 @@ BOOST_FUSION_ADAPT_STRUCT(
                         nets_rule;
                 }
 
-                static PinIOTypeSymbolTable pin_io_type_symbol;
+                static PinIOTypeSymbolTable pin_io_type_symbol;                             //!< Net file symbol table
 
                 qi::rule<Iterator, qi::unused_type(), asc::space_type>         header_rule; //!< escape headers
                 qi::rule<Iterator, qi::unused_type(), asc::space_type>        comment_rule; //!< escapte comments
@@ -117,6 +117,20 @@ BOOST_FUSION_ADAPT_STRUCT(
         template<typename Iterator>
             PinIOTypeSymbolTable BookshelfNetParser<Iterator>::pin_io_type_symbol;
 
+        /*! 
+         * \fn bool parse_bookshelf_net(Iterator &iter, Iterator &end, BookshelfNets &nets);
+         * 
+         */
+        template<typename Iterator>
+            bool parse_bookshelf_net(Iterator &iter, Iterator &end, BookshelfNets &nets) {
+
+                BookshelfNetParser<Iterator> p;
+                bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), nets);
+
+                return ret;
+            }
+
     }//end namespace thueda
 
 #endif  
+

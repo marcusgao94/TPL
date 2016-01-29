@@ -7,7 +7,6 @@
 #ifndef BOOKSHELF_NODE_H
 #define BOOKSHELF_NODE_H
 
-#include <string>
 #include <vector>
 #include <iostream>
 
@@ -39,7 +38,6 @@ namespace thueda {
     std::ostream & operator<<(std::ostream &out, const BookshelfNode &node);
 
 
-
     //! The in-memory representation class for the .nodes files.
     /*!
      * This struct can be seen as the in-memory equivalent of the .nodes files, 
@@ -57,3 +55,4 @@ namespace thueda {
 }//end namespace thueda
 
 #endif
+

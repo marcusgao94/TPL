@@ -88,12 +88,12 @@ BOOST_FUSION_ADAPT_STRUCT(
                         nodes_rule;
                 }
 
-                static NodeMoveTypeSymbolTable  node_move_type_symbol;
+                static NodeMoveTypeSymbolTable  node_move_type_symbol;                        //!< Node file symbol table
 
                 qi::rule<Iterator, qi::unused_type(), asc::space_type>           header_rule; //!< escape headers
                 qi::rule<Iterator,        unsigned(), asc::space_type>        num_nodes_rule; //!< store NumNodes
                 qi::rule<Iterator,        unsigned(), asc::space_type>    num_terminals_rule; //!< store NumTerminals
-                qi::rule<Iterator, qi::unused_type(), asc::space_type>          comment_rule; //!< escapte comments
+                qi::rule<Iterator, qi::unused_type(), asc::space_type>          comment_rule; //!< escape comments
                 qi::rule<Iterator,     std::string(), asc::space_type>               id_rule; //!< cache node id
                 qi::rule<Iterator,   BookshelfNode(), asc::space_type>             node_rule; //!< parse one line of node
                 qi::rule<Iterator, std::vector<BookshelfNode>(), asc::space_type> nodes_rule; //!< parse all lines of nodes
@@ -104,6 +104,20 @@ BOOST_FUSION_ADAPT_STRUCT(
         template<typename Iterator>
             NodeMoveTypeSymbolTable BookshelfNodeParser<Iterator>::node_move_type_symbol;
 
+        /*! 
+         * \fn bool parse_bookshelf_node(Iterator &iter, Iterator &end, BookshelfNodes &nodes);
+         * 
+         */
+        template<typename Iterator>
+            bool parse_bookshelf_node(Iterator &iter, Iterator &end, BookshelfNodes &nodes) {
+
+                BookshelfNodeParser<Iterator> p;
+                bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), nodes);
+
+                return ret;
+            }
+
     }//end namespace thueda
 
 #endif  
+

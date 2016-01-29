@@ -11,6 +11,8 @@
 #include <string>
 #include <fstream>
 #include <iterator>
+#include <cstdlib>
+#include <cstring>
 
 #include "bookshelf_net_parser.hpp"
 
@@ -20,7 +22,12 @@ using namespace thueda;
 SCENARIO("Test .net files", "[case 1]") {
 
     GIVEN("A .nets file and a BookshelfNetParser") {
-        ifstream in("/home/fpeng/Workspace/TPL/benchmark/bigblue1/bigblue1.nets", ios_base::in);
+        char path[200];
+        char *home;
+        home = std::getenv("HOME");
+        std::strcpy(path, home);
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1/bigblue1.nets");
+        ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
 
         string storage;
@@ -43,8 +50,8 @@ SCENARIO("Test .net files", "[case 1]") {
             }
         }
 
+        cout << endl;
     }//end GIVEN
 
-    cout << endl;
-}
+}//end SCENARIO
 

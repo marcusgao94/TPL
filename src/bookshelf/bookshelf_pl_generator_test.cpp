@@ -11,6 +11,8 @@
 #include <string>
 #include <fstream>
 #include <iterator>
+#include <cstdlib>
+#include <cstring>
 
 #include "bookshelf_pl_parser.hpp"
 #include "bookshelf_pl_generator.hpp"
@@ -21,7 +23,12 @@ using namespace thueda;
 SCENARIO("Test .pl files", "[case 1]") {
 
     GIVEN("BookshelfPls constructed from a BookshelfPlParser.") {
-        ifstream in("/home/fpeng/Workspace/TPL/benchmark/bigblue1/bigblue1.pl", ios_base::in);
+        char path[200];
+        char *home;
+        home = std::getenv("HOME");
+        std::strcpy(path, home);
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1/bigblue1.pl");
+        ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
 
         string storage;
@@ -48,8 +55,8 @@ SCENARIO("Test .pl files", "[case 1]") {
             }
         }
 
+        cout << endl;
     }//end GIVEN
 
-    cout << endl;
-}
+}//end SCENARIO
 

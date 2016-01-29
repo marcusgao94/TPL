@@ -7,7 +7,6 @@
 #ifndef BOOKSHELF_NET_H
 #define BOOKSHELF_NET_H
 
-#include <string>
 #include <vector>
 #include <iostream>
 
@@ -35,14 +34,13 @@ namespace thueda {
     std::ostream & operator<<(std::ostream &out, const BookshelfPin &pin);
 
 
-
     //! public class storing one net's degree and its associated pins.
     /*!
      * When BookshelfNetParser parses .nets files, the nets' information are stored in this struct. 
      */
     struct BookshelfNet {
         Id                            id; //!< A net's id
-        unsigned                  degree; //!< A net's degree, i.e. number of pins attached on this net 
+        unsigned int              degree; //!< A net's degree, i.e. number of pins attached on this net 
         std::vector<BookshelfPin>   pins; //!< A net's attached pins
     };
 
@@ -54,7 +52,6 @@ namespace thueda {
      */
     std::ostream & operator<<(std::ostream &out, const BookshelfNet &net);
 
-   
 
     //! The in-memory representation class for the .nets files.
     /*!
@@ -73,3 +70,4 @@ namespace thueda {
 }//end namespace thueda
 
 #endif
+

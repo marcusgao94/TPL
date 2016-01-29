@@ -11,6 +11,8 @@
 #include <string>
 #include <fstream>
 #include <iterator>
+#include <cstdlib>
+#include <cstring>
 
 #include "bookshelf_node_parser.hpp"
 
@@ -20,7 +22,12 @@ using namespace thueda;
 SCENARIO("Test .nodes files", "[case 1]") {
 
     GIVEN("A .nodes file and a BookshelfNodeParser") {
-        ifstream in("/home/fpeng/Workspace/TPL/benchmark/bigblue1/bigblue1.nodes", ios_base::in);
+        char path[200];
+        char *home;
+        home = std::getenv("HOME");
+        std::strcpy(path, home);
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1/bigblue1.nodes");
+        ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
 
         string storage;
@@ -32,7 +39,6 @@ SCENARIO("Test .nodes files", "[case 1]") {
         string::const_iterator end  = storage.end();
 
         BookshelfNodeParser< string::const_iterator > p;
-
         BookshelfNodes n;
 
         WHEN("we parse the input") {
@@ -43,8 +49,8 @@ SCENARIO("Test .nodes files", "[case 1]") {
             }
         }
 
+        cout << endl;
     }//end GIVEN
 
-    cout << endl;
-}
+}//SCENARIO
 

@@ -7,7 +7,6 @@
 #ifndef BOOKSHELF_PL_H
 #define BOOKSHELF_PL_H
 
-#include <string>
 #include <vector>
 #include <iostream>
 
@@ -40,7 +39,6 @@ namespace thueda {
     std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl);
 
 
-
     //! The in-memory representation class for the .pl files.
     /*!
      * This struct can be seen as the in-memory equivalent of the .pl files, 
@@ -56,3 +54,4 @@ namespace thueda {
 }//end namespace thueda
 
 #endif
+

@@ -7,16 +7,12 @@
 #ifndef BOOKSHELF_PL_GENERATOR_HPP
 #define BOOKSHELF_PL_GENERATOR_HPP
 
-#include <string>
-#include <vector>
-
 #include <boost/spirit/include/karma.hpp>
 
 #include "bookshelf_pl.h"
 
-namespace karma = boost::spirit::karma;
-
 namespace thueda {
+    namespace karma = boost::spirit::karma;
 
     /*! 
      * \fn bool generate_bookshelf_pl(OutputIterator &sink, const BookshelfPls &pls);
@@ -41,3 +37,4 @@ namespace thueda {
 }//end namespace thueda
 
 #endif  
+
