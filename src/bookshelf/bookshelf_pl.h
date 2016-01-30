@@ -22,19 +22,20 @@ namespace thueda {
      * A default constructor is explicitly provided mainly for setting the fixed bool to false.
      */
     struct BookshelfPl {
-        Id        id;  //!< A node's id
-        Coordinate x;  //!< A node's x coordinate
-        Coordinate y;  //!< A node's y coordinate
-        bool   fixed;  //!< A node's move mode flag
+        Id        id;  //!< A node's id.
+        Coordinate x;  //!< A node's x coordinate.
+        Coordinate y;  //!< A node's y coordinate.
+        bool   fixed;  //!< A node's move mode flag.
 
-        BookshelfPl(); //!< Default constructor for BookshelfNode
+        BookshelfPl(); //!< Default constructor for BookshelfNode.
+        BookshelfPl(const Id &_id, const Coordinate &_x, const Coordinate &_y, const bool &_fixed); //!< Normal constructor.
     };
 
     /*!
      * \fn std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl);
      * \brief A help function used for printing the BookshelfPl's information.
-     * \param out  the output stream object
-     * \param pl the pl information to be printed
+     * \param out The output stream object.
+     * \param pl The pl information to be printed.
      */
     std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl);
 

@@ -1,21 +1,19 @@
 #include "tpl_circuit.h"
 
 #include <fstream>
+#include <string>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
 #include "../bookshelf/bookshelf_node_parser.hpp"
 #include "../bookshelf/bookshelf_pl_parser.hpp"
 #include "../bookshelf/bookshelf_net_parser.hpp"
+#include "../bookshelf/bookshelf_pl_generator.hpp"
 
 namespace tpl {
-
-    using std::vector;
-    using std::list;
-    using std::deque;
-    using std::map;
-    using std::pair;
-    using std::string;
+    using namespace std;
+    using namespace thueda;
 
     void TplModules::clear()
     {
@@ -25,6 +23,9 @@ namespace tpl {
         wds.clear();
         hts.clear();
         flgs.clear();
+
+        num_nodes = 0;
+        num_free  = 0;
     }
 
     TplModule TplModules::operator[](const size_t &i) const
@@ -32,20 +33,40 @@ namespace tpl {
         return TplModule({ids[i], xcs[i], ycs[i], wds[i], hts[i], flgs[i]});
     }
 
-    TplNets::iterator TplNets::begin()
+    void TplModules::set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys)
     {
-        return netlist.begin();
+#ifndef NDEBUG
+        assert( xs.size() == num_free );
+        assert( ys.size() == num_free );
+#endif
+
+        xcs.erase( xcs.begin(), xcs.begin()+num_free);
+        ycs.erase( ycs.begin(), ycs.begin()+num_free);
+
+        xcs.insert(xcs.begin(), xs.begin(), xs.end());
+        ycs.insert(ycs.begin(), ys.begin(), ys.end());
     }
 
-    TplNets::iterator TplNets::end()
+    void TplModules::get_bookshelf_pls(thueda::BookshelfPls &bpls) const
     {
-        return netlist.end();
+#ifndef NDEBUG
+        assert(bpls.data.size() == 0);
+#endif
+
+        for(size_t i=0; i<num_nodes; ++i) {
+            bpls.data.push_back(BookshelfPl(ids[i], xcs[i], ycs[i], flgs[i]));
+        }
+    }
+
+    TplPin::TplPin(const Id &_id, const Distance &_dx, const Distance &_dy) : id(_id), dx(_dx), dy(_dy)
+    {
     }
 
     void TplNets::clear()
     {
-        pinstore.clear();
         netlist.clear();
+        num_nets = 0;
+        num_pins = 0;
     }
 
     TplDB* TplDB::_instance = NULL;
@@ -58,6 +79,47 @@ namespace tpl {
         return _instance;
     }
 
+    //////////////////////Query Iterface///////////////////////
+    const double &TplDB::get_chip_width()  const
+    {
+        return _chip_width;
+    }
+
+    const double &TplDB::get_chip_height() const
+    {
+        return _chip_height;
+    }
+
+    TplModule TplDB::get_module(const std::string &id) const
+    {
+        size_t idx = _module_id_index_map.at(id);
+        return _modules[idx];
+    }
+
+    size_t TplDB::get_module_index(const std::string &id) const
+    {
+        return _module_id_index_map.at(id);
+    }
+
+    unsigned int TplDB::get_number_of_free_modules() const
+    {
+        return _modules.num_free;
+    }
+
+    bool TplDB::is_module_fixed(const std::string &id) const
+    {
+        return _modules.flgs[_module_id_index_map.at(id)];
+    }
+    //////////////////////Query Iterface///////////////////////
+    
+    //////////////////////////////////Modification Iterface///////////////////////////////////
+    void TplDB::update_free_module_position(const std::vector<double> &xs, const std::vector<double> &ys)
+    {
+        _modules.set_free_module_coordinates(xs, ys);
+    }
+    //////////////////////////////////Modification Iterface///////////////////////////////////
+    
+    //////////////////////////////////Helper Functions///////////////////////////////////
     bool TplDB::load_circuit(const std::string &_path)
     {
         using namespace boost::filesystem;
@@ -65,14 +127,14 @@ namespace tpl {
 
         try {
             path   benchmark_path(_path);
-            string benchmark_name = benchmark_path.filename().string();
+            _benchmark_name = benchmark_path.filename().string();
 
             string storage;
             string::const_iterator iter, end;
 
             //parse .nodes file
             path node_file_path(benchmark_path);
-            node_file_path /= benchmark_name + ".nodes";
+            node_file_path /= _benchmark_name + ".nodes";
             read_file(node_file_path.c_str(), storage);
 
             iter = storage.begin();
@@ -83,7 +145,7 @@ namespace tpl {
 
             //parse .pl file
             path pl_file_path(benchmark_path);
-            pl_file_path /= benchmark_name + ".pl";
+            pl_file_path /= _benchmark_name + ".pl";
             read_file(pl_file_path.c_str(), storage);
 
             iter = storage.begin();
@@ -94,7 +156,7 @@ namespace tpl {
 
             //parse .nets file
             path net_file_path(benchmark_path);
-            net_file_path /= benchmark_name + ".nets";
+            net_file_path /= _benchmark_name + ".nets";
             read_file(net_file_path.c_str(), storage);
 
             iter = storage.begin();
@@ -121,7 +183,10 @@ namespace tpl {
 
                 const BookshelfNode &bnode = bnodes.data[i];
                 const BookshelfPl   &bpl   = bpls.data[i];
+
+#ifndef NDEBUG
                 assert( bnode.id == bpl.id );
+#endif
 
                 if( bnode.fixed ) {
                     _module_id_index_map.insert( make_pair(bnode.id, cur_terminal_idx++) );
@@ -163,25 +228,13 @@ namespace tpl {
             _nets.num_nets = bnets.num_nets;
             _nets.num_pins = bnets.num_pins;
 
-            map<string, TplPin*> pin_address_map;
-            _nets.pinstore.reserve(bnets.num_pins);
             for(vector<BookshelfNet>::iterator nit=bnets.data.begin(); nit!=bnets.data.end(); ++nit) {
                 TplNet net;
-                net.id = nit->id;
-
+                net.id     = nit->id;
+                net.degree = nit->degree;
                 for(vector<BookshelfPin>::iterator pit=nit->pins.begin(); pit!=nit->pins.end(); ++pit) {
-                    if( pin_address_map.count(pit->id) == 0 ) {
-                        TplPin pin;
-                        pin.id = pit->id;
-                        pin.dx = pit->dx;
-                        pin.dy = pit->dy;
-
-                        pin_address_map.insert( make_pair(pin.id, &_nets.pinstore[0]+_nets.pinstore.size()) );
-                        _nets.pinstore.push_back(pin);
-                    }
-                    net.pins.push_back( pin_address_map[pit->id] );
+                    net.pins.push_back(TplPin(pit->id, pit->dx, pit->dy));
                 }
-
                 _nets.netlist.push_back(net);
             }
             //end filling nets and pins
@@ -193,49 +246,23 @@ namespace tpl {
             return false;
         }
     }//end TplDB::load_circuit
-
-    //define quering methods
-    const double &TplDB::get_chip_width()  const
+    
+    void TplDB::generate_placement_snapshot() const
     {
-        return _chip_width;
-    }
+        static int version = 0;
 
-    const double &TplDB::get_chip_height() const
-    {
-        return _chip_height;
-    }
+        BookshelfPls bpls;
+        _modules.get_bookshelf_pls(bpls);
 
-    TplModule TplDB::get_module(const std::string &id) const
-    {
-        size_t idx = _module_id_index_map.at(id);
-        return _modules[idx];
-    }
+        string out_file_name = _benchmark_name + string("_") + boost::lexical_cast<string>(version++) + ".pl";
 
-    size_t TplDB::get_module_index(const std::string &id) const
-    {
-        return _module_id_index_map.at(id);
-    }
+        ofstream out(out_file_name.c_str(), ios_base::out);
+        ostream_iterator<char> ositer(out, "");
 
-    unsigned int TplDB::get_number_of_free_modules() const
-    {
-        return _modules.num_free;
+        generate_bookshelf_pl(ositer, bpls); 
     }
-
-    bool TplDB::is_module_fixed(const std::string &id) const
-    {
-        return _modules.flgs[_module_id_index_map.at(id)];
-    }
-
-    TplDB::net_iterator TplDB::net_begin()
-    {
-        return _nets.begin();
-    }
-
-    TplDB::net_iterator TplDB::net_end()
-    {
-        return _nets.end();
-    }
-
+    //////////////////////////////////Helper Functions///////////////////////////////////
+    
     //private routines
     TplDB::TplDB()
     {

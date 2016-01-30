@@ -13,12 +13,14 @@
 #include <deque>
 #include <map>
 
-#include <boost/ptr_container/ptr_vector.hpp>
-
 #include "../bookshelf/utils.h"
+#include "../bookshelf/bookshelf_pl.h"
+
+#ifndef NDEBUG
+#define private public
+#endif
 
 namespace tpl {
-
     using namespace thueda;
 
     //! struct storing a module's position and size information.
@@ -46,6 +48,19 @@ namespace tpl {
             */
             TplModule operator[](const size_t &i) const;
 
+            //! Set the free modules' coordinates.
+            /*!
+             * \param xs The free modules' x coordinates.
+             * \param ys The free modules' y coordinates.
+             */
+            void set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys);
+
+            //! Write the current placement status in BookshelfPls data structure. 
+            /*!
+             * \param bpls The BookshelfPls data structure holding the result.
+             */
+            void get_bookshelf_pls(thueda::BookshelfPls &bpls) const;
+
         private:
             std::deque<Id>         ids; //!< All modules' ids
             std::deque<Coordinate> xcs; //!< All modules' x coordinates
@@ -65,6 +80,9 @@ namespace tpl {
         Id       id; //!< The pin's corresponding module's id.
         Distance dx; //!< Not used contemporarily.
         Distance dy; //!< Not used contemporarily.
+
+        //! TplPin constructor
+        TplPin(const Id &_id, const Distance &dx, const Distance &dy);
     };
 
     //! struct storing a net's information.
@@ -72,29 +90,42 @@ namespace tpl {
      * The net's pins are stored as a vector of pointer using boost::ptr_vector for the sake of memory usage.
      */
     struct TplNet {
-        Id                          id; //!< The net's id.
-        boost::ptr_vector<TplPin> pins; //!< vector of pointers to the net related pins.
+        //! Iterator access function representing the net's pins.
+        inline std::vector<TplPin>::iterator begin()
+        {
+            return pins.begin();
+        }
+
+        //! Iterator access function representing the net's pin ending.
+        inline std::vector<TplPin>::iterator end()
+        {
+            return pins.end();
+        }
+
+        Id                    id; //!< The net's id.
+        unsigned int      degree; //!< The net's degree
+        std::vector<TplPin> pins; //!< vector of pointers to the net related pins.
     };
 
     //! class storing all the nets and pins.
     class TplNets {
         public:
-            /*!
-             * \typedef std::list<TplNet>::iterator iterator;
-             * \brief TplNets::iterator type
-             */
-            typedef std::list<TplNet>::iterator iterator;
-
             //! Iterator access function representing the netlist beginning.
-            iterator begin();
+            inline std::list<TplNet>::iterator begin()
+            {
+                return netlist.begin();
+            }
 
             //! Iterator access function representing the netlist ending.
-            iterator end();
+            std::list<TplNet>::iterator end()
+            {
+                return netlist.end();
+            }
 
             //! Clear all the nets' contents.
             void clear();
         private:
-            std::vector<TplPin> pinstore; //!< A container storing all the pins uniquely.
+            //std::vector<TplPin> pinstore; //!< A container storing all the pins uniquely.
             std::list<TplNet>   netlist;  //!< A sequential container representing the netlist.
 
             unsigned int num_nets;        //!< Number of nets.
@@ -106,28 +137,47 @@ namespace tpl {
     //! The main class for data savings and manipulations.
     class TplDB {
         public:
-            /*!
-             * \typedef TplNets::iterator net_iterator;
-             * \brief TplDB::net_iterator type
-             */
-            typedef TplNets::iterator net_iterator;
-
             //! Realize the singleton design pattern.
             static TplDB *db();
 
-            //! Load benchmark circuit into in-memory data structures.
+            ////////////////////////// Iterators //////////////////////////
             /*!
-             * \param path the benchmark file's directory path 
-             * \return A boolean variable indicating wether the operation is success.
+             * \typedef std::list<TplNet>::iterator net_iterator;
+             * \brief TplDB::net_iterator type
              */
-            bool load_circuit(const std::string &_path);
-            
+            typedef std::list<TplNet>::iterator net_iterator;
+            //! Iterator access function representing the netlist beginning.
+            inline net_iterator net_begin()
+            {
+                return _nets.begin();
+            }
+            //! Iterator access function representing the netlist ending.
+            inline net_iterator net_end()
+            {
+                return _nets.end();
+            }
+            /*!
+             * \typedef std::vector<TplPins>::iterator pin_iterator;
+             * \brief TplDB::pin_iterator type
+             */
+            typedef std::vector<TplPin>::iterator pin_iterator;
+            //! Iterator access function representing the netlist beginning.
+            inline pin_iterator pin_begin(const net_iterator &nit)
+            {
+                return nit->begin();
+            }
+            //! Iterator access function representing the netlist ending.
+            inline pin_iterator pin_end(const net_iterator &nit)
+            {
+                return nit->end();
+            }
+            ////////////////////////// Iterators //////////////////////////
 
+            //////////////////////Query Iterface///////////////////////
             //! Query interface for chip width.
             const double &get_chip_width()  const;
             //! Query interface for chip height.
             const double &get_chip_height() const;
-
             //! Query interface for a module using a Id.
             TplModule get_module      (const std::string &id) const;
             //! Query interface for a module's index.
@@ -136,11 +186,23 @@ namespace tpl {
             unsigned int get_number_of_free_modules() const;
             //! Query interface checking wether a module is fixed.
             bool is_module_fixed(const std::string &id) const;
+            //////////////////////Query Iterface///////////////////////
 
-            //! Iterator access function representing the netlist beginning.
-            net_iterator net_begin();
-            //! Iterator access function representing the netlist ending.
-            net_iterator net_end();
+            //////////////////////////////////Modification Iterface///////////////////////////////////
+            //! Modification interface to adjust the free modules' coordinates
+            void update_free_module_position(const std::vector<double> &xs, const std::vector<double> &ys);
+            //////////////////////////////////Modification Iterface///////////////////////////////////
+
+            //////////////////////////////////Helper Functions///////////////////////////////////
+            //! Load benchmark circuit into in-memory data structures.
+            /*!
+             * \param path The benchmark file's directory path.
+             * \return A boolean variable indicating wether the operation is success.
+             */
+            bool load_circuit(const std::string &_path);
+            //! Take a snapshot of the current placement.
+            void generate_placement_snapshot() const;
+            //////////////////////////////////Helper Functions///////////////////////////////////
 
         private:
             //! TplDB constructor.
@@ -162,6 +224,8 @@ namespace tpl {
             TplModules _modules;     //!< storing the modules
             TplNets    _nets;        //!< storing the nets
             std::map<std::string, size_t> _module_id_index_map; //!< a id index map for all the modules
+
+            std::string _benchmark_name;
     };
 
 }//end namespace tpl

@@ -24,33 +24,41 @@ namespace tpl {
     {
     }
 
-
     void TplAlgorithm::initial_placement()
     {
+        vector<double> x_target, y_target;
 
+        for(size_t i=0; i<10; ++i) {
+            compute_net_force_target(x_target, y_target);
+            db.update_free_module_position(x_target, y_target);
 
+            x_target.clear();
+            y_target.clear();
+        }
+
+        db.generate_placement_snapshot();
     }//end TplAlgorithm::initial_placement
     
     void TplAlgorithm::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
     {
+#ifndef NDEBUG
+        assert( x_target.size() == 0 );
+        assert( y_target.size() == 0 );
+#endif
+
         //compute net weight for each net
         NetWeight x_net_weight, y_net_weight;
         for(TplDB::net_iterator nit=db.net_begin(); nit!=db.net_end(); ++nit) {
-            compute_net_weight(*nit, x_net_weight, y_net_weight);
+            compute_net_weight(nit, x_net_weight, y_net_weight);
         }
 
         compute_net_force_target(x_net_weight, x_target);
         compute_net_force_target(y_net_weight, y_target);
-
     }//end TplAlgorithm::compute_net_force_target
 
 
-    void TplAlgorithm::compute_net_weight(const TplNet &net, NetWeight &x_net_weight, NetWeight &y_net_weight)
+    void TplAlgorithm::compute_net_weight(const TplDB::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
     {
-        //define aliases
-        const boost::ptr_vector<TplPin> &pins = net.pins;
-        const unsigned int            &degree = net.pins.size();
-
         //define static data
         static vector<string> ids;
         static vector<double> xs, ys;
@@ -58,9 +66,10 @@ namespace tpl {
         static size_t xmin_idx, xmax_idx, ymin_idx, ymax_idx;
 
         //initilize static data
-        for(size_t i=0; i<degree; ++i) {
-            TplModule module =  db.get_module(pins[i].id);
-            ids.push_back( pins[i].id );
+        size_t i=0;
+        for(TplDB::pin_iterator pit=db.pin_begin(nit); pit!=db.pin_end(nit); ++pit) {
+            TplModule module =  db.get_module(pit->id);
+            ids.push_back( pit->id );
 
             if       (module.x < xmin) {
                 xmin = module.x;
@@ -79,6 +88,8 @@ namespace tpl {
                 ymax_idx = i;
             }
             ys.push_back(module.y);
+
+            ++i; 
         }
 
         //call private routine
@@ -93,13 +104,16 @@ namespace tpl {
         xmax=-1; 
         ymin=db.get_chip_height(); 
         ymax=-1;
-
-    }//end TplAlgorithm::get_current_net_weight
+    }//end TplAlgorithm::compute_net_weight
 
 
     //private routines
     void TplAlgorithm::compute_net_force_target(const NetWeight &net_weight, std::vector<double> &target)
     {
+#ifndef NDEBUG
+        assert( target.size() == 0 );
+#endif
+
         //define matrix and vector
         unsigned int num_free = db.get_number_of_free_modules();
         SpMat C(num_free, num_free);
@@ -141,17 +155,24 @@ namespace tpl {
         C.setFromTriplets(coefficients.begin(), coefficients.end());
         d *= -1;
 
+        cout << "Solving linear problem." << endl;
+
         //solve linear problem using ConjugateGradient method
         CGSolver cg;
         cg.compute(C);
         VectorXd eigen_target = cg.solve(d);
         target.resize(eigen_target.size());
         VectorXd::Map(&target[0], eigen_target.size()) = eigen_target;
-    }// end TplAlgorithm::compute_net_force_target
+        cout << "Linear problem solved." << endl;
+    }//end TplAlgorithm::compute_net_force_target
 
     void TplAlgorithm::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
             const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
     {
+#ifndef NDEBUG
+        assert( ids.size() == coordinates.size() );
+#endif
+
         const size_t &degree = ids.size();
         double min_weight, max_weight;
 
@@ -169,12 +190,18 @@ namespace tpl {
                 max_weight = 2.0/(degree-1)*(max-coordinates[cur_idx]);
             }
 
+#ifndef NDEBUG
             assert( net_weight.count(    make_pair(ids[cur_idx], ids[min_idx]) ) == 0 );
+#endif
             net_weight.insert( make_pair(make_pair(ids[cur_idx], ids[min_idx]), min_weight) );
+#ifndef NDEBUG
             assert( net_weight.count(    make_pair(ids[cur_idx], ids[max_idx]) ) == 0 );
+#endif
             net_weight.insert( make_pair(make_pair(ids[cur_idx], ids[max_idx]), max_weight) );
-        }
 
+            double min_max_weight = 2.0/(degree-1)*(max-min);
+            net_weight.insert( make_pair(make_pair(ids[min_idx], ids[max_idx]), min_max_weight) );
+        }
     }//end TplAlgorithm::compute_net_weight
 
 }//end namespace tpl

@@ -24,7 +24,7 @@ SCENARIO("Test load_circuit", "[case 1]") {
         char *home;
         home = std::getenv("HOME");
         std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1/bigblue1.nets");
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1");
 
         string _path(path);
 
