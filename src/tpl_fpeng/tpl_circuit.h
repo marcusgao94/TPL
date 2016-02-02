@@ -12,12 +12,18 @@
 #include <list>
 #include <deque>
 #include <map>
+#include <stdexcept>
 
-#include "../bookshelf/utils.h"
+#include "../bookshelf/bookshelf_node.h"
 #include "../bookshelf/bookshelf_pl.h"
+#include "../bookshelf/bookshelf_net.h"
 
 #ifndef NDEBUG
 #define private public
+#endif
+
+#ifndef pdb
+#define pdb (*(tpl::TplDB::db()))
 #endif
 
 namespace tpl {
@@ -39,99 +45,281 @@ namespace tpl {
     //! class storing all the modules' positions and sizes information.
     class TplModules {
         public:
+            ///////////////////////// Member Type //////////////////////////////////////////
+            //! \typedef std::vector<TplModule>::iterator iterator;
+            typedef std::vector<TplModule>::iterator iterator;
+            //! \typedef std::vector<TplModule>::const_iterator const_iterator;
+            typedef std::vector<TplModule>::const_iterator const_iterator;
+            ///////////////////////// Member Type //////////////////////////////////////////
+
+            ///////////////////////// Constructors /////////////////////////////////////////
+            //! Default constructor defaulted.
+            TplModules() = default;
+            //! Constructor using bookshelf data structures.
+            TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls);
+            //! Destructor defaulted.
+            ~TplModules() = default;
+            //! Copy constructor deleted.
+            TplModules(const TplModules &) = delete;
+            //! Copy assignment operator deleted.
+            TplModules& operator=(const TplModules &) = delete;
+            //! Move constructor.
+            TplModules(TplModules &&temp);
+            //! Move assignment opeartor.
+            TplModules &operator=(TplModules &&temp);
+            ///////////////////////// Constructors /////////////////////////////////////////
+
+            ////////////////////////// Member Access ///////////////////////////////////////
+            //! Access TplModule using index, return reference with bound checking.
+            TplModule&       at(const size_t &pos)
+            {
+                try {
+                    return _modules.at(pos);
+                }
+                catch(std::out_of_range e) {
+                    throw e;
+                }
+            }
+            //! Access TplModule using index, return const reference with bound checking.
+            const TplModule& at(const size_t &pos) const
+            {
+                try {
+                    return _modules.at(pos);
+                }
+                catch(std::out_of_range e) {
+                    throw e;
+                }
+            }
+            //! Access TplModule using index, return reference without bound checking.
+            TplModule&       operator[](const size_t &pos)
+            {
+                return _modules[pos];
+            }
+            //! Access TplModule using index, return const reference without bound checking.
+            const TplModule& operator[](const size_t &pos) const
+            {
+                return _modules[pos];
+            }
+            ////////////////////////// Member Access ///////////////////////////////////////
+            
+            ///////////////////////// Iterators   //////////////////////////////////////////
+            //! Iterator indicating the first TplModule.
+            iterator begin()
+            {
+                return _modules.begin();
+            }
+            //! Iterator indicating the first TplModule, const version.
+            const_iterator cbegin() const
+            {
+                return _modules.begin();
+            }
+            //! Iterator indicating the past-the-last TplModule.
+            iterator end()
+            {
+                return _modules.end();
+            }
+            //! Iterator indicating the past-the-last TplModule, const version.
+            const_iterator cend() const
+            {
+                return _modules.end();
+            }
+            ///////////////////////// Iterators   //////////////////////////////////////////
+
+            ///////////////////////// Capacity    //////////////////////////////////////////
+            //! Total number of modules.
+            size_t size()      const
+            {
+                return _num_modules;
+            }
+            //! Number of free modules.
+            size_t num_free()  const
+            {
+                return _num_free;
+            }
+            //! Number of fixed modules.
+            size_t num_fixed() const
+            {
+                return _num_modules-_num_free;
+            }
+            ///////////////////////// Capacity    //////////////////////////////////////////
+
+            ///////////////////////// Modifiers   //////////////////////////////////////////
             //! Clear all the modules' contents.
             void clear();
-
-            //! Provides an index based access interface to TplModules.
-            /*!
-             * \param i A module's index.
-            */
-            TplModule operator[](const size_t &i) const;
-
             //! Set the free modules' coordinates.
             /*!
              * \param xs The free modules' x coordinates.
              * \param ys The free modules' y coordinates.
              */
             void set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys);
+            ///////////////////////// Modifiers   //////////////////////////////////////////
 
-            //! Write the current placement status in BookshelfPls data structure. 
+            ///////////////////////// Id based Member Access ///////////////////////////////
+            //! Get a TplModule reference with a Id id.
+            TplModule&       module(const std::string &id);
+            //! Get a const TplModule reference with a Id id.
+            const TplModule& module(const std::string &id) const;
+            //! Get a module's index, with a Id id.
+            size_t module_index(const std::string &id) const;
+            //! Query interface checking wether a module is fixed.
+            bool is_module_fixed(const std::string &id) const;
+            ///////////////////////// Id based Member Access ///////////////////////////////
+
+            ///////////////////////// Chip Size ////////////////////////////////////////////
+            //! Query interface for chip width.
+            double chip_width()  const
+            {
+                return _chip_width;
+            }
+            //! Query interface for chip height.
+            double chip_height() const
+            {
+                return _chip_height;
+            }
+            ///////////////////////// Chip Size ////////////////////////////////////////////
+            
+            ///////////////////////// Bookshelf Conversion /////////////////////////////////
+            //! Write the current placement status in BookshelfPls data structure.
             /*!
              * \param bpls The BookshelfPls data structure holding the result.
              */
-            void get_bookshelf_pls(thueda::BookshelfPls &bpls) const;
-
+            void get_bookshelf_pls(BookshelfPls &bpls) const;
+            ///////////////////////// Bookshelf Conversion /////////////////////////////////
         private:
-            std::deque<Id>         ids; //!< All modules' ids
-            std::deque<Coordinate> xcs; //!< All modules' x coordinates
-            std::deque<Coordinate> ycs; //!< All modules' y coordinates
-            std::deque<Length>     wds; //!< All modules' widths
-            std::deque<Length>     hts; //!< All modules' heights 
-            std::deque<bool>      flgs; //!< All modules' fixed flags
+            size_t _num_modules; //!< Number of modules.
+            size_t _num_free;    //!< Number of free modules.
 
-            unsigned int     num_nodes; //!< Number of modules
-            unsigned int      num_free; //!< Number of free modules
+            double _chip_width;  //!< Chip width.
+            double _chip_height; //!< Chip height.
 
-            friend class TplDB;
+            std::vector<TplModule> _modules;                //!< vector of TplModule.
+            std::map<std::string, size_t> _id_index_map; //!< A ID index map for all the modules
     };
 
-    //! struct storing a pin's related module's id and its offset from the module center.
-    struct TplPin {
-        Id       id; //!< The pin's corresponding module's id.
-        Distance dx; //!< Not used contemporarily.
-        Distance dy; //!< Not used contemporarily.
-
-        //! TplPin constructor
-        TplPin(const Id &_id, const Distance &dx, const Distance &dy);
-    };
-
-    //! struct storing a net's information.
-    /*!
-     * The net's pins are stored as a vector of pointer using boost::ptr_vector for the sake of memory usage.
-     */
-    struct TplNet {
-        //! Iterator access function representing the net's pins.
-        inline std::vector<TplPin>::iterator begin()
-        {
-            return pins.begin();
-        }
-
-        //! Iterator access function representing the net's pin ending.
-        inline std::vector<TplPin>::iterator end()
-        {
-            return pins.end();
-        }
-
-        Id                    id; //!< The net's id.
-        unsigned int      degree; //!< The net's degree
-        std::vector<TplPin> pins; //!< vector of pointers to the net related pins.
-    };
+    //! \typedef BookshelfPin TplPin;
+    typedef BookshelfPin TplPin;
+    //! \typedef BookshelfNet TplNet;
+    typedef BookshelfNet TplNet;
 
     //! class storing all the nets and pins.
     class TplNets {
         public:
-            //! Iterator access function representing the netlist beginning.
-            inline std::list<TplNet>::iterator begin()
-            {
-                return netlist.begin();
-            }
+            ///////////////////////// Member Type //////////////////////////////////////////
+            //! \typedef std::list<TplNet>::iterator net_iterator;
+            typedef std::list<TplNet>::iterator net_iterator;
+            //! \typedef std::list<TplNet>::const_iterator const_net_iterator;
+            typedef std::list<TplNet>::const_iterator const_net_iterator;
+            //! \typedef std::vector<TplPin>::iterator pin_iterator;
+            typedef std::vector<TplPin>::iterator pin_iterator;
+            //! \typedef std::vector<TplPin>::iterator iterator;
+            typedef std::vector<TplPin>::const_iterator const_pin_iterator;
+            ///////////////////////// Member Type //////////////////////////////////////////
 
-            //! Iterator access function representing the netlist ending.
-            std::list<TplNet>::iterator end()
-            {
-                return netlist.end();
-            }
+            ///////////////////////// Constructors /////////////////////////////////////////
+            //! Default constructor defaulted.
+            TplNets() = default;
+            //! Constructor using bookshelf data structures.
+            TplNets(const BookshelfNets &bnets);
+            //! Destructor defaulted.
+            ~TplNets() = default;
+            //! Copy constructor deleted.
+            TplNets(const TplNets &) = delete;
+            //! Copy assignment operator deleted.
+            TplNets& operator=(const TplNets &) = delete;
+            //! Move constructor.
+            TplNets(TplNets &&temp);
+            //! Move assignment opeator.
+            TplNets& operator=(TplNets &&temp);
+            ///////////////////////// Constructors /////////////////////////////////////////
 
-            //! Clear all the nets' contents.
+            ////////////////////////// Member Access ///////////////////////////////////////
+            //! Access first TplNet.
+            TplNet &front()
+            {
+                return _netlist.front();
+            }
+            //! Access first TplNet, const version.
+            const TplNet &front() const
+            {
+                return _netlist.front();
+            }
+            //! Access last TplNet.
+            TplNet &back()
+            {
+                return _netlist.back();
+            }
+            //! Access last TplNet, const version.
+            const TplNet &back() const
+            {
+                return _netlist.back();
+            }
+            ////////////////////////// Member Access ///////////////////////////////////////
+
+            ///////////////////////// Iterators   //////////////////////////////////////////
+            //! Iterator indicating the first TplNet.
+            net_iterator net_begin()
+            {
+                return _netlist.begin();
+            }
+            //! Iterator indicating the first TplNet, const version.
+            const_net_iterator cnet_begin() const
+            {
+                return _netlist.begin();
+            }
+            //! Iterator indicating the past-the-last TplNet.
+            net_iterator net_end()
+            {
+                return _netlist.end();
+            }
+            //! Iterator indicating the past-the-last TplNet, const version.
+            const_net_iterator cnet_end() const
+            {
+                return _netlist.end();
+            }
+            //! Iterator indicating the first TplPin.
+            pin_iterator pin_begin(const net_iterator &nit)
+            {
+                return nit->pins.begin();
+            }
+            //! Iterator indicating the first TplPin, const version.
+            const_pin_iterator cpin_begin(const net_iterator &nit) const
+            {
+                return nit->pins.begin();
+            }
+            //! Iterator indicating the past-the-last TplPin.
+            pin_iterator pin_end(const net_iterator &nit)
+            {
+                return nit->pins.end();
+            }
+            //! Iterator indicating the past-the-last TplPin, const version.
+            const_pin_iterator cpin_end(const net_iterator &nit) const
+            {
+                return nit->pins.end();
+            }
+            ///////////////////////// Iterators   //////////////////////////////////////////
+
+            ///////////////////////// Capacity    //////////////////////////////////////////
+            //! Number of nets.
+            size_t num_nets() const
+            {
+                return _num_nets;
+            }
+            //! Number of pins.
+            size_t num_pins() const
+            {
+                return _num_pins;
+            }
+            ///////////////////////// Capacity    //////////////////////////////////////////
+
+            ///////////////////////// Modifiers   //////////////////////////////////////////
+            //! Clear the netlist.
             void clear();
+            ///////////////////////// Modifiers   //////////////////////////////////////////
         private:
-            //std::vector<TplPin> pinstore; //!< A container storing all the pins uniquely.
-            std::list<TplNet>   netlist;  //!< A sequential container representing the netlist.
+            size_t _num_nets;           //!< Number of nets.
+            size_t _num_pins;           //!< Number of pins.
 
-            unsigned int num_nets;        //!< Number of nets.
-            unsigned int num_pins;        //!< Number of pins.
-
-            friend class TplDB;
+            std::list<TplNet> _netlist; //!< A sequential container representing the netlist.
     };
 
     //! The main class for data savings and manipulations.
@@ -139,93 +327,49 @@ namespace tpl {
         public:
             //! Realize the singleton design pattern.
             static TplDB *db();
+            static void destroy_db();
 
-            ////////////////////////// Iterators //////////////////////////
-            /*!
-             * \typedef std::list<TplNet>::iterator net_iterator;
-             * \brief TplDB::net_iterator type
-             */
-            typedef std::list<TplNet>::iterator net_iterator;
-            //! Iterator access function representing the netlist beginning.
-            inline net_iterator net_begin()
-            {
-                return _nets.begin();
-            }
-            //! Iterator access function representing the netlist ending.
-            inline net_iterator net_end()
-            {
-                return _nets.end();
-            }
-            /*!
-             * \typedef std::vector<TplPins>::iterator pin_iterator;
-             * \brief TplDB::pin_iterator type
-             */
-            typedef std::vector<TplPin>::iterator pin_iterator;
-            //! Iterator access function representing the netlist beginning.
-            inline pin_iterator pin_begin(const net_iterator &nit)
-            {
-                return nit->begin();
-            }
-            //! Iterator access function representing the netlist ending.
-            inline pin_iterator pin_end(const net_iterator &nit)
-            {
-                return nit->end();
-            }
-            ////////////////////////// Iterators //////////////////////////
-
-            //////////////////////Query Iterface///////////////////////
-            //! Query interface for chip width.
-            const double &get_chip_width()  const;
-            //! Query interface for chip height.
-            const double &get_chip_height() const;
-            //! Query interface for a module using a Id.
-            TplModule get_module      (const std::string &id) const;
-            //! Query interface for a module's index.
-            size_t    get_module_index(const std::string &id) const;
-            //! Query interface for number of free modules.
-            unsigned int get_number_of_free_modules() const;
-            //! Query interface checking wether a module is fixed.
-            bool is_module_fixed(const std::string &id) const;
-            //////////////////////Query Iterface///////////////////////
-
-            //////////////////////////////////Modification Iterface///////////////////////////////////
-            //! Modification interface to adjust the free modules' coordinates
-            void update_free_module_position(const std::vector<double> &xs, const std::vector<double> &ys);
-            //////////////////////////////////Modification Iterface///////////////////////////////////
-
-            //////////////////////////////////Helper Functions///////////////////////////////////
             //! Load benchmark circuit into in-memory data structures.
             /*!
              * \param path The benchmark file's directory path.
              * \return A boolean variable indicating wether the operation is success.
              */
             bool load_circuit(const char *path);
+
             //! Take a snapshot of the current placement.
             void generate_placement_snapshot() const;
-            //////////////////////////////////Helper Functions///////////////////////////////////
+            
+            TplModules modules;     //!< storing the modules
+            TplNets    nets;        //!< storing the nets
 
         private:
+            ///////////////////////// Constructors /////////////////////////////////////////
             //! TplDB constructor.
-            TplDB();
-            //! TplDB copy constructor, which has been claimed deleted.
+            TplDB() = default;
+            //! TplDB destructor.
+            ~TplDB() = default;
+            //! TplDB copy constructor deleted.
             TplDB(const TplDB&) = delete;
-            //! TplDB assignment operator, which has been claimed deleted.
+            //! TplDB assignment operator deleted.
             TplDB &operator=(const TplDB&) = delete;
+            ///////////////////////// Constructors /////////////////////////////////////////
 
+            //////////////////////////////////Helper Functions///////////////////////////////////
             //! Private helper routine loading a file into string.
             bool read_file(const char *file_name, std::string &storage);
+            //! Private helper routine initialize the modules member variable.
+            void initialize_modules(const char *node_file, const char *pl_file);
+            //! Private helper routine initialize the nets member variable.
+            void initialize_nets   (const char *net_file);
+            //! Private helper routine initialize the grid size.
+            void initialize_grid_size();
+            //////////////////////////////////Helper Functions///////////////////////////////////
 
             static TplDB *_instance; //!< The TplDB singleton
 
-            double _chip_width;      //!< storing chip width
-            double _chip_height;     //!< storing chip height
-            unsigned int _grid_size; //!< storing grid size during tpl algorithm computation
+            unsigned int _grid_size; //!< Storing grid size during tpl algorithm computation
 
-            TplModules _modules;     //!< storing the modules
-            TplNets    _nets;        //!< storing the nets
-            std::map<std::string, size_t> _module_id_index_map; //!< a id index map for all the modules
-
-            std::string _benchmark_name;
+            std::string _benchmark_name; //!< The current loading circuit's name.
     };
 
 }//end namespace tpl

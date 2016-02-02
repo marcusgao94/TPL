@@ -13,12 +13,6 @@
 
 #include "tpl_circuit.h"
 
-
-/*!
- * \def db (*TplDB::db())
- */
-#define db (*TplDB::db())
-
 namespace tpl {
 
     //! The entry class for tpl algorithm.
@@ -51,7 +45,7 @@ namespace tpl {
              * \param x_net_weight storing the net weight in x directions.
              * \param y_net_weight storing the net weight in y directions.
              */
-            void compute_net_weight(const TplDB::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight);
+            void compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight);
 
         private:
             //! Private routine for computing all the free module's net force target position.

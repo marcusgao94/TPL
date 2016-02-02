@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -15,36 +16,110 @@ namespace tpl {
     using namespace std;
     using namespace thueda;
 
-    void TplModules::clear()
+    TplModules::TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls) :
+        _num_modules(bnodes.num_nodes),
+        _num_free(bnodes.num_nodes - bnodes.num_terminals),
+        _chip_width(0), 
+        _chip_height(0)
     {
-        ids.clear();
-        xcs.clear();
-        ycs.clear();
-        wds.clear();
-        hts.clear();
-        flgs.clear();
+#ifndef NDEBUG
+        assert(bnodes.data.size() == bpls.data.size());
+#endif
+        for(size_t i=0; i<bnodes.data.size(); ++i) {
+            const BookshelfNode &bnode = bnodes.data[i];
+            const BookshelfPl   &bpl    = bpls.data[i];
 
-        num_nodes = 0;
-        num_free  = 0;
+            TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed};
+           _modules.push_back(std::move(m)); 
+           _id_index_map.insert( make_pair(bnode.id, i) );
+
+           double right_border = bpl.x + bnode.width; 
+           if(right_border>_chip_width) _chip_width  = right_border;
+           double top_border = bpl.y + bnode.height; 
+           if(top_border>_chip_height) _chip_height = top_border;
+        }
     }
 
-    TplModule TplModules::operator[](const size_t &i) const
+    TplModules::TplModules(TplModules &&temp) :
+        _num_modules(std::move(temp._num_modules)),
+        _num_free(std::move(temp._num_free)),
+        _chip_width(std::move(temp._chip_width)),
+        _chip_height(std::move(temp._chip_height)),
+        _modules(std::move(temp._modules)),
+        _id_index_map(std::move(temp._id_index_map))
     {
-        return TplModule({ids[i], xcs[i], ycs[i], wds[i], hts[i], flgs[i]});
+    }
+
+    TplModules &TplModules::operator=(TplModules &&temp) 
+    {
+        _num_modules  = std::move(temp._num_modules);
+        _num_free     = std::move(temp._num_free);
+
+        _chip_width   = std::move(temp._chip_width);
+        _chip_height  = std::move(temp._chip_height);
+
+        _modules      = std::move(temp._modules);
+        _id_index_map = std::move(temp._id_index_map);
+
+        return *this;
+    }
+
+    void TplModules::clear()
+    {
+        _modules.clear();
+        _id_index_map.clear();
+
+        _num_modules = 0;
+        _num_free    = 0;
+    }
+
+    TplModule& TplModules::module(const std::string &id)
+    {
+#ifndef NDEBUG
+        assert(_id_index_map.count(id) != 0);
+#endif
+
+        return _modules[_id_index_map[id]];
+    }
+
+    const TplModule& TplModules::module(const std::string &id) const
+    {
+#ifndef NDEBUG
+        assert(_id_index_map.count(id) != 0);
+#endif
+
+        return _modules.at(_id_index_map.at(id));
+    }
+
+    size_t TplModules::module_index(const std::string &id) const
+    {
+#ifndef NDEBUG
+        assert(_id_index_map.count(id) != 0);
+#endif
+
+        return _id_index_map.at(id);
+    }
+
+    bool TplModules::is_module_fixed(const std::string &id) const
+    {
+#ifndef NDEBUG
+        assert(_id_index_map.count(id) != 0);
+#endif
+
+        return _modules.at(_id_index_map.at(id)).fixed;
     }
 
     void TplModules::set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys)
     {
 #ifndef NDEBUG
-        assert( xs.size() == num_free );
-        assert( ys.size() == num_free );
+        assert( xs.size() == _num_free );
+        assert( ys.size() == _num_free );
 #endif
 
-        xcs.erase( xcs.begin(), xcs.begin()+num_free);
-        ycs.erase( ycs.begin(), ycs.begin()+num_free);
-
-        xcs.insert(xcs.begin(), xs.begin(), xs.end());
-        ycs.insert(ycs.begin(), ys.begin(), ys.end());
+        for(size_t i=0; i<_num_free; ++i) {
+            _modules[i].x = xs[i];
+            _modules[i].y = ys[i];
+        }
     }
 
     void TplModules::get_bookshelf_pls(thueda::BookshelfPls &bpls) const
@@ -53,20 +128,42 @@ namespace tpl {
         assert(bpls.data.size() == 0);
 #endif
 
-        for(size_t i=0; i<num_nodes; ++i) {
-            bpls.data.push_back( BookshelfPl({ids[i], xcs[i], ycs[i], flgs[i]}) );
+        for(size_t i=0; i<_num_modules; ++i) {
+            const TplModule &m = _modules.at(i);
+            bpls.data.push_back( {m.id, m.x, m.y, m.fixed} );
         }
     }
 
-    TplPin::TplPin(const Id &_id, const Distance &_dx, const Distance &_dy) : id(_id), dx(_dx), dy(_dy)
+    TplNets::TplNets(const BookshelfNets &bnets)
     {
+        _num_nets = bnets.num_nets;
+        _num_pins = bnets.num_pins;
+
+        copy(bnets.data.begin(), bnets.data.end(), back_inserter(_netlist));
+    }
+
+    TplNets::TplNets(TplNets &&temp) :
+        _num_nets(std::move(temp._num_nets)),
+        _num_pins(std::move(temp._num_pins)),
+        _netlist(std::move(temp._netlist))
+    {
+    }
+
+    TplNets& TplNets::operator=(TplNets &&temp)
+    {
+        _num_nets = std::move(temp._num_nets);
+        _num_pins = std::move(temp._num_pins);
+        _netlist  = std::move(temp._netlist);
+
+        return *this;
     }
 
     void TplNets::clear()
     {
-        netlist.clear();
-        num_nets = 0;
-        num_pins = 0;
+        _netlist.clear();
+
+        _num_nets = 0;
+        _num_pins = 0;
     }
 
     TplDB* TplDB::_instance = NULL;
@@ -79,166 +176,34 @@ namespace tpl {
         return _instance;
     }
 
-    //////////////////////Query Iterface///////////////////////
-    const double &TplDB::get_chip_width()  const
+    void TplDB::destroy_db()
     {
-        return _chip_width;
+        delete _instance;
+        _instance = NULL;
     }
-
-    const double &TplDB::get_chip_height() const
-    {
-        return _chip_height;
-    }
-
-    TplModule TplDB::get_module(const std::string &id) const
-    {
-        size_t idx = _module_id_index_map.at(id);
-        return _modules[idx];
-    }
-
-    size_t TplDB::get_module_index(const std::string &id) const
-    {
-        return _module_id_index_map.at(id);
-    }
-
-    unsigned int TplDB::get_number_of_free_modules() const
-    {
-        return _modules.num_free;
-    }
-
-    bool TplDB::is_module_fixed(const std::string &id) const
-    {
-        return _modules.flgs[_module_id_index_map.at(id)];
-    }
-    //////////////////////Query Iterface///////////////////////
-    
-    //////////////////////////////////Modification Iterface///////////////////////////////////
-    void TplDB::update_free_module_position(const std::vector<double> &xs, const std::vector<double> &ys)
-    {
-        _modules.set_free_module_coordinates(xs, ys);
-    }
-    //////////////////////////////////Modification Iterface///////////////////////////////////
     
     //////////////////////////////////Helper Functions///////////////////////////////////
     bool TplDB::load_circuit(const char *path)
     {
-        using namespace thueda;
-
         try {
             boost::filesystem::path   benchmark_path(path);
             _benchmark_name = benchmark_path.filename().string();
 
-            string storage;
-            string::const_iterator iter, end;
-
-            //parse .nodes file
+            //load modules
             boost::filesystem::path node_file_path(benchmark_path);
             node_file_path /= _benchmark_name + ".nodes";
-            read_file(node_file_path.c_str(), storage);
-
-            iter = storage.begin();
-            end  = storage.end();
-
-            BookshelfNodes bnodes;
-            parse_bookshelf_node(iter, end, bnodes); 
-
-            //parse .pl file
             boost::filesystem::path pl_file_path(benchmark_path);
             pl_file_path /= _benchmark_name + ".pl";
-            read_file(pl_file_path.c_str(), storage);
 
-            iter = storage.begin();
-            end  = storage.end();
+            initialize_modules(node_file_path.c_str(), pl_file_path.c_str());
 
-            BookshelfPls bpls;
-            parse_bookshelf_pl(iter, end, bpls); 
-
-            //parse .nets file
+            //load nets
             boost::filesystem::path net_file_path(benchmark_path);
             net_file_path /= _benchmark_name + ".nets";
-            read_file(net_file_path.c_str(), storage);
 
-            iter = storage.begin();
-            end  = storage.end();
+            initialize_nets(net_file_path.c_str());
 
-            BookshelfNets bnets;
-            parse_bookshelf_net(iter, end, bnets); 
-
-            //clear old circuit data
-            _modules.clear();
-            _nets.clear();
-
-
-            //filling modules
-            _modules.num_nodes = bnodes.num_nodes;
-            _modules.num_free  = bnodes.num_nodes - bnodes.num_terminals;
-
-            deque<Id>         tids;
-            deque<Coordinate> txcs, tycs;
-            deque<Length>     twds, thts;
-            deque<bool>      tflgs;
-            size_t cur_terminal_idx = _modules.num_free;
-            for(size_t i=0; i<bnodes.num_nodes; ++i) {
-
-                const BookshelfNode &bnode = bnodes.data[i];
-                const BookshelfPl   &bpl   = bpls.data[i];
-
-#ifndef NDEBUG
-                assert( bnode.id == bpl.id );
-#endif
-
-                if( bnode.fixed ) {
-                    _module_id_index_map.insert( make_pair(bnode.id, cur_terminal_idx++) );
-                    
-                    tids.push_back(bnode.id);
-                    txcs.push_back(bpl.x);
-                    tycs.push_back(bpl.y);
-                    twds.push_back(bnode.width);
-                    thts.push_back(bnode.height);
-                    tflgs.push_back(bnode.fixed);
-
-                } else {
-                    _module_id_index_map.insert( make_pair(bnode.id, _modules.ids.size()) );
-
-                    _modules.ids.push_back(bnode.id);
-                    _modules.xcs.push_back(bpl.x);
-                    _modules.ycs.push_back(bpl.y);
-                    _modules.wds.push_back(bnode.width);
-                    _modules.hts.push_back(bnode.height);
-                    _modules.flgs.push_back(bnode.fixed);
-                }
-
-                //update chip width and height
-                double right_border = bpl.x + bnode.width; 
-                if(right_border>_chip_width) _chip_width  = right_border;
-                double top_border = bpl.y + bnode.height; 
-                if(top_border>_chip_height) _chip_height = top_border;
-            }
-
-            _modules.ids.insert( _modules.ids.end(),  tids.begin(),  tids.end() );
-            _modules.xcs.insert( _modules.xcs.end(),  txcs.begin(),  txcs.end() );
-            _modules.ycs.insert( _modules.ycs.end(),  tycs.begin(),  tycs.end() );
-            _modules.wds.insert( _modules.wds.end(),  twds.begin(),  twds.end() );
-            _modules.hts.insert( _modules.hts.end(),  thts.begin(),  thts.end() );
-            _modules.flgs.insert(_modules.flgs.end(), tflgs.begin(), tflgs.end());
-            //end filling modules
-
-            //filling nets and pins
-            _nets.num_nets = bnets.num_nets;
-            _nets.num_pins = bnets.num_pins;
-
-            for(vector<BookshelfNet>::iterator nit=bnets.data.begin(); nit!=bnets.data.end(); ++nit) {
-                TplNet net;
-                net.id     = nit->id;
-                net.degree = nit->degree;
-                for(vector<BookshelfPin>::iterator pit=nit->pins.begin(); pit!=nit->pins.end(); ++pit) {
-                    net.pins.push_back(TplPin(pit->id, pit->dx, pit->dy));
-                }
-                _nets.netlist.push_back(net);
-            }
-            //end filling nets and pins
-
-            _grid_size = 100;
+            initialize_grid_size();
 
             return true;
         } catch(...) {
@@ -251,7 +216,7 @@ namespace tpl {
         static int version = 0;
 
         BookshelfPls bpls;
-        _modules.get_bookshelf_pls(bpls);
+        modules.get_bookshelf_pls(bpls);
 
         string out_file_name = _benchmark_name + string("_") + boost::lexical_cast<string>(version++) + ".pl";
 
@@ -260,12 +225,8 @@ namespace tpl {
 
         generate_bookshelf_pl(ositer, bpls); 
     }
-    //////////////////////////////////Helper Functions///////////////////////////////////
     
     //private routines
-    TplDB::TplDB()
-    {
-    }
 
     bool TplDB::read_file(const char *file_name, std::string &storage)
     {
@@ -282,6 +243,56 @@ namespace tpl {
         return in.good();
     }//end TplDB::read_file
 
+    void TplDB::initialize_modules(const char *node_file, const char *pl_file)
+    {
+        modules.clear();
+
+        string storage;
+        string::const_iterator iter, end;
+
+        //process .nodes file
+        read_file(node_file, storage);
+
+        iter = storage.begin();
+        end  = storage.end();
+
+        BookshelfNodes bnodes;
+        parse_bookshelf_node(iter, end, bnodes); 
+
+        //process .pl file
+        read_file(pl_file, storage);
+
+        iter = storage.begin();
+        end  = storage.end();
+
+        BookshelfPls bpls;
+        parse_bookshelf_pl(iter, end, bpls); 
+
+        modules = std::move( TplModules(bnodes, bpls) );
+    }
+
+    void TplDB::initialize_nets(const char *net_file)
+    {
+        nets.clear();
+
+        string storage;
+        string::const_iterator iter, end;
+
+        read_file(net_file, storage);
+
+        iter = storage.begin();
+        end  = storage.end();
+
+        BookshelfNets bnets;
+        parse_bookshelf_net(iter, end, bnets); 
+
+        nets = std::move( TplNets(bnets) );
+    }
+
+    void TplDB::initialize_grid_size()
+    {
+        _grid_size = 10;
+    }
 
 }//end namespace tpl
 

@@ -10,7 +10,6 @@
 #include <Eigen/Sparse>
 #include <Eigen/IterativeLinearSolvers>
 
-
 namespace tpl {
     using namespace std;
 
@@ -28,15 +27,13 @@ namespace tpl {
     {
         vector<double> x_target, y_target;
 
-        for(size_t i=0; i<10; ++i) {
+        for(size_t i=0; i<2; ++i) {
             compute_net_force_target(x_target, y_target);
-            db.update_free_module_position(x_target, y_target);
+            pdb.modules.set_free_module_coordinates(x_target, y_target);
 
             x_target.clear();
             y_target.clear();
         }
-
-        db.generate_placement_snapshot();
     }//end TplAlgorithm::initial_placement
     
     void TplAlgorithm::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
@@ -48,7 +45,7 @@ namespace tpl {
 
         //compute net weight for each net
         NetWeight x_net_weight, y_net_weight;
-        for(TplDB::net_iterator nit=db.net_begin(); nit!=db.net_end(); ++nit) {
+        for(TplNets::net_iterator nit=pdb.nets.net_begin(); nit!=pdb.nets.net_end(); ++nit) {
             compute_net_weight(nit, x_net_weight, y_net_weight);
         }
 
@@ -57,18 +54,18 @@ namespace tpl {
     }//end TplAlgorithm::compute_net_force_target
 
 
-    void TplAlgorithm::compute_net_weight(const TplDB::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
+    void TplAlgorithm::compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
     {
         //define static data
         static vector<string> ids;
         static vector<double> xs, ys;
-        static double xmin=db.get_chip_width(), xmax=-1, ymin=db.get_chip_height(), ymax=-1;
+        static double xmin=pdb.modules.chip_width(), xmax=-1, ymin=pdb.modules.chip_height(), ymax=-1;
         static size_t xmin_idx, xmax_idx, ymin_idx, ymax_idx;
 
         //initilize static data
         size_t i=0;
-        for(TplDB::pin_iterator pit=db.pin_begin(nit); pit!=db.pin_end(nit); ++pit) {
-            TplModule module =  db.get_module(pit->id);
+        for(TplNets::pin_iterator pit=pdb.nets.pin_begin(nit); pit!=pdb.nets.pin_end(nit); ++pit) {
+            TplModule module =  pdb.modules.module(pit->id);
             ids.push_back( pit->id );
 
             if       (module.x < xmin) {
@@ -100,9 +97,9 @@ namespace tpl {
         ids.clear();
         xs.clear();
         ys.clear();
-        xmin=db.get_chip_width(); 
+        xmin=pdb.modules.chip_width(); 
         xmax=-1; 
-        ymin=db.get_chip_height(); 
+        ymin=pdb.modules.chip_height(); 
         ymax=-1;
     }//end TplAlgorithm::compute_net_weight
 
@@ -115,7 +112,7 @@ namespace tpl {
 #endif
 
         //define matrix and vector
-        unsigned int num_free = db.get_number_of_free_modules();
+        unsigned int num_free = pdb.modules.num_free();
         SpMat C(num_free, num_free);
         VectorXd d(num_free); 
         d = VectorXd::Zero(num_free);
@@ -130,16 +127,16 @@ namespace tpl {
         for(NetWeight::const_iterator it=net_weight.begin(); it!=net_weight.end(); ++it) {
             id1 = it->first.first;
             id2 = it->first.second;
-            idx1    = db.get_module_index(id1);
-            idx2    = db.get_module_index(id2);
+            idx1    = pdb.modules.module_index(id1);
+            idx2    = pdb.modules.module_index(id2);
             weight = it->second;
 
-            if(db.is_module_fixed(id1) && db.is_module_fixed(id2)) {
+            if(pdb.modules.is_module_fixed(id1) && pdb.modules.is_module_fixed(id2)) {
                 continue;
-            } else if(db.is_module_fixed(id1)) {
+            } else if(pdb.modules.is_module_fixed(id1)) {
                 nw[make_pair(idx2, idx2)] += weight;
                 d(idx2)       -= weight;
-            } else if(db.is_module_fixed(id2)) {
+            } else if(pdb.modules.is_module_fixed(id2)) {
                 nw[make_pair(idx1, idx1)] += weight;
                 d(idx1)       -= weight;
             } else {
