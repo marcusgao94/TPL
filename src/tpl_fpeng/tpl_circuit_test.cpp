@@ -17,24 +17,77 @@
 using namespace std;
 using namespace tpl;
 
-SCENARIO("Test load_circuit", "[case 1]") {
+#define db (*tpl::TplDB::db())
 
-    GIVEN("A test case file path") {
+SCENARIO("adaptec1", "[adaptec1]") {
+
+    GIVEN("A circuit adaptec1") {
         char path[200];
         char *home;
         home = std::getenv("HOME");
         std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1");
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec1");
 
-        string _path(path);
+        bool load_status = db.load_circuit(path);
 
-        WHEN("we load a circuit") {
-            bool ret = TplDB::db()->load_circuit(_path);
-            THEN("a circuit's information is loaded") {
-                REQUIRE(ret == true);
-            }
-        }
-    }//end GIVEN
+        REQUIRE(load_status == true);
+        REQUIRE(db.get_chip_width()  == 11589);
+        REQUIRE(db.get_chip_height() == 11589);
+        REQUIRE(db.get_number_of_free_modules() == 210904);
+    }
+}//end adaptec1
 
-}//end SCENARIO
+SCENARIO("adaptec2", "[adaptec2]") {
+
+    GIVEN("A circuit adaptec2") {
+        char path[200];
+        char *home;
+        home = std::getenv("HOME");
+        std::strcpy(path, home);
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec2");
+
+        bool load_status = db.load_circuit(path);
+
+        REQUIRE(load_status == true);
+        REQUIRE(db.get_chip_width()  == 15244);
+        REQUIRE(db.get_chip_height() == 15244);
+        REQUIRE(db.get_number_of_free_modules() == 254457);
+    }
+}//end adaptec2
+
+SCENARIO("adaptec3", "[adaptec3]") {
+
+    GIVEN("A circuit adaptec3") {
+        char path[200];
+        char *home;
+        home = std::getenv("HOME");
+        std::strcpy(path, home);
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec3");
+
+        bool load_status = db.load_circuit(path);
+
+        REQUIRE(load_status == true);
+        REQUIRE(db.get_chip_width()  == 23190);
+        REQUIRE(db.get_chip_height() == 23386);
+        REQUIRE(db.get_number_of_free_modules() == 450927);
+    }
+}//end adaptec3
+
+SCENARIO("adaptec4", "[adaptec4]") {
+
+    GIVEN("Test case adaptec4") {
+        char path[200];
+        char *home;
+        home = std::getenv("HOME");
+        std::strcpy(path, home);
+        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec4");
+
+        bool load_status = db.load_circuit(path);
+
+        REQUIRE(load_status == true);
+        REQUIRE(db.get_chip_width()  == 23226);
+        REQUIRE(db.get_chip_height() == 23386);
+        REQUIRE(db.get_number_of_free_modules() == 494716);
+    }
+}//end adaptec4
 

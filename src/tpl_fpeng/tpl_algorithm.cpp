@@ -1,16 +1,15 @@
 #include "tpl_algorithm.h"
 
+#include "tpl_circuit.h"
+
 #include <cassert>
 #include <fstream>
 #include <iterator>
 #include <utility>
 
-#include <boost/filesystem.hpp>
-
 #include <Eigen/Sparse>
 #include <Eigen/IterativeLinearSolvers>
 
-#include "tpl_circuit.h"
 
 namespace tpl {
     using namespace std;
@@ -18,13 +17,14 @@ namespace tpl {
     typedef Eigen::SparseMatrix<double> SpMat;
     typedef Eigen::Triplet<double>     SpElem;
     typedef Eigen::ConjugateGradient<SpMat> CGSolver;
+    typedef Eigen::SimplicialLLT<SpMat> LLTSolver;
     using Eigen::VectorXd;
 
     TplAlgorithm::TplAlgorithm()
     {
     }
 
-    void TplAlgorithm::initial_placement()
+    void TplAlgorithm::make_initial_placement()
     {
         vector<double> x_target, y_target;
 
@@ -155,15 +155,12 @@ namespace tpl {
         C.setFromTriplets(coefficients.begin(), coefficients.end());
         d *= -1;
 
-        cout << "Solving linear problem." << endl;
+        //solve linear problem using a LLT solver
+        LLTSolver llt;
+        VectorXd eigen_target = llt.compute(C).solve(d);
 
-        //solve linear problem using ConjugateGradient method
-        CGSolver cg;
-        cg.compute(C);
-        VectorXd eigen_target = cg.solve(d);
         target.resize(eigen_target.size());
         VectorXd::Map(&target[0], eigen_target.size()) = eigen_target;
-        cout << "Linear problem solved." << endl;
     }//end TplAlgorithm::compute_net_force_target
 
     void TplAlgorithm::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
@@ -191,17 +188,17 @@ namespace tpl {
             }
 
 #ifndef NDEBUG
-            assert( net_weight.count(    make_pair(ids[cur_idx], ids[min_idx]) ) == 0 );
+            //assert( net_weight.count(    make_pair(ids[cur_idx], ids[min_idx]) ) == 0 );
 #endif
-            net_weight.insert( make_pair(make_pair(ids[cur_idx], ids[min_idx]), min_weight) );
+            net_weight[make_pair(ids[cur_idx], ids[min_idx])] += min_weight;
 #ifndef NDEBUG
-            assert( net_weight.count(    make_pair(ids[cur_idx], ids[max_idx]) ) == 0 );
+            //assert( net_weight.count(    make_pair(ids[cur_idx], ids[max_idx]) ) == 0 );
 #endif
-            net_weight.insert( make_pair(make_pair(ids[cur_idx], ids[max_idx]), max_weight) );
-
-            double min_max_weight = 2.0/(degree-1)*(max-min);
-            net_weight.insert( make_pair(make_pair(ids[min_idx], ids[max_idx]), min_max_weight) );
+            net_weight[make_pair(ids[cur_idx], ids[max_idx])] += max_weight;
         }
+
+        double min_max_weight = 2.0/(degree-1)*(max-min);
+        net_weight[make_pair(ids[min_idx], ids[max_idx])] += min_max_weight;
     }//end TplAlgorithm::compute_net_weight
 
 }//end namespace tpl

@@ -199,7 +199,7 @@ namespace tpl {
              * \param path The benchmark file's directory path.
              * \return A boolean variable indicating wether the operation is success.
              */
-            bool load_circuit(const std::string &_path);
+            bool load_circuit(const char *path);
             //! Take a snapshot of the current placement.
             void generate_placement_snapshot() const;
             //////////////////////////////////Helper Functions///////////////////////////////////

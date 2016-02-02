@@ -1,8 +1,8 @@
-include_directories(
-    ${PROJECT_SOURCE_DIR}/src/bookshelf
-    ${PROJECT_SOURCE_DIR}/src/tpl_fpeng
-    ${Boost_INCLUDE_DIRS}
-    )
+#include_directories(
+#    ${PROJECT_SOURCE_DIR}/src/bookshelf
+#    ${PROJECT_SOURCE_DIR}/src/tpl_fpeng
+#    ${Boost_INCLUDE_DIRS}
+#    )
 
 #libraries
 set(TPL_LIB_SRC tpl_circuit.cpp tpl_algorithm.cpp)

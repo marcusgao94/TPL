@@ -18,25 +18,22 @@
 using namespace std;
 using namespace tpl;
 
-/*
-SCENARIO("Test compute_net_weight", "[case 1]") {
+SCENARIO("adaptec1", "[adaptec1]") {
 
-    GIVEN("A circuit bigblue1 and a algorithm solver") {
+    GIVEN("A circuit adaptec1") {
         char path[200];
         char *home;
         home = std::getenv("HOME");
         std::strcpy(path, home);
         std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1");
 
-        string _path(path);
-        cout << _path << endl;
-        db.load_circuit(_path);
+        db.load_circuit(path);
 
         TplAlgorithm alg;
 
-        WHEN("we compute net weight") {
+        WHEN("we compute the first net's weight") {
             TplDB::net_iterator nit = db.net_begin();
-            cout << nit->pins.size();
+
             TplAlgorithm::NetWeight x_net_weight, y_net_weight;
             alg.compute_net_weight(nit, x_net_weight, y_net_weight);
 
@@ -45,9 +42,28 @@ SCENARIO("Test compute_net_weight", "[case 1]") {
                 REQUIRE( y_net_weight.size() != 0);
             }
         }
-    }//end WHEN
+
+        WHEN("we compute net force target") {
+            vector<double> x_target, y_target;
+            alg.compute_net_force_target(x_target, y_target);
+
+            THEN("the targets are not empty") {
+                REQUIRE( x_target.size() != 0);
+                REQUIRE( y_target.size() != 0);
+            }
+        }
+
+        WHEN("we make the initial placement") {
+            alg.make_initial_placement();
+
+            THEN("the free modules' coordinates will be chaned") {
+                db.generate_placement_snapshot();
+            }
+        }
+    }
 }//end SCENARIO
 
+/*
 SCENARIO("Test compute_net_force_target", "[case 2]") {
 
     GIVEN("A circuit bigblue1 and a algorithm solver") {
@@ -73,7 +89,6 @@ SCENARIO("Test compute_net_force_target", "[case 2]") {
     }//end GIVEN
 
 }//end SCENARIO
-*/
 
 SCENARIO("Test initial_placement", "[case 3]") {
 
@@ -85,7 +100,7 @@ SCENARIO("Test initial_placement", "[case 3]") {
         std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1");
 
         string _path(path);
-        db.load_circuit(_path);
+        db.load_circuit(_path.c_str());
 
         TplAlgorithm alg;
 
@@ -98,4 +113,4 @@ SCENARIO("Test initial_placement", "[case 3]") {
     }//end GIVEN
 
 }//end SCENARIO
-
+*/

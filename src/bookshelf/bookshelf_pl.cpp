@@ -10,12 +10,14 @@
 
 namespace thueda {
 
-    BookshelfPl::BookshelfPl() : id(""), x(0), y(0), fixed(false) {}
+    //BookshelfPl::BookshelfPl() : id(""), x(0), y(0), fixed(false) {}
 
+    /*
     BookshelfPl::BookshelfPl(const Id &_id, const Coordinate &_x, const Coordinate &_y, const bool &_fixed) :
         id(_id), x(_x), y(_y), fixed(_fixed)
     {
     }
+    */
 
     std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl) 
     {

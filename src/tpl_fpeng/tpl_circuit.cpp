@@ -54,7 +54,7 @@ namespace tpl {
 #endif
 
         for(size_t i=0; i<num_nodes; ++i) {
-            bpls.data.push_back(BookshelfPl(ids[i], xcs[i], ycs[i], flgs[i]));
+            bpls.data.push_back( BookshelfPl({ids[i], xcs[i], ycs[i], flgs[i]}) );
         }
     }
 
@@ -120,20 +120,19 @@ namespace tpl {
     //////////////////////////////////Modification Iterface///////////////////////////////////
     
     //////////////////////////////////Helper Functions///////////////////////////////////
-    bool TplDB::load_circuit(const std::string &_path)
+    bool TplDB::load_circuit(const char *path)
     {
-        using namespace boost::filesystem;
         using namespace thueda;
 
         try {
-            path   benchmark_path(_path);
+            boost::filesystem::path   benchmark_path(path);
             _benchmark_name = benchmark_path.filename().string();
 
             string storage;
             string::const_iterator iter, end;
 
             //parse .nodes file
-            path node_file_path(benchmark_path);
+            boost::filesystem::path node_file_path(benchmark_path);
             node_file_path /= _benchmark_name + ".nodes";
             read_file(node_file_path.c_str(), storage);
 
@@ -144,7 +143,7 @@ namespace tpl {
             parse_bookshelf_node(iter, end, bnodes); 
 
             //parse .pl file
-            path pl_file_path(benchmark_path);
+            boost::filesystem::path pl_file_path(benchmark_path);
             pl_file_path /= _benchmark_name + ".pl";
             read_file(pl_file_path.c_str(), storage);
 
@@ -155,7 +154,7 @@ namespace tpl {
             parse_bookshelf_pl(iter, end, bpls); 
 
             //parse .nets file
-            path net_file_path(benchmark_path);
+            boost::filesystem::path net_file_path(benchmark_path);
             net_file_path /= _benchmark_name + ".nets";
             read_file(net_file_path.c_str(), storage);
 

@@ -37,7 +37,7 @@ namespace tpl {
             //! Use bound2bound net model to initialize the module placement.
             /*!
              */
-            void initial_placement();
+            void make_initial_placement();
 
             //! Compute all the free modules' net force target position.
             /*!
