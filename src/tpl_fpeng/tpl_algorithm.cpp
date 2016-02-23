@@ -1,250 +1,72 @@
 #include "tpl_algorithm.h"
 
+#include "tpl_circuit.h"
+
 #include <cassert>
 #include <fstream>
 #include <iterator>
 #include <utility>
 
-#include <boost/filesystem.hpp>
-
 #include <Eigen/Sparse>
-
-#include "../bookshelf/bookshelf_node_parser.hpp"
-#include "../bookshelf/bookshelf_pl_parser.hpp"
-#include "../bookshelf/bookshelf_net_parser.hpp"
-
+#include <Eigen/IterativeLinearSolvers>
 
 namespace tpl {
-    using std::vector;
-    using std::list;
-    using std::deque;
-    using std::map;
-    using std::pair;
-    using std::string;
+    using namespace std;
 
     typedef Eigen::SparseMatrix<double> SpMat;
+    typedef Eigen::Triplet<double>     SpElem;
+    typedef Eigen::ConjugateGradient<SpMat> CGSolver;
+    typedef Eigen::SimplicialLLT<SpMat> LLTSolver;
+    using Eigen::VectorXd;
 
-    TplAlgorithm::TplAlgorithm(): CHIP_WIDTH(0), CHIP_HEIGHT(0), NUM_FREE_MODULE(0), GRID_SIZE(0)
+    TplAlgorithm::TplAlgorithm()
     {
     }
 
-    bool TplAlgorithm::load_circuit(const std::string &_path)
+    void TplAlgorithm::make_initial_placement()
     {
-        using namespace boost::filesystem;
-        using namespace thueda;
+        vector<double> x_target, y_target;
 
-        try {
-            path   benchmark_path(_path);
-            string benchmark_name = benchmark_path.filename().string();
+        for(size_t i=0; i<2; ++i) {
+            compute_net_force_target(x_target, y_target);
+            pdb.modules.set_free_module_coordinates(x_target, y_target);
 
-            string storage;
-            string::const_iterator iter, end;
-
-            //parse .nodes file
-            path node_file_path(benchmark_path);
-            node_file_path /= benchmark_name + ".nodes";
-            read_file(node_file_path.c_str(), storage);
-
-            iter = storage.begin();
-            end  = storage.end();
-
-            BookshelfNodes nodes;
-            parse_bookshelf_node(iter, end, nodes); 
-
-            //parse .pl file
-            path pl_file_path(benchmark_path);
-            pl_file_path /= benchmark_name + ".pl";
-            read_file(pl_file_path.c_str(), storage);
-
-            iter = storage.begin();
-            end  = storage.end();
-
-            BookshelfPls pls;
-            parse_bookshelf_pl(iter, end, pls); 
-
-            //parse .nets file
-            path net_file_path(benchmark_path);
-            net_file_path /= benchmark_name + ".nets";
-            read_file(net_file_path.c_str(), storage);
-
-            iter = storage.begin();
-            end  = storage.end();
-
-            BookshelfNets nets;
-            parse_bookshelf_net(iter, end, nets); 
-
-            //clear old circuit data
-            MODULES.clear();
-            NETS.clear();
-
-            NUM_FREE_MODULE = nodes.num_nodes-nodes.num_terminals;
-
-            //scanning nodes
-            deque<Id>         tids;
-            deque<Coordinate> txcs, tycs;
-            deque<Length>     twds, thts;
-            deque<bool>      tflgs;
-            size_t cur_terminal_idx=NUM_FREE_MODULE;
-            for(size_t i=0; i<nodes.num_nodes; ++i) {
-
-                const BookshelfNode &node = nodes.data[i];
-                const BookshelfPl   &pl   = pls.data[i];
-                assert( node.id == pl.id );
-
-                if( node.fixed ) {
-                    MODULE_ID_INDEX_MAP.insert( make_pair(node.id, cur_terminal_idx++) );
-                    
-                    tids.push_back(node.id);
-                    txcs.push_back(pl.x);
-                    tycs.push_back(pl.y);
-                    twds.push_back(node.width);
-                    thts.push_back(node.height);
-                    tflgs.push_back(node.fixed);
-
-                } else {
-                    MODULE_ID_INDEX_MAP.insert( make_pair(node.id, MODULES.ids.size()) );
-
-                    MODULES.ids.push_back(node.id);
-                    MODULES.xcs.push_back(pl.x);
-                    MODULES.ycs.push_back(pl.y);
-                    MODULES.wds.push_back(node.width);
-                    MODULES.hts.push_back(node.height);
-                    MODULES.flgs.push_back(node.fixed);
-                }
-
-                //update chip width and height
-                double right_border = pl.x + node.width; 
-                if(right_border>CHIP_WIDTH) CHIP_WIDTH  = right_border;
-                double top_border = pl.y + node.height; 
-                if(top_border>CHIP_HEIGHT) CHIP_HEIGHT = top_border;
-            }
-
-            MODULES.ids.insert( MODULES.ids.end(),  tids.begin(),  tids.end() );
-            MODULES.xcs.insert( MODULES.xcs.end(),  txcs.begin(),  txcs.end() );
-            MODULES.ycs.insert( MODULES.ycs.end(),  tycs.begin(),  tycs.end() );
-            MODULES.wds.insert( MODULES.wds.end(),  twds.begin(),  twds.end() );
-            MODULES.hts.insert( MODULES.hts.end(),  thts.begin(),  thts.end() );
-            MODULES.flgs.insert(MODULES.flgs.end(), tflgs.begin(), tflgs.end());
-            //end scanning nodes
-
-            //scanning nets and pins
-            map<string, TplPin*> pin_add_map;
-            NETS.pinstore.reserve(nets.num_pins);
-            for(vector<BookshelfNet>::iterator nit=nets.data.begin(); nit!=nets.data.end(); ++nit) {
-                TplNet net;
-                net.id = nit->id;
-
-                for(vector<BookshelfPin>::iterator pit=nit->pins.begin(); pit!=nit->pins.end(); ++pit) {
-                    if( pin_add_map.count(pit->id) == 0 ) {
-                        TplPin pin;
-                        pin.id = pit->id;
-                        pin.dx = pit->dx;
-                        pin.dy = pit->dy;
-
-                        pin_add_map.insert( make_pair(pin.id, &NETS.pinstore+NETS.pinstore.size()) );
-                        NETS.pinstore.push_back(pin);
-                    }
-                    net.pins.push_back( pin_add_map[pit->id] );
-                }
-
-                NETS.netlist.push_back(net);
-            }
-            //end scanning nets and pins
-
-            GRID_SIZE = 100;
-
-            return true;
-        } catch(...) {
-            return false;
+            x_target.clear();
+            y_target.clear();
         }
-    }// TplAlgorithm::load_circuit
-
-    void TplAlgorithm::initial_placement()
-    {
-
-
     }//end TplAlgorithm::initial_placement
     
     void TplAlgorithm::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
     {
-        /*
-        MatrixXd Cx(NUM_FREE_MODULE, NUM_FREE_MODULE), Cy(NUM_FREE_MODULE, NUM_FREE_MODULE);
-        Cx = MatrixXd::Zero(NUM_FREE_MODULE, NUM_FREE_MODULE);
-        Cy = MatrixXd::Zero(NUM_FREE_MODULE, NUM_FREE_MODULE);
-        VectorXd dx(NUM_FREE_MODULE), dy(NUM_FREE_MODULE);
-        dx = VectorXd::Zero(NUM_FREE_MODULE);
-        dy = VectorXd::Zero(NUM_FREE_MODULE);
+#ifndef NDEBUG
+        assert( x_target.size() == 0 );
+        assert( y_target.size() == 0 );
+#endif
 
+        //compute net weight for each net
         NetWeight x_net_weight, y_net_weight;
-        for(vector<TplNet>::iterator nit=NETS.begin(); nit!=NETS.end(); ++nit) {
-            compute_current_net_weight(*nit, x_net_weight, y_net_weight);
+        for(TplNets::net_iterator nit=pdb.nets.net_begin(); nit!=pdb.nets.net_end(); ++nit) {
+            compute_net_weight(nit, x_net_weight, y_net_weight);
         }
 
-        for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
-            const unsigned int &idx1   = MODULE_ID_INDEX_MAP[it->first.first ];
-            const unsigned int &idx2   = MODULE_ID_INDEX_MAP[it->first.second];
-            const double       &weight = it->second;
-
-            if(MODULES[idx1].fixed && MODULES[idx2].fixed) {
-                continue;
-            } else if(MODULES[idx1].fixed) {
-                Cx(idx2, idx2) += weight;
-                dx(idx2)       -= weight;
-            } else if(MODULES[idx2].fixed) {
-                Cx(idx1, idx1) += weight;
-                dx(idx1)       -= weight;
-            } else {
-                Cx(idx1, idx1) += weight;
-                Cx(idx2, idx2) += weight;
-                Cx(idx1, idx2) -= weight;
-                Cx(idx2, idx1) -= weight;
-            }
-        }
-
-        for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
-            const unsigned int &idx1   = MODULE_ID_INDEX_MAP[it->first.first ];
-            const unsigned int &idx2   = MODULE_ID_INDEX_MAP[it->first.second];
-            const double       &weight = it->second;
-
-            if(MODULES[idx1].fixed && MODULES[idx2].fixed) {
-                continue;
-            } else if(MODULES[idx1].fixed) {
-                Cy(idx2, idx2) += weight;
-                dy(idx2)       -= weight;
-            } else if(MODULES[idx2].fixed) {
-                Cy(idx1, idx1) += weight;
-                dy(idx1)       -= weight;
-            } else {
-                Cy(idx1, idx1) += weight;
-                Cy(idx2, idx2) += weight;
-                Cy(idx1, idx2) -= weight;
-                Cy(idx2, idx1) -= weight;
-            }
-        }
-
-        VectorXd eigen_x_target = Cx.llt().solve(dx);
-        x_target.resize(eigen_x_target.size());
-        VectorXd::Map(&x_target[0], eigen_x_target.size()) = eigen_x_target;
-
-        VectorXd eigen_y_target = Cy.llt().solve(dy);
-        y_target.resize(eigen_y_target.size());
-        VectorXd::Map(&y_target[0], eigen_y_target.size()) = eigen_y_target;
-        */
+        compute_net_force_target(x_net_weight, x_target);
+        compute_net_force_target(y_net_weight, y_target);
     }//end TplAlgorithm::compute_net_force_target
 
 
-    void TplAlgorithm::compute_net_weight(const TplNet &net, NetWeight &x_net_weight, NetWeight &y_net_weight)
+    void TplAlgorithm::compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
     {
-        //define aliases
-        const boost::ptr_vector<TplPin> &pins = net.pins;
-        const unsigned int &degree = net.pins.size();
+        //define static data
+        static vector<string> ids;
+        static vector<double> xs, ys;
+        static double xmin=pdb.modules.chip_width(), xmax=-1, ymin=pdb.modules.chip_height(), ymax=-1;
+        static size_t xmin_idx, xmax_idx, ymin_idx, ymax_idx;
 
-        //prepare data
-        double xmin=CHIP_WIDTH, xmax=-1, ymin=CHIP_HEIGHT, ymax=-1;
-        size_t xmin_idx, xmax_idx, ymin_idx, ymax_idx;
-        vector<double> xs, ys;
-        for(size_t i=0; i<degree; ++i) {
-            TplModule &module = MODULES[ MODULE_ID_INDEX_MAP[pins[i].id] ];
+        //initilize static data
+        size_t i=0;
+        for(TplNets::pin_iterator pit=pdb.nets.pin_begin(nit); pit!=pdb.nets.pin_end(nit); ++pit) {
+            TplModule module =  pdb.modules.module(pit->id);
+            ids.push_back( pit->id );
 
             if       (module.x < xmin) {
                 xmin = module.x;
@@ -263,75 +85,118 @@ namespace tpl {
                 ymax_idx = i;
             }
             ys.push_back(module.y);
+
+            ++i; 
         }
 
-        double min_weight, max_weight;
-        size_t cur_idx;
-        //scan xs
-        for(cur_idx=0; cur_idx<degree; ++cur_idx) {
-            if(cur_idx == xmin_idx || cur_idx == xmax_idx ) continue;
+        //call private routine
+        compute_net_weight(ids, xs, xmin, xmax, xmin_idx, xmax_idx, x_net_weight);
+        compute_net_weight(ids, ys, ymin, ymax, ymin_idx, ymax_idx, y_net_weight);
 
-            if( xs[cur_idx] == xmin ) {
-                min_weight = 0;
-                max_weight = 2.0/(degree-1)*(xmax-xmin);
-            } else if( xs[cur_idx] == xmax ) {
-                min_weight = 2.0/(degree-1)*(xmax-xmin);
-                max_weight = 0;
-            } else {
-                min_weight = 2.0/(degree-1)*(xs[cur_idx]-xmin);
-                max_weight = 2.0/(degree-1)*(xmax-xs[cur_idx]);
-            }
-            assert( x_net_weight.count(    make_pair(pins[cur_idx].id, pins[xmin_idx].id) ) == 0 );
-            x_net_weight.insert( make_pair(make_pair(pins[cur_idx].id, pins[xmin_idx].id), min_weight) );
-            assert( x_net_weight.count(    make_pair(pins[cur_idx].id, pins[xmax_idx].id) ) == 0 );
-            x_net_weight.insert( make_pair(make_pair(pins[cur_idx].id, pins[xmax_idx].id), max_weight) );
-        }//end scan xs
-
-        //scan ys
-        for(cur_idx=0; cur_idx<degree; ++cur_idx) {
-            if(cur_idx == ymin_idx || cur_idx == ymax_idx ) continue;
-
-            if( ys[cur_idx] == ymin ) {
-                min_weight = 0;
-                max_weight = 2.0/(degree-1)*(ymax-ymin);
-            } else if( ys[cur_idx] == ymax ) {
-                min_weight = 2.0/(degree-1)*(ymax-ymin);
-                max_weight = 0;
-
-            } else {
-                min_weight = 2.0/(degree-1)*(ys[cur_idx]-ymin);
-                max_weight = 2.0/(degree-1)*(ymax-ys[cur_idx]);
-            }
-            assert( y_net_weight.count(    make_pair(pins[cur_idx].id, pins[ymin_idx].id) ) == 0 );
-            y_net_weight.insert( make_pair(make_pair(pins[cur_idx].id, pins[ymin_idx].id), min_weight) );
-            assert( y_net_weight.count(    make_pair(pins[cur_idx].id, pins[ymin_idx].id) ) == 0 );
-            y_net_weight.insert( make_pair(make_pair(pins[cur_idx].id, pins[ymax_idx].id), max_weight) );
-        }//end scan ys
-
-    }//end TplAlgorithm::get_current_net_weight
+        //restore static data
+        ids.clear();
+        xs.clear();
+        ys.clear();
+        xmin=pdb.modules.chip_width(); 
+        xmax=-1; 
+        ymin=pdb.modules.chip_height(); 
+        ymax=-1;
+    }//end TplAlgorithm::compute_net_weight
 
 
     //private routines
-    bool TplAlgorithm::read_file(const char *file_name, std::string &storage)
+    void TplAlgorithm::compute_net_force_target(const NetWeight &net_weight, std::vector<double> &target)
     {
-        using namespace std;
+#ifndef NDEBUG
+        assert( target.size() == 0 );
+#endif
 
-        ifstream in(file_name, ios_base::in);
-        in.unsetf(ios::skipws);
+        //define matrix and vector
+        unsigned int num_free = pdb.modules.num_free();
+        SpMat C(num_free, num_free);
+        VectorXd d(num_free); 
+        d = VectorXd::Zero(num_free);
 
-        storage.clear();
-        copy(istream_iterator<char>(in), istream_iterator<char>(), back_inserter(storage));
+        //prepare data for bound2bound model 
+        string id1, id2;
+        size_t idx1, idx2;
+        double weight;
+        map<pair<size_t, size_t>, double> nw;
+        vector<SpElem> coefficients;
 
-        in.close();
+        for(NetWeight::const_iterator it=net_weight.begin(); it!=net_weight.end(); ++it) {
+            id1 = it->first.first;
+            id2 = it->first.second;
+            idx1    = pdb.modules.module_index(id1);
+            idx2    = pdb.modules.module_index(id2);
+            weight = it->second;
 
-        return in.good();
-    }// TplAlgorithm::read_file
+            if(pdb.modules.is_module_fixed(id1) && pdb.modules.is_module_fixed(id2)) {
+                continue;
+            } else if(pdb.modules.is_module_fixed(id1)) {
+                nw[make_pair(idx2, idx2)] += weight;
+                d(idx2)       -= weight;
+            } else if(pdb.modules.is_module_fixed(id2)) {
+                nw[make_pair(idx1, idx1)] += weight;
+                d(idx1)       -= weight;
+            } else {
+                nw[make_pair(idx1, idx1)] += weight;
+                nw[make_pair(idx2, idx2)] += weight;
+                nw[make_pair(idx1, idx2)] -= weight;
+                nw[make_pair(idx2, idx1)] -= weight;
+            }
+        }
+        for(map<pair<size_t, size_t>, double>::iterator it=nw.begin(); it!=nw.end(); ++it) {
+            coefficients.push_back( SpElem(it->first.first, it->first.second, it->second) );
+        }
+        C.setFromTriplets(coefficients.begin(), coefficients.end());
+        d *= -1;
 
-    /*
-    void TplAlgorithm::compute_net_weight(const std::vector<double> &pos, NetWeight &net_weight)
+        //solve linear problem using a LLT solver
+        LLTSolver llt;
+        VectorXd eigen_target = llt.compute(C).solve(d);
+
+        target.resize(eigen_target.size());
+        VectorXd::Map(&target[0], eigen_target.size()) = eigen_target;
+    }//end TplAlgorithm::compute_net_force_target
+
+    void TplAlgorithm::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
+            const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
     {
-    }
-    */
+#ifndef NDEBUG
+        assert( ids.size() == coordinates.size() );
+#endif
+
+        const size_t &degree = ids.size();
+        double min_weight, max_weight;
+
+        for(size_t cur_idx=0; cur_idx<degree; ++cur_idx) {
+            if(cur_idx == min_idx || cur_idx == max_idx ) continue;
+
+            if( coordinates[cur_idx] == min ) {
+                min_weight = 0;
+                max_weight = 2.0/(degree-1)*(max-min);
+            } else if( coordinates[cur_idx] == max ) {
+                min_weight = 2.0/(degree-1)*(max-min);
+                max_weight = 0;
+            } else {
+                min_weight = 2.0/(degree-1)*(coordinates[cur_idx]-min);
+                max_weight = 2.0/(degree-1)*(max-coordinates[cur_idx]);
+            }
+
+#ifndef NDEBUG
+            //assert( net_weight.count(    make_pair(ids[cur_idx], ids[min_idx]) ) == 0 );
+#endif
+            net_weight[make_pair(ids[cur_idx], ids[min_idx])] += min_weight;
+#ifndef NDEBUG
+            //assert( net_weight.count(    make_pair(ids[cur_idx], ids[max_idx]) ) == 0 );
+#endif
+            net_weight[make_pair(ids[cur_idx], ids[max_idx])] += max_weight;
+        }
+
+        double min_max_weight = 2.0/(degree-1)*(max-min);
+        net_weight[make_pair(ids[min_idx], ids[max_idx])] += min_max_weight;
+    }//end TplAlgorithm::compute_net_weight
 
 }//end namespace tpl
 

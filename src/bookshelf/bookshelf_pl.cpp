@@ -10,17 +10,17 @@
 
 namespace thueda {
 
-    BookshelfPl::BookshelfPl() : id(""), x(0), y(0), fixed(false) {}
-
     std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl) 
     {
         using std::setw;
+        using std::fixed;
+        using std::setprecision;
 
         out << std::left
             << setw(8) << pl.id 
             << std::right
-            << setw(8) << pl.x
-            << setw(8) << pl.y 
+            << setprecision(10) << fixed << pl.x << "\t"
+            << setprecision(10) << fixed << pl.y << "\t"
             << "\t: N"; 
 
         if(pl.fixed) {
