@@ -1,4 +1,6 @@
 *.[oa]
 *~
+*.xml
+.DS_Store
 build/
 benchmark/
