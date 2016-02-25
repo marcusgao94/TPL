@@ -5,7 +5,7 @@
  */
 
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "../tpl/catch.hpp"
 
 #include <iostream>
 #include <string>
@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "tpl_algorithm.h"
+#include "tpl_algorithm_pf.h"
 
 using namespace std;
 using namespace tpl;
@@ -29,12 +29,12 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
         pdb.load_circuit(path);
 
-        TplAlgorithm alg;
+        TplAlgorithmPF alg;
 
         WHEN("we compute the first net's weight") {
             TplNets::net_iterator nit = pdb.nets.net_begin();
 
-            TplAlgorithm::NetWeight x_net_weight, y_net_weight;
+            NetWeight x_net_weight, y_net_weight;
             alg.compute_net_weight(nit, x_net_weight, y_net_weight);
 
             THEN("the net weight is not empty") {

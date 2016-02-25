@@ -1,29 +1,133 @@
-#include "tpl_algorithm.h"
+#include "tpl_algorithm_pf.h"
 
-#include "tpl_circuit.h"
+#include "../tpl/tpl_circuit.h"
 
 #include <cassert>
 #include <fstream>
 #include <iterator>
 #include <utility>
 
-#include <Eigen/Sparse>
-#include <Eigen/IterativeLinearSolvers>
 
 namespace tpl {
     using namespace std;
 
-    typedef Eigen::SparseMatrix<double> SpMat;
-    typedef Eigen::Triplet<double>     SpElem;
-    typedef Eigen::ConjugateGradient<SpMat> CGSolver;
-    typedef Eigen::SimplicialLLT<SpMat> LLTSolver;
-    using Eigen::VectorXd;
-
-    TplAlgorithm::TplAlgorithm()
+    TplChipGridPF::TplChipGridPF(double r1, double r2, unsigned int grid_size) :
+        _r1(r1), _r2(r2), _grid_size(grid_size), _bin_width(0), _bin_height(0)
     {
     }
 
-    void TplAlgorithm::make_initial_placement()
+    double TplChipGridPF::green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const
+    {
+#ifndef NDEBUG
+        assert(0 <= idx.first  && idx.first  < _grid_size);
+        assert(0 <= idx.second && idx.second < _grid_size);
+        assert(-_grid_size <= idx0.first  && idx0.first  < 2*_grid_size);
+        assert(-_grid_size <= idx0.second && idx0.second < 2*_grid_size);
+#endif
+        return _green_function.at(make_pair(idx, idx0));
+    }
+
+    double TplChipGridPF::power_density(int i, int j) const
+    {
+#ifndef NDEBUG
+        assert(-_grid_size <= i && i < 2*_grid_size);
+        assert(-_grid_size <= j && j < 2*_grid_size);
+#endif
+        int gsize = _grid_size;
+
+        int x_idx=i;
+        if(i<0) x_idx = -i + 1;
+        else if(i>=gsize) x_idx = -i + 2*gsize - 1;
+
+        int y_idx=j;
+        if(j<0) y_idx = -i + 1;
+        else if(j>=gsize) y_idx = -i + 2*gsize - 1;
+
+        return _power_density.at(x_idx).at(y_idx);
+
+    }
+
+    void TplChipGridPF::update_green_function(unsigned int grid_size)
+    {
+        _grid_size = grid_size;
+
+        _bin_width  = pdb.modules.chip_width()  / _grid_size;
+        _bin_height = pdb.modules.chip_height() / _grid_size;
+
+        _green_function.clear();
+        double distance = 0;
+        for(size_t i=0; i<grid_size; ++i) {
+            for(size_t j=0; i<grid_size; ++j) {
+                for(int i0=-grid_size; i0<2*grid_size; ++i0) {
+                    for(int j0=-grid_size; i0<2*grid_size; ++j0) {
+                        if(i==i0 && j==j0) continue;
+                        pair<int, int> idx  = make_pair(i, j);
+                        pair<int, int> idx0 = make_pair(i0, j0);
+
+                        distance = sqrt(pow(abs(i-i0)*_bin_width, 2) + pow(abs(j-j0)*_bin_height, 2));
+
+                        if(distance <= _r1) {
+                            _green_function[make_pair(idx, idx0)] = 1/distance;
+                        } else if( distance > _r2) {
+                            _green_function[make_pair(idx, idx0)] = 0;
+                        } else {
+                            _green_function[make_pair(idx, idx0)] = 0.6/sqrt(distance);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void TplChipGridPF::update_power_density()
+    {
+        _power_density.clear();
+        _power_density.reserve(_grid_size);
+        for(size_t i=0; i<_power_density.size(); ++i) {
+            _power_density[i].reserve(_grid_size);
+        }
+
+        int density_grid_size = _grid_size / 10;
+        double x_step = _bin_width  / 10;
+        double y_step = _bin_height / 10;
+
+        vector<vector<double> > power_density_grid(density_grid_size, vector<double>(density_grid_size, 0));
+
+        double x_orig = x_step / 2.0;
+        double y_orig = y_step / 2.0;
+        double x_cord = 0;
+        double y_cord = 0;
+        for(size_t i=0; i<_grid_size; ++i) {
+            for(size_t j=0; j<_grid_size; ++j) {
+                x_cord = x_orig + i*x_step;
+                y_cord = y_orig + j*y_step;
+
+                for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
+                    const TplModule &m = *it;
+                    if( m.x-m.width  <= x_cord && x_cord <= m.x+m.width &&
+                        m.y-m.height <= y_cord && y_cord <= m.y+m.height) {
+                        power_density_grid[i][j] += m.power_density;
+                    }
+                }
+            }
+        }
+
+        for(size_t i=0; i<_grid_size; ++i) {
+            for(size_t j=0; j<_grid_size; ++j) {
+                for(size_t x_idx = i*10; x_idx<i*10+10; ++x_idx) {
+                    for(size_t y_idx = j*10; y_idx<j*10+10; ++y_idx) {
+                        _power_density[i][j] += power_density_grid[x_idx][y_idx];
+                    }
+                }
+            }
+        }
+    }
+
+    TplAlgorithmPF::TplAlgorithmPF()
+    {
+    }
+
+    void TplAlgorithmPF::make_initial_placement()
     {
         vector<double> x_target, y_target;
 
@@ -34,9 +138,9 @@ namespace tpl {
             x_target.clear();
             y_target.clear();
         }
-    }//end TplAlgorithm::initial_placement
+    }//end TplAlgorithmPF::initial_placement
     
-    void TplAlgorithm::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
+    void TplAlgorithmPF::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
     {
 #ifndef NDEBUG
         assert( x_target.size() == 0 );
@@ -51,10 +155,10 @@ namespace tpl {
 
         compute_net_force_target(x_net_weight, x_target);
         compute_net_force_target(y_net_weight, y_target);
-    }//end TplAlgorithm::compute_net_force_target
+    }//end TplAlgorithmPF::compute_net_force_target
 
 
-    void TplAlgorithm::compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
+    void TplAlgorithmPF::compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
     {
         //define static data
         static vector<string> ids;
@@ -101,11 +205,16 @@ namespace tpl {
         xmax=-1; 
         ymin=pdb.modules.chip_height(); 
         ymax=-1;
-    }//end TplAlgorithm::compute_net_weight
+    }//end TplAlgorithmPF::compute_net_weight
 
 
     //private routines
-    void TplAlgorithm::compute_net_force_target(const NetWeight &net_weight, std::vector<double> &target)
+    void TplAlgorithmPF::initialize_chip_grid()
+    {
+        chip_grid = TplChipGridPF(0.1, 0.2, 100000);
+    }
+
+    void TplAlgorithmPF::compute_net_force_target(const NetWeight &net_weight, std::vector<double> &target)
     {
 #ifndef NDEBUG
         assert( target.size() == 0 );
@@ -158,9 +267,9 @@ namespace tpl {
 
         target.resize(eigen_target.size());
         VectorXd::Map(&target[0], eigen_target.size()) = eigen_target;
-    }//end TplAlgorithm::compute_net_force_target
+    }//end TplAlgorithmPF::compute_net_force_target
 
-    void TplAlgorithm::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
+    void TplAlgorithmPF::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
             const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
     {
 #ifndef NDEBUG
@@ -196,7 +305,7 @@ namespace tpl {
 
         double min_max_weight = 2.0/(degree-1)*(max-min);
         net_weight[make_pair(ids[min_idx], ids[max_idx])] += min_max_weight;
-    }//end TplAlgorithm::compute_net_weight
+    }//end TplAlgorithmPF::compute_net_weight
 
 }//end namespace tpl
 

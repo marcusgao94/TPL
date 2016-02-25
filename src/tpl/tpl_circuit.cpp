@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <utility>
+#include <cmath>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
@@ -29,7 +30,7 @@ namespace tpl {
             const BookshelfNode &bnode = bnodes.data[i];
             const BookshelfPl   &bpl    = bpls.data[i];
 
-            TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed};
+            TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1};
            _modules.push_back(std::move(m)); 
            _id_index_map.insert( make_pair(bnode.id, i) );
 
@@ -203,8 +204,6 @@ namespace tpl {
 
             initialize_nets(net_file_path.c_str());
 
-            initialize_grid_size();
-
             return true;
         } catch(...) {
             return false;
@@ -225,7 +224,7 @@ namespace tpl {
 
         generate_bookshelf_pl(ositer, bpls); 
     }
-    
+
     //private routines
 
     bool TplDB::read_file(const char *file_name, std::string &storage)
@@ -289,10 +288,6 @@ namespace tpl {
         nets = std::move( TplNets(bnets) );
     }
 
-    void TplDB::initialize_grid_size()
-    {
-        _grid_size = 10;
-    }
 
 }//end namespace tpl
 

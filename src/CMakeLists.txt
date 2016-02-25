@@ -12,10 +12,13 @@ else(Boost_FOUND)
 endif(Boost_FOUND)
 
 #build flags
+set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS_DEBUG}       -Wall -std=c++11")
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}       -Wall -std=c++11 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -std=c++11 -DNDEBUG")
 
 #sub dirs
 ADD_SUBDIRECTORY(bookshelf)
 ADD_SUBDIRECTORY(tpl)
+ADD_SUBDIRECTORY(tpl_pf)
+ADD_SUBDIRECTORY(tpl_gy)
 

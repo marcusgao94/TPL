@@ -40,6 +40,7 @@ namespace tpl {
         Length  width; //!< A module's width
         Length height; //!< A module's height
         bool    fixed; //!< A module's fixed flag
+        double power_density; //!< A module's power density
     };
 
     //! class storing all the modules' positions and sizes information.
@@ -361,13 +362,9 @@ namespace tpl {
             void initialize_modules(const char *node_file, const char *pl_file);
             //! Private helper routine initialize the nets member variable.
             void initialize_nets   (const char *net_file);
-            //! Private helper routine initialize the grid size.
-            void initialize_grid_size();
             //////////////////////////////////Helper Functions///////////////////////////////////
 
             static TplDB *_instance; //!< The TplDB singleton
-
-            unsigned int _grid_size; //!< Storing grid size during tpl algorithm computation
 
             std::string _benchmark_name; //!< The current loading circuit's name.
     };
