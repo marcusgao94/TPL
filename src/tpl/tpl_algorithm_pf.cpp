@@ -1,6 +1,6 @@
-#include "tpl_algorithm_gy.h"
+#include "tpl_algorithm_pf.h"
 
-#include "../tpl/tpl_circuit.h"
+#include "tpl_circuit.h"
 
 #include <cassert>
 #include <fstream>
@@ -11,29 +11,30 @@
 namespace tpl {
     using namespace std;
 
-    TplChipGridGY::TplChipGridGY(double r1, double r2, unsigned int grid_size) :
+    TplChipGridPF::TplChipGridPF(double r1, double r2, unsigned int grid_size) :
         _r1(r1), _r2(r2), _grid_size(grid_size), _bin_width(0), _bin_height(0)
     {
     }
 
-    double TplChipGridGY::green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const
+    double TplChipGridPF::green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const
     {
 #ifndef NDEBUG
-        assert(0 <= idx.first  && idx.first  < _grid_size);
-        assert(0 <= idx.second && idx.second < _grid_size);
-        assert(-_grid_size <= idx0.first  && idx0.first  < 2*_grid_size);
-        assert(-_grid_size <= idx0.second && idx0.second < 2*_grid_size);
+        int gsize(_grid_size);
 #endif
+        assert(0 <= idx.first  && idx.first  < gsize);
+        assert(0 <= idx.second && idx.second < gsize);
+        assert(-gsize <= idx0.first  && idx0.first  < 2*gsize);
+        assert(-gsize <= idx0.second && idx0.second < 2*gsize);
+
         return _green_function.at(make_pair(idx, idx0));
     }
 
-    double TplChipGridGY::power_density(int i, int j) const
+    double TplChipGridPF::power_density(int i, int j) const
     {
-#ifndef NDEBUG
-        assert(-_grid_size <= i && i < 2*_grid_size);
-        assert(-_grid_size <= j && j < 2*_grid_size);
-#endif
-        int gsize = _grid_size;
+        int gsize(_grid_size);
+
+        assert(-gsize <= i && i < 2*gsize);
+        assert(-gsize <= j && j < 2*gsize);
 
         int x_idx=i;
         if(i<0) x_idx = -i + 1;
@@ -47,7 +48,7 @@ namespace tpl {
 
     }
 
-    void TplChipGridGY::update_green_function(unsigned int grid_size)
+    void TplChipGridPF::update_green_function(unsigned int grid_size)
     {
         _grid_size = grid_size;
 
@@ -56,10 +57,11 @@ namespace tpl {
 
         _green_function.clear();
         double distance = 0;
-        for(size_t i=0; i<grid_size; ++i) {
-            for(size_t j=0; i<grid_size; ++j) {
-                for(int i0=-grid_size; i0<2*grid_size; ++i0) {
-                    for(int j0=-grid_size; i0<2*grid_size; ++j0) {
+        int gsize(grid_size);
+        for(int i=0; i<gsize; ++i) {
+            for(int j=0; i<gsize; ++j) {
+                for(int i0=-gsize; i0<2*gsize; ++i0) {
+                    for(int j0=-gsize; i0<2*gsize; ++j0) {
                         if(i==i0 && j==j0) continue;
                         pair<int, int> idx  = make_pair(i, j);
                         pair<int, int> idx0 = make_pair(i0, j0);
@@ -79,7 +81,7 @@ namespace tpl {
         }
     }
 
-    void TplChipGridGY::update_power_density()
+    void TplChipGridPF::update_power_density()
     {
         _power_density.clear();
         _power_density.reserve(_grid_size);
@@ -123,11 +125,12 @@ namespace tpl {
         }
     }
 
-    TplAlgorithmGY::TplAlgorithmGY()
+    TplAlgorithmPF::TplAlgorithmPF() 
     {
+        chip_grid_ptr = NULL;
     }
 
-    void TplAlgorithmGY::make_initial_placement()
+    void TplAlgorithmPF::make_initial_placement()
     {
         vector<double> x_target, y_target;
 
@@ -138,14 +141,12 @@ namespace tpl {
             x_target.clear();
             y_target.clear();
         }
-    }//end TplAlgorithmGY::initial_placement
+    }//end TplAlgorithmPF::initial_placement
     
-    void TplAlgorithmGY::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
+    void TplAlgorithmPF::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
     {
-#ifndef NDEBUG
         assert( x_target.size() == 0 );
         assert( y_target.size() == 0 );
-#endif
 
         //compute net weight for each net
         NetWeight x_net_weight, y_net_weight;
@@ -155,10 +156,13 @@ namespace tpl {
 
         compute_net_force_target(x_net_weight, x_target);
         compute_net_force_target(y_net_weight, y_target);
-    }//end TplAlgorithmGY::compute_net_force_target
+    }//end TplAlgorithmPF::compute_net_force_target
 
+    void TplAlgorithmPF::compute_net_force_matrix(SpMat &Cx, SpMat &Cy)
+    {
+    }
 
-    void TplAlgorithmGY::compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
+    void TplAlgorithmPF::compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight)
     {
         //define static data
         static vector<string> ids;
@@ -205,20 +209,18 @@ namespace tpl {
         xmax=-1; 
         ymin=pdb.modules.chip_height(); 
         ymax=-1;
-    }//end TplAlgorithmGY::compute_net_weight
+    }//end TplAlgorithmPF::compute_net_weight
 
 
     //private routines
-    void TplAlgorithmGY::initialize_chip_grid()
+    void TplAlgorithmPF::initialize_chip_grid()
     {
-        chip_grid = TplChipGridGY(0.1, 0.2, 100000);
+        chip_grid_ptr = new TplChipGridPF(0.1, 0.2, 100000);
     }
 
-    void TplAlgorithmGY::compute_net_force_target(const NetWeight &net_weight, std::vector<double> &target)
+    void TplAlgorithmPF::compute_net_force_target(const NetWeight &net_weight, std::vector<double> &target)
     {
-#ifndef NDEBUG
         assert( target.size() == 0 );
-#endif
 
         //define matrix and vector
         unsigned int num_free = pdb.modules.num_free();
@@ -267,14 +269,12 @@ namespace tpl {
 
         target.resize(eigen_target.size());
         VectorXd::Map(&target[0], eigen_target.size()) = eigen_target;
-    }//end TplAlgorithmGY::compute_net_force_target
+    }//end TplAlgorithmPF::compute_net_force_target
 
-    void TplAlgorithmGY::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
+    void TplAlgorithmPF::compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
             const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
     {
-#ifndef NDEBUG
         assert( ids.size() == coordinates.size() );
-#endif
 
         const size_t &degree = ids.size();
         double min_weight, max_weight;
@@ -293,19 +293,15 @@ namespace tpl {
                 max_weight = 2.0/(degree-1)*(max-coordinates[cur_idx]);
             }
 
-#ifndef NDEBUG
             //assert( net_weight.count(    make_pair(ids[cur_idx], ids[min_idx]) ) == 0 );
-#endif
             net_weight[make_pair(ids[cur_idx], ids[min_idx])] += min_weight;
-#ifndef NDEBUG
             //assert( net_weight.count(    make_pair(ids[cur_idx], ids[max_idx]) ) == 0 );
-#endif
             net_weight[make_pair(ids[cur_idx], ids[max_idx])] += max_weight;
         }
 
         double min_max_weight = 2.0/(degree-1)*(max-min);
         net_weight[make_pair(ids[min_idx], ids[max_idx])] += min_max_weight;
-    }//end TplAlgorithmGY::compute_net_weight
+    }//end TplAlgorithmPF::compute_net_weight
 
 }//end namespace tpl
 

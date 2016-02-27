@@ -18,10 +18,6 @@
 #include "../bookshelf/bookshelf_pl.h"
 #include "../bookshelf/bookshelf_net.h"
 
-#ifndef NDEBUG
-#define private public
-#endif
-
 #ifndef pdb
 #define pdb (*(tpl::TplDB::db()))
 #endif

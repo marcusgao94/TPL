@@ -1,11 +1,11 @@
 /*!
- * \file tpl_algorithm_test_gy.cpp
- * \author Peng Fei
+ * \file tpl_algorithm_gy_test.cpp
+ * \author Gao Yue
  * \brief tpl algorithm unittest.
  */
 
 #define CATCH_CONFIG_MAIN
-#include "../tpl/catch.hpp"
+#include "catch.hpp"
 
 #include <iostream>
 #include <string>
@@ -22,10 +22,10 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
     GIVEN("A circuit adaptec1") {
         char path[200];
-        char *home;
-        home = std::getenv("HOME");
-        std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1");
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/bigblue1");
 
         pdb.load_circuit(path);
 

@@ -1,6 +1,6 @@
 /*!
- * \file tpl_algorithm_pf.h
- * \author Peng Fei
+ * \file tpl_algorithm_gy.h
+ * \author Gao Yue
  * \brief Definition for TPL algorithm
  */
 
@@ -11,11 +11,12 @@
 #include <map>
 #include <string>
 
-#include "../tpl/tpl_algorithm_interface.h"
+#include "tpl_algorithm_interface.h"
 
 namespace tpl {
 
-    class TplChipGridGY : public TplAbstractChipGrid {
+    //! ChipGrid implementation class.
+    class TplChipGridGY : public TplChipGridInterface {
         public:
             ///////////////////////// Constructors /////////////////////////////////////////
             //! Default constructor defaulted.
@@ -49,14 +50,12 @@ namespace tpl {
             double _bin_width;       //!< A grid bin's width.
             double _bin_height;      //!< A grid bin's height.
             std::map<std::pair<std::pair<int, int>, std::pair<int, int> >, double> _green_function; //!< Green function map.
-            std::vector<std::vector<double> > _power_density;  //!< Power density map.
+            std::vector<std::vector<double> > _power_density;                                       //!< Power density map.
     };
 
-    //! The entry class for tpl algorithm.
-    class TplAlgorithmGY : public TplAbstractAlgorithm {
+    //! tpl algorithm implementation class.
+    class TplAlgorithmGY : public TplAlgorithmInterface {
         public:
-
-
             //! TplAlgorithmGY constructor.
             TplAlgorithmGY();
 
@@ -72,6 +71,13 @@ namespace tpl {
              */
             void compute_net_force_target(std::vector<double> &x_target, std::vector<double> &y_target);
 
+            //! Compute all the free modules' net force matrix.
+            /*!
+             * \param Cx SpMat storing the net force matrix in x direction. 
+             * \param Cy SpMat storing the net force matrix in y direction. 
+             */
+            void compute_net_force_matrix(SpMat &Cx, SpMat &Cy);
+
             //! Compute a net's net weight.
             /*!
              * \param x_net_weight storing the net weight in x directions.
@@ -79,9 +85,11 @@ namespace tpl {
              */
             void compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight);
 
-        private:
-            //! Private helper routine initialize the chip grid.
+        protected:
+            //! Initializing the chip grid.
             void initialize_chip_grid();
+
+        private:
 
             //! Private routine for computing all the free module's net force target position.
             /*!
@@ -103,7 +111,6 @@ namespace tpl {
             void compute_net_weight(const std::vector<std::string> &ids, const std::vector<double> &coordinates,
                     const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight);
 
-            TplChipGridGY chip_grid;
     };
 
 }//end namespace tpl

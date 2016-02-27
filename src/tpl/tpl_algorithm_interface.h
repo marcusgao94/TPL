@@ -43,19 +43,22 @@ namespace tpl {
      */
     typedef std::map<std::pair<std::string, std::string>, double> NetWeight;
 
-    class TplAbstractChipGrid {
+    //! Interface definition for chip grid.
+    class TplChipGridInterface {
         public:
             ////////////////////////// Member Access ///////////////////////////////////////
             //! Interface for accessing green function value in index pair idx and idx0.
             /*!
              * \param idx  ranges from 0 to grid_size in both x and y direction.
              * \param idx0 ranges from -grid_size to 2*grid_size in both x and y direction.
+             * \return green function value.
              */
             virtual double green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const = 0;
             //! Interface for accessing power density value in (i,j) position.
             /*!
              * \param i x grid bin index.
              * \param j y grid bin index.
+             * \return power density value.
              */
             virtual double power_density(int i, int j) const = 0;
             ////////////////////////// Member Access ///////////////////////////////////////
@@ -73,9 +76,8 @@ namespace tpl {
             ///////////////////////// Modifiers   //////////////////////////////////////////
     };
 
-
-    //! The entry class for tpl algorithm.
-    class TplAbstractAlgorithm {
+    //! Interface definition for tpl algorithm.
+    class TplAlgorithmInterface {
         public:
 
             //! Interface for initializing the module placement.
@@ -90,12 +92,25 @@ namespace tpl {
              */
             virtual void compute_net_force_target(std::vector<double> &x_target, std::vector<double> &y_target) = 0;
 
+            //! Interface for computing all the free modules' net force matrix.
+            /*!
+             * \param Cx SpMat storing the net force matrix in x direction. 
+             * \param Cy SpMat storing the net force matrix in y direction. 
+             */
+            virtual void compute_net_force_matrix(SpMat &Cx, SpMat &Cy) = 0;
+
             //! Interface for computing a net's net weight.
             /*!
              * \param x_net_weight storing the net weight in x directions.
              * \param y_net_weight storing the net weight in y directions.
              */
             virtual void compute_net_weight(const TplNets::net_iterator &nit, NetWeight &x_net_weight, NetWeight &y_net_weight) = 0;
+
+        protected:
+            //! Initializing the chip grid.
+            virtual void initialize_chip_grid() = 0;
+
+            TplChipGridInterface *chip_grid_ptr; //!< Pointer to a TplChipGridInterface.
     };
 
 }//end namespace tpl
