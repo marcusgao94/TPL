@@ -10,22 +10,22 @@
 #include "tpl_standard_algorithm.h"
 
 namespace tpl {
-    class TplGYNetForceModel : public TplStandardNetForceModel {
+
+    class TplGYNetForceModel final : public TplStandardNetForceModel {
         public:
-            virtual ~TplGYNetForceModel() {};
+            ~TplGYNetForceModel();
     };
 
-    class TplGYMoveForceModel : public TplStandardMoveForceModel {
+    class TplGYMoveForceModel final : public TplStandardMoveForceModel {
         public:
             TplGYMoveForceModel(double r1, double r2, unsigned int grid_size);
-            virtual ~TplGYMoveForceModel() {};
+            ~TplGYMoveForceModel();
     };
 
-    class TplGYAlgorithm : public TplStandardAlgorithm {
+    class TplGYAlgorithm final : public TplStandardAlgorithm {
         public:
-            virtual ~TplGYAlgorithm() {};
-            virtual void initialize_models();
-
+            ~TplGYAlgorithm();
+            void initialize_models() override;
     };
 
 }//end namespace tpl

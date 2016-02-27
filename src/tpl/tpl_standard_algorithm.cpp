@@ -23,6 +23,10 @@ namespace tpl {
 
     ////Begin TplStandardNetForceModel////
     
+    TplStandardNetForceModel::~TplStandardNetForceModel()
+    {
+    }
+
     void TplStandardNetForceModel::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
     {
         assert( x_target.size() == 0 );
@@ -231,6 +235,10 @@ namespace tpl {
 
     ////Begin TplStandardMoveForceModel////
 
+    TplStandardMoveForceModel::~TplStandardMoveForceModel()
+    {
+    }
+
     TplStandardMoveForceModel::TplStandardMoveForceModel(double r1, double r2, unsigned int grid_size) :
         _r1(r1), _r2(r2), _grid_size(grid_size), _bin_width(0), _bin_height(0)
     {
@@ -352,6 +360,10 @@ namespace tpl {
 
     ////Begin TplStandardAlgorithm////
     
+    TplStandardAlgorithm::~TplStandardAlgorithm()
+    {
+    }
+
     void TplStandardAlgorithm::initialize_models()
     {
         net_force_model  = new TplStandardNetForceModel;

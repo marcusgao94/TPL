@@ -137,7 +137,7 @@ namespace tpl {
         public:
             ///////////////////////// Constructors /////////////////////////////////////////
             //! Virtual destructor.
-            virtual ~TplStandardNetForceModel() {};
+            virtual ~TplStandardNetForceModel();
             ///////////////////////// Constructors /////////////////////////////////////////
 
             //! Standard implementation for interface compute_net_force_target.
@@ -203,7 +203,7 @@ namespace tpl {
             //! Constructor using grid_size, r1 and r2 radius.
             TplStandardMoveForceModel(double r1, double r2, unsigned int grid_size);
             //! Virtual destructor.
-            virtual ~TplStandardMoveForceModel() {};
+            virtual ~TplStandardMoveForceModel();
             ///////////////////////// Constructors /////////////////////////////////////////
 
             //! Standard implementation for interface green_function.
@@ -241,8 +241,7 @@ namespace tpl {
 
     class TplStandardAlgorithm : public TplAlgorithmInterface {
         public:
-            TplStandardAlgorithm() {};
-            virtual ~TplStandardAlgorithm() {};
+            virtual ~TplStandardAlgorithm();
 
             //! Standard implementation for interface initialize_models.
             virtual void initialize_models();
