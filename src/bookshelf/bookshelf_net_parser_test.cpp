@@ -23,10 +23,10 @@ SCENARIO("Test .net files", "[case 1]") {
 
     GIVEN("A .nets file and a BookshelfNetParser") {
         char path[200];
-        char *home;
-        home = std::getenv("HOME");
-        std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/bigblue1/bigblue1.nets");
+        char *benchmark;
+        benchmark= std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/bigblue1/bigblue1.nets");
         ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
 

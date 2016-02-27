@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "tpl_circuit.h"
+#include "tpl_db.h"
 
 using namespace std;
 using namespace tpl;
@@ -21,10 +21,10 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
     GIVEN("A circuit adaptec1") {
         char path[200];
-        char *home;
-        home = std::getenv("HOME");
-        std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec1");
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/adaptec1");
 
         bool load_status = pdb.load_circuit(path);
 
@@ -39,10 +39,10 @@ SCENARIO("adaptec2", "[adaptec2]") {
 
     GIVEN("A circuit adaptec2") {
         char path[200];
-        char *home;
-        home = std::getenv("HOME");
-        std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec2");
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/adaptec2");
 
         bool load_status = pdb.load_circuit(path);
 
@@ -57,10 +57,10 @@ SCENARIO("adaptec3", "[adaptec3]") {
 
     GIVEN("A circuit adaptec3") {
         char path[200];
-        char *home;
-        home = std::getenv("HOME");
-        std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec3");
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/adaptec3");
 
         bool load_status = pdb.load_circuit(path);
 
@@ -75,10 +75,10 @@ SCENARIO("adaptec4", "[adaptec4]") {
 
     GIVEN("Test case adaptec4") {
         char path[200];
-        char *home;
-        home = std::getenv("HOME");
-        std::strcpy(path, home);
-        std::strcat(path, "/Workspace/TPL/benchmark/ispd2005/adaptec4");
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/adaptec4");
 
         bool load_status = pdb.load_circuit(path);
 

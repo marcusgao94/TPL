@@ -1,4 +1,4 @@
-#library
+#libraries
 set(BOOKSHELF_LIB_SRC bookshelf_node.cpp bookshelf_node_parser.hpp
                       bookshelf_pl.cpp   bookshelf_pl_parser.hpp
                                          bookshelf_pl_generator.hpp
@@ -7,7 +7,6 @@ add_library(bookshelf SHARED ${BOOKSHELF_LIB_SRC})
 set_target_properties(bookshelf PROPERTIES VERSION 0.1 SOVERSION 1)
 
 #executables
-#include_directories(${PROJECT_SOURCE_DIR}/src/bookshelf)
 #1.NodeParser
 set(BOOKSHELF_NODE_PARSER_TEST_SRC bookshelf_node_parser_test.cpp)
 add_executable(node_parser_test ${BOOKSHELF_NODE_PARSER_TEST_SRC})

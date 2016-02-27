@@ -1,11 +1,10 @@
-#include "tpl_circuit.h"
+#include "tpl_db.h"
 
 #include <fstream>
 #include <string>
 #include <utility>
 #include <cmath>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
 #include "../bookshelf/bookshelf_node_parser.hpp"
@@ -23,9 +22,8 @@ namespace tpl {
         _chip_width(0), 
         _chip_height(0)
     {
-#ifndef NDEBUG
         assert(bnodes.data.size() == bpls.data.size());
-#endif
+
         for(size_t i=0; i<bnodes.data.size(); ++i) {
             const BookshelfNode &bnode = bnodes.data[i];
             const BookshelfPl   &bpl    = bpls.data[i];
@@ -76,46 +74,36 @@ namespace tpl {
 
     TplModule& TplModules::module(const std::string &id)
     {
-#ifndef NDEBUG
         assert(_id_index_map.count(id) != 0);
-#endif
 
         return _modules[_id_index_map[id]];
     }
 
     const TplModule& TplModules::module(const std::string &id) const
     {
-#ifndef NDEBUG
         assert(_id_index_map.count(id) != 0);
-#endif
 
         return _modules.at(_id_index_map.at(id));
     }
 
     size_t TplModules::module_index(const std::string &id) const
     {
-#ifndef NDEBUG
         assert(_id_index_map.count(id) != 0);
-#endif
 
         return _id_index_map.at(id);
     }
 
     bool TplModules::is_module_fixed(const std::string &id) const
     {
-#ifndef NDEBUG
         assert(_id_index_map.count(id) != 0);
-#endif
 
         return _modules.at(_id_index_map.at(id)).fixed;
     }
 
     void TplModules::set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys)
     {
-#ifndef NDEBUG
         assert( xs.size() == _num_free );
         assert( ys.size() == _num_free );
-#endif
 
         for(size_t i=0; i<_num_free; ++i) {
             _modules[i].x = xs[i];
@@ -125,9 +113,7 @@ namespace tpl {
 
     void TplModules::get_bookshelf_pls(thueda::BookshelfPls &bpls) const
     {
-#ifndef NDEBUG
         assert(bpls.data.size() == 0);
-#endif
 
         for(size_t i=0; i<_num_modules; ++i) {
             const TplModule &m = _modules.at(i);
@@ -217,7 +203,7 @@ namespace tpl {
         BookshelfPls bpls;
         modules.get_bookshelf_pls(bpls);
 
-        string out_file_name = _benchmark_name + string("_") + boost::lexical_cast<string>(version++) + ".pl";
+        string out_file_name = _benchmark_name + string("_") + std::to_string(version++) + ".pl";
 
         ofstream out(out_file_name.c_str(), ios_base::out);
         ostream_iterator<char> ositer(out, "");
