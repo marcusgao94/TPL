@@ -12,20 +12,20 @@
 namespace tpl {
 
     class TplGYNetForceModel final : public TplStandardNetForceModel {
-        public:
-            ~TplGYNetForceModel();
+    public:
+        ~TplGYNetForceModel();
     };
 
     class TplGYMoveForceModel final : public TplStandardMoveForceModel {
-        public:
-            TplGYMoveForceModel(double r1, double r2, unsigned int grid_size);
-            ~TplGYMoveForceModel();
+    public:
+        TplGYMoveForceModel(double r1, double r2, unsigned int grid_size);
+        ~TplGYMoveForceModel();
     };
 
     class TplGYAlgorithm final : public TplStandardAlgorithm {
-        public:
-            ~TplGYAlgorithm();
-            void initialize_models() override;
+    public:
+        ~TplGYAlgorithm();
+        void initialize_models() override;
     };
 
 }//end namespace tpl

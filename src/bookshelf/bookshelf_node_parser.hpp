@@ -23,101 +23,101 @@ BOOST_FUSION_ADAPT_STRUCT(
         (thueda::Length,  width)
         (thueda::Length, height)
         (bool,            fixed)
-        )
+)
 
 BOOST_FUSION_ADAPT_STRUCT(
         thueda::BookshelfNodes,
-        (unsigned,                      num_nodes)
-        (unsigned,                  num_terminals)
+        (unsigned int,                  num_nodes)
+        (unsigned int,              num_terminals)
         (std::vector<thueda::BookshelfNode>, data)
-        )
+)
 
-    namespace thueda {
+namespace thueda {
 
-        //! Symbols tables for the Bookshelf Node grammar.
-        /*! 
-         *  When the parser reads in a line ending with terminal, 
-         *  it set the fixed bool to true using this symbol table.
-         */
-        struct NodeMoveTypeSymbolTable : qi::symbols<char, bool> {
-            NodeMoveTypeSymbolTable() {
-                add("terminal", true);
-            }
-        };
+    //! Symbols tables for the Bookshelf Node grammar.
+    /*!
+     *  When the parser reads in a line ending with terminal,
+     *  it set the fixed bool to true using this symbol table.
+     */
+    struct NodeMoveTypeSymbolTable : qi::symbols<char, bool> {
+        NodeMoveTypeSymbolTable() {
+            add("terminal", true);
+        }
+    };
 
-        //! The grammar definition for .nodes files.
-        /*! 
-         * Using PEG format and regular expression, the grammar can be written as follows:
-         *
-         * \code
-         * header_rule        := "^UCLA\s*nodes\s*1.0"
-         * comment_rule       := "^#.*$"
-         * num_nodes_rule     := "^NumNodes\s*:\s*" uint_
-         * num_terminals_rule := "^NumTerminals\s*:\s*" uint_
-         * id_rule            := [^\s]*
-         * node_rule          := id_rule uint_ uint_ | id unit_ unit_ "terminal$"
-         * nodes_rule         := node_rule*
-         * start              := header_rule comment_rule* num_nodes_rule num_terminals_rule nodes_rule
-         * \endcode
-         */
-        template<typename Iterator>
-            struct BookshelfNodeParser: qi::grammar<Iterator, BookshelfNodes(), asc::space_type> {
+    //! The grammar definition for .nodes files.
+    /*!
+     * Using PEG format and regular expression, the grammar can be written as follows:
+     *
+     * \code
+     * header_rule        := "^UCLA\s*nodes\s*1.0"
+     * comment_rule       := "^#.*$"
+     * num_nodes_rule     := "^NumNodes\s*:\s*" uint_
+     * num_terminals_rule := "^NumTerminals\s*:\s*" uint_
+     * id_rule            := [^\s]*
+     * node_rule          := id_rule uint_ uint_ | id unit_ unit_ "terminal$"
+     * nodes_rule         := node_rule*
+     * start              := header_rule comment_rule* num_nodes_rule num_terminals_rule nodes_rule
+     * \endcode
+     */
+    template<typename Iterator>
+    struct BookshelfNodeParser: qi::grammar<Iterator, BookshelfNodes(), asc::space_type> {
 
-                BookshelfNodeParser() : BookshelfNodeParser::base_type(start) {
+        BookshelfNodeParser() : BookshelfNodeParser::base_type(start) {
 
-                    using qi::uint_;
-                    using qi::lit;
-                    using qi::lexeme;
+            using qi::uint_;
+            using qi::lit;
+            using qi::lexeme;
 
-                    header_rule  = lit("UCLA") >> lit("nodes") >> lit("1.0");
+            header_rule  = lit("UCLA") >> lit("nodes") >> lit("1.0");
 
-                    comment_rule = lexeme[lit("#") >> *~lit('\n') ];
+            comment_rule = lexeme[lit("#") >> *~lit('\n') ];
 
-                    num_nodes_rule      %=  lit("NumNodes")     >> lit(":") >> uint_;
-                    num_terminals_rule  %=  lit("NumTerminals") >> lit(":") >> uint_;
+            num_nodes_rule      %=  lit("NumNodes")     >> lit(":") >> uint_;
+            num_terminals_rule  %=  lit("NumTerminals") >> lit(":") >> uint_;
 
-                    id_rule     %= lexeme[+~qi::space];
-                    node_rule   %= id_rule >> uint_ >> uint_ >> -node_move_type_symbol;
-                    nodes_rule  %= *node_rule;
+            id_rule     %= lexeme[+~qi::space];
+            node_rule   %= id_rule >> uint_ >> uint_ >> -node_move_type_symbol;
+            nodes_rule  %= *node_rule;
 
-                    start       %= 
-                        header_rule        >> 
-                        *comment_rule      >> 
-                        num_nodes_rule     >>
-                        num_terminals_rule >>
-                        nodes_rule;
-                }
+            start       %=
+                    header_rule        >>
+                    *comment_rule      >>
+                    num_nodes_rule     >>
+                    num_terminals_rule >>
+                    nodes_rule;
+        }
 
-                static NodeMoveTypeSymbolTable  node_move_type_symbol;                        //!< Node file symbol table
+        static NodeMoveTypeSymbolTable  node_move_type_symbol;                        //!< Node file symbol table
 
-                qi::rule<Iterator, qi::unused_type(), asc::space_type>           header_rule; //!< escape headers
-                qi::rule<Iterator,        unsigned(), asc::space_type>        num_nodes_rule; //!< store NumNodes
-                qi::rule<Iterator,        unsigned(), asc::space_type>    num_terminals_rule; //!< store NumTerminals
-                qi::rule<Iterator, qi::unused_type(), asc::space_type>          comment_rule; //!< escape comments
-                qi::rule<Iterator,     std::string(), asc::space_type>               id_rule; //!< cache node id
-                qi::rule<Iterator,   BookshelfNode(), asc::space_type>             node_rule; //!< parse one line of node
-                qi::rule<Iterator, std::vector<BookshelfNode>(), asc::space_type> nodes_rule; //!< parse all lines of nodes
-                qi::rule<Iterator,  BookshelfNodes(), asc::space_type>                 start; //!< the start rule, i.e. the entry
+        qi::rule<Iterator, qi::unused_type(), asc::space_type>           header_rule; //!< escape headers
+        qi::rule<Iterator,        unsigned(), asc::space_type>        num_nodes_rule; //!< store NumNodes
+        qi::rule<Iterator,        unsigned(), asc::space_type>    num_terminals_rule; //!< store NumTerminals
+        qi::rule<Iterator, qi::unused_type(), asc::space_type>          comment_rule; //!< escape comments
+        qi::rule<Iterator,     std::string(), asc::space_type>               id_rule; //!< cache node id
+        qi::rule<Iterator,   BookshelfNode(), asc::space_type>             node_rule; //!< parse one line of node
+        qi::rule<Iterator, std::vector<BookshelfNode>(), asc::space_type> nodes_rule; //!< parse all lines of nodes
+        qi::rule<Iterator,  BookshelfNodes(), asc::space_type>                 start; //!< the start rule, i.e. the entry
 
-            };//end template
+    };//end template
 
-        template<typename Iterator>
-            NodeMoveTypeSymbolTable BookshelfNodeParser<Iterator>::node_move_type_symbol;
+    template<typename Iterator>
+    NodeMoveTypeSymbolTable BookshelfNodeParser<Iterator>::node_move_type_symbol;
 
-        /*! 
-         * \fn bool parse_bookshelf_node(Iterator &iter, Iterator &end, BookshelfNodes &nodes);
-         * 
-         */
-        template<typename Iterator>
-            bool parse_bookshelf_node(Iterator &iter, Iterator &end, BookshelfNodes &nodes) {
+    /*!
+     * \fn bool parse_bookshelf_node(Iterator &iter, Iterator &end, BookshelfNodes &nodes);
+     *
+     */
+    template<typename Iterator>
+    bool parse_bookshelf_node(Iterator &iter, Iterator &end, BookshelfNodes &nodes) {
 
-                BookshelfNodeParser<Iterator> p;
-                bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), nodes);
+        BookshelfNodeParser<Iterator> p;
+        bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), nodes);
 
-                return ret;
-            }
+        return ret;
+    }
 
-    }//end namespace thueda
+}//end namespace thueda
 
 #endif  
 

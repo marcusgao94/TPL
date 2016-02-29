@@ -45,9 +45,9 @@ namespace thueda {
      * \enum IOType {Output, Input};
      * \brief Pin's IO type
      */
-    enum IOType {Output, Input};
+    enum class IOType {Output, Input};
 
 }
 
-#endif// BOOKSHELF_UTILS_H
+#endif//BOOKSHELF_UTILS_H
 
