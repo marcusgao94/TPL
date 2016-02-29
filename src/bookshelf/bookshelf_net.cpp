@@ -4,9 +4,9 @@
  * \brief bookshelf net implementation file.
  */
 
-#include "bookshelf_net.h"
-
 #include <iomanip>
+
+#include "bookshelf_net.h"
 
 namespace thueda {
 
@@ -17,12 +17,12 @@ namespace thueda {
         out << std::left << setw(8) << pin.id;
         out << std::right;
         switch(pin.io) {
-            case Input:
+            case IOType::Input:
                 out << " I : ";
-            case Output:
+                break;
+            case IOType::Output:
                 out << " O : ";
-            default:
-                ;//error
+                break;
         }
         out << setw(12) << pin.dx
             << setw(12) << pin.dy;

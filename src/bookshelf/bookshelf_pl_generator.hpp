@@ -19,22 +19,22 @@ namespace thueda {
      * 
      */
     template<typename OutputIterator>
-        bool generate_bookshelf_pl(OutputIterator &sink, const BookshelfPls &pls) {
-            using karma::generate;
-            using karma::lit;
-            using karma::stream;
-            using karma::eol;
+    bool generate_bookshelf_pl(OutputIterator &sink, const BookshelfPls &pls) {
+        using karma::generate;
+        using karma::lit;
+        using karma::stream;
+        using karma::eol;
 
-            bool r = generate(
-                    sink,
-                    lit("UCLA pl 1.0\n") << stream % eol,
-                    pls.data
-                    );
-            return r;
+        bool r = generate(
+                sink,
+                lit("UCLA pl 1.0\n") << stream % eol,
+                pls.data
+        );
+        return r;
 
-        };
+    };
 
 }//end namespace thueda
 
-#endif  
+#endif//BOOKSHELF_PL_GENERATOR_HPP
 

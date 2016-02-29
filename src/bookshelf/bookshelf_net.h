@@ -60,14 +60,14 @@ namespace thueda {
      * A default constructor is provided for allocating some storage space in the first time.
      */
     struct BookshelfNets {
-        unsigned num_nets;              //!< Number of nets in .nets files
-        unsigned num_pins;              //!< Number of pins in .nets files
-        std::vector<BookshelfNet> data; //!< Vector storing all the nets in .nets files
+        unsigned int num_nets;              //!< Number of nets in .nets files
+        unsigned int num_pins;              //!< Number of pins in .nets files
+        std::vector<BookshelfNet> data;     //!< Vector storing all the nets in .nets files
 
         BookshelfNets();                //!< Default constructor for BookshelfNets
     };
 
 }//end namespace thueda
 
-#endif
+#endif//BOOKSHELF_NET_H
 

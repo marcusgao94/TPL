@@ -35,7 +35,7 @@ namespace tpl {
            double right_border = bpl.x + bnode.width; 
            if(right_border>_chip_width) _chip_width  = right_border;
            double top_border = bpl.y + bnode.height; 
-           if(top_border>_chip_height) _chip_height = top_border;
+           if(top_border>_chip_height)  _chip_height = top_border;
         }
     }
 
@@ -65,11 +65,14 @@ namespace tpl {
 
     void TplModules::clear()
     {
-        _modules.clear();
-        _id_index_map.clear();
-
         _num_modules = 0;
         _num_free    = 0;
+
+        _chip_width  = 0;
+        _chip_height = 0;
+
+        _modules.clear();
+        _id_index_map.clear();
     }
 
     TplModule& TplModules::module(const std::string &id)
