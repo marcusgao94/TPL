@@ -51,5 +51,5 @@ namespace thueda {
 
 }//end namespace thueda
 
-#endif
+#endif//BOOKSHELF_PL_H
 

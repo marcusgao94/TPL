@@ -45,8 +45,8 @@ namespace thueda {
      * A default constructor is provided for allocating some storage space in the first time.
      */
     struct BookshelfNodes {
-        unsigned              num_nodes;  //!< Number of node in .node files
-        unsigned          num_terminals;  //!< Number of terminals in .node files
+        unsigned int          num_nodes;  //!< Number of node in .node files
+        unsigned int      num_terminals;  //!< Number of terminals in .node files
         std::vector<BookshelfNode> data;  //!< Vector storing all the nodes in .nodes files
 
         BookshelfNodes();                 //!< Default constructor for BookshelfNodes
@@ -54,5 +54,5 @@ namespace thueda {
 
 }//end namespace thueda
 
-#endif
+#endif//BOOKSHELF_NODE_H
 

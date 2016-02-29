@@ -11,7 +11,7 @@ namespace tpl {
     {
     }
 
-    TplMoveForceModelInterface::~TplMoveForceModelInterface() 
+    TplMoveForceModelInterface::~TplMoveForceModelInterface()
     {
     }
 
@@ -19,10 +19,12 @@ namespace tpl {
     {
         delete net_force_model;
         delete move_force_model;
+
+        pdb.destroy_db();
     }
 
     ////Begin TplStandardNetForceModel////
-    
+
     TplStandardNetForceModel::~TplStandardNetForceModel()
     {
     }
@@ -38,12 +40,12 @@ namespace tpl {
         VectorXd dx(num_free);
         dx = VectorXd::Zero(num_free);
         VectorXd dy(num_free);
-        dy = VectorXd::Zero(num_free); 
+        dy = VectorXd::Zero(num_free);
 
         compute_net_force_matrix(Cx, dx, Cy, dy);
 
         compute_net_force_target(Cx, dx, x_target);
-        compute_net_force_target(Cx, dx, x_target);
+        compute_net_force_target(Cy, dy, y_target);
 
     }
 
@@ -97,7 +99,7 @@ namespace tpl {
                 }
                 ys.push_back(cury);
 
-                ++i; 
+                ++i;
             }
 
             //call private routine
@@ -108,9 +110,9 @@ namespace tpl {
             pins.clear();
             xs.clear();
             ys.clear();
-            xmin=pdb.modules.chip_width(); 
-            xmax=-1; 
-            ymin=pdb.modules.chip_height(); 
+            xmin=pdb.modules.chip_width();
+            xmax=-1;
+            ymin=pdb.modules.chip_height();
             ymax=-1;
         }
     }
@@ -196,7 +198,7 @@ namespace tpl {
     }
 
     void TplStandardNetForceModel::compute_net_weight(const std::vector<TplPin*> &pins, const std::vector<double> &coordinates,
-            const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
+                                                      const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
     {
         assert( pins.size() == coordinates.size() );
 
@@ -240,7 +242,7 @@ namespace tpl {
     }
 
     TplStandardMoveForceModel::TplStandardMoveForceModel(double r1, double r2, unsigned int grid_size) :
-        _r1(r1), _r2(r2), _grid_size(grid_size), _bin_width(0), _bin_height(0)
+            _r1(r1), _r2(r2), _grid_size(grid_size), _bin_width(0), _bin_height(0)
     {
         _bin_width  = pdb.modules.chip_width()  / _grid_size;
         _bin_height = pdb.modules.chip_height() / _grid_size;
@@ -289,9 +291,9 @@ namespace tpl {
         double distance = 0;
         int gsize(grid_size);
         for(int i=0; i<gsize; ++i) {
-            for(int j=0; i<gsize; ++j) {
+            for(int j=0; j<gsize; ++j) {
                 for(int i0=-gsize; i0<2*gsize; ++i0) {
-                    for(int j0=-gsize; i0<2*gsize; ++j0) {
+                    for(int j0=-gsize; j0<2*gsize; ++j0) {
                         if(i==i0 && j==j0) continue;
                         pair<int, int> idx  = make_pair(i, j);
                         pair<int, int> idx0 = make_pair(i0, j0);
@@ -356,10 +358,10 @@ namespace tpl {
     }
 
     ////End TplStandardMoveForceModel////
-   
+
 
     ////Begin TplStandardAlgorithm////
-    
+
     TplStandardAlgorithm::~TplStandardAlgorithm()
     {
     }
@@ -384,6 +386,6 @@ namespace tpl {
     }
 
     ////End TplStandardAlgorithm////
-    
+
 }//end namespace tpl
 

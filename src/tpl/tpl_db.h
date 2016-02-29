@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <deque>
 #include <map>
 #include <stdexcept>
 
