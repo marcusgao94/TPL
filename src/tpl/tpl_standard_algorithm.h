@@ -253,4 +253,4 @@ namespace tpl {
     };
 }//end namespace tpl
 
-#endif
+#endif//TPL_STANDARD_ALGORITHM_H

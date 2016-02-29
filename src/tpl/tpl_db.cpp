@@ -17,10 +17,10 @@ namespace tpl {
     using namespace thueda;
 
     TplModules::TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls) :
-        _num_modules(bnodes.num_nodes),
-        _num_free(bnodes.num_nodes - bnodes.num_terminals),
-        _chip_width(0), 
-        _chip_height(0)
+            _num_modules(bnodes.num_nodes),
+            _num_free(bnodes.num_nodes - bnodes.num_terminals),
+            _chip_width(0),
+            _chip_height(0)
     {
         assert(bnodes.data.size() == bpls.data.size());
 
@@ -29,27 +29,27 @@ namespace tpl {
             const BookshelfPl   &bpl    = bpls.data[i];
 
             TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1};
-           _modules.push_back(std::move(m)); 
-           _id_index_map.insert( make_pair(bnode.id, i) );
+            _modules.push_back(std::move(m));
+            _id_index_map.insert( make_pair(bnode.id, i) );
 
-           double right_border = bpl.x + bnode.width; 
-           if(right_border>_chip_width) _chip_width  = right_border;
-           double top_border = bpl.y + bnode.height; 
-           if(top_border>_chip_height)  _chip_height = top_border;
+            double right_border = bpl.x + bnode.width;
+            if(right_border>_chip_width) _chip_width  = right_border;
+            double top_border = bpl.y + bnode.height;
+            if(top_border>_chip_height)  _chip_height = top_border;
         }
     }
 
     TplModules::TplModules(TplModules &&temp) :
-        _num_modules(std::move(temp._num_modules)),
-        _num_free(std::move(temp._num_free)),
-        _chip_width(std::move(temp._chip_width)),
-        _chip_height(std::move(temp._chip_height)),
-        _modules(std::move(temp._modules)),
-        _id_index_map(std::move(temp._id_index_map))
+            _num_modules(std::move(temp._num_modules)),
+            _num_free(std::move(temp._num_free)),
+            _chip_width(std::move(temp._chip_width)),
+            _chip_height(std::move(temp._chip_height)),
+            _modules(std::move(temp._modules)),
+            _id_index_map(std::move(temp._id_index_map))
     {
     }
 
-    TplModules &TplModules::operator=(TplModules &&temp) 
+    TplModules &TplModules::operator=(TplModules &&temp)
     {
         _num_modules  = std::move(temp._num_modules);
         _num_free     = std::move(temp._num_free);
@@ -133,9 +133,9 @@ namespace tpl {
     }
 
     TplNets::TplNets(TplNets &&temp) :
-        _num_nets(std::move(temp._num_nets)),
-        _num_pins(std::move(temp._num_pins)),
-        _netlist(std::move(temp._netlist))
+            _num_nets(std::move(temp._num_nets)),
+            _num_pins(std::move(temp._num_pins)),
+            _netlist(std::move(temp._netlist))
     {
     }
 
@@ -171,7 +171,7 @@ namespace tpl {
         delete _instance;
         _instance = NULL;
     }
-    
+
     //////////////////////////////////Helper Functions///////////////////////////////////
     bool TplDB::load_circuit(const char *path)
     {
@@ -198,7 +198,7 @@ namespace tpl {
             return false;
         }
     }//end TplDB::load_circuit
-    
+
     void TplDB::generate_placement_snapshot() const
     {
         static int version = 0;
@@ -211,7 +211,7 @@ namespace tpl {
         ofstream out(out_file_name.c_str(), ios_base::out);
         ostream_iterator<char> ositer(out, "");
 
-        generate_bookshelf_pl(ositer, bpls); 
+        generate_bookshelf_pl(ositer, bpls);
     }
 
     //private routines
@@ -245,7 +245,7 @@ namespace tpl {
         end  = storage.end();
 
         BookshelfNodes bnodes;
-        parse_bookshelf_node(iter, end, bnodes); 
+        parse_bookshelf_node(iter, end, bnodes);
 
         //process .pl file
         read_file(pl_file, storage);
@@ -254,7 +254,7 @@ namespace tpl {
         end  = storage.end();
 
         BookshelfPls bpls;
-        parse_bookshelf_pl(iter, end, bpls); 
+        parse_bookshelf_pl(iter, end, bpls);
 
         modules = std::move( TplModules(bnodes, bpls) );
     }
@@ -272,7 +272,7 @@ namespace tpl {
         end  = storage.end();
 
         BookshelfNets bnets;
-        parse_bookshelf_net(iter, end, bnets); 
+        parse_bookshelf_net(iter, end, bnets);
 
         nets = std::move( TplNets(bnets) );
     }
