@@ -123,17 +123,17 @@ namespace tpl {
 
         ///////////////////////// Capacity    //////////////////////////////////////////
         //! Total number of modules.
-        size_t size()      const
+        unsigned int size()      const
         {
             return _num_modules;
         }
         //! Number of free modules.
-        size_t num_free()  const
+        unsigned int num_free()  const
         {
             return _num_free;
         }
         //! Number of fixed modules.
-        size_t num_fixed() const
+        unsigned int num_fixed() const
         {
             return _num_modules-_num_free;
         }
@@ -182,14 +182,14 @@ namespace tpl {
         void get_bookshelf_pls(BookshelfPls &bpls) const;
         ///////////////////////// Bookshelf Conversion /////////////////////////////////
     private:
-        size_t _num_modules; //!< Number of modules.
-        size_t _num_free;    //!< Number of free modules.
+        unsigned int _num_modules; //!< Number of modules.
+        unsigned int _num_free;    //!< Number of free modules.
 
         double _chip_width;  //!< Chip width.
         double _chip_height; //!< Chip height.
 
         std::vector<TplModule> _modules;                //!< vector of TplModule.
-        std::map<std::string, size_t> _id_index_map; //!< A ID index map for all the modules
+        std::map<std::string, size_t> _id_index_map;    //!< A ID index map for all the modules
     };
 
     //! \typedef BookshelfPin TplPin;
@@ -224,7 +224,7 @@ namespace tpl {
         TplNets& operator=(const TplNets &) = delete;
         //! Move constructor.
         TplNets(TplNets &&temp);
-        //! Move assignment opeator.
+        //! Move assignment operator deleted.
         TplNets& operator=(TplNets &&temp);
         ///////////////////////// Constructors /////////////////////////////////////////
 
@@ -296,12 +296,12 @@ namespace tpl {
 
         ///////////////////////// Capacity    //////////////////////////////////////////
         //! Number of nets.
-        size_t num_nets() const
+        unsigned int num_nets() const
         {
             return _num_nets;
         }
         //! Number of pins.
-        size_t num_pins() const
+        unsigned int num_pins() const
         {
             return _num_pins;
         }
@@ -312,8 +312,8 @@ namespace tpl {
         void clear();
         ///////////////////////// Modifiers   //////////////////////////////////////////
     private:
-        size_t _num_nets;           //!< Number of nets.
-        size_t _num_pins;           //!< Number of pins.
+        unsigned int _num_nets;           //!< Number of nets.
+        unsigned int _num_pins;           //!< Number of pins.
 
         std::list<TplNet> _netlist; //!< A sequential container representing the netlist.
     };
@@ -346,8 +346,12 @@ namespace tpl {
         ~TplDB() = default;
         //! TplDB copy constructor deleted.
         TplDB(const TplDB&) = delete;
-        //! TplDB assignment operator deleted.
+        //! TplDB copy assignment operator deleted.
         TplDB &operator=(const TplDB&) = delete;
+        //! TplDB move constructor deleted.
+        TplDB(const TplDB&&) = delete;
+        //! TplDB move assignment operator deleted.
+        TplDB &operator=(const TplDB&&) = delete;
         ///////////////////////// Constructors /////////////////////////////////////////
 
         //////////////////////////////////Helper Functions///////////////////////////////////

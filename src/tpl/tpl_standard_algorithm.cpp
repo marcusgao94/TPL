@@ -1,8 +1,8 @@
-#include "tpl_standard_algorithm.h"
-
 #include <cassert>
 #include <fstream>
 #include <iterator>
+
+#include "tpl_standard_algorithm.h"
 
 namespace tpl {
     using namespace std;
@@ -19,8 +19,6 @@ namespace tpl {
     {
         delete net_force_model;
         delete move_force_model;
-
-        pdb.destroy_db();
     }
 
     ////Begin TplStandardNetForceModel////
@@ -46,7 +44,6 @@ namespace tpl {
 
         compute_net_force_target(Cx, dx, x_target);
         compute_net_force_target(Cy, dy, y_target);
-
     }
 
     void TplStandardNetForceModel::compute_net_force_matrix(SpMat &Cx, VectorXd &dx, SpMat &Cy, VectorXd &dy)
@@ -74,7 +71,7 @@ namespace tpl {
             curx = 0;
             cury = 0;
 
-            //initilize static data
+            //initialize static data
             for(TplNets::pin_iterator pit=pdb.nets.pin_begin(nit); pit!=pdb.nets.pin_end(nit); ++pit) {
                 TplModule module =  pdb.modules.module(pit->id);
                 pins.push_back( &(*pit) );
@@ -219,8 +216,8 @@ namespace tpl {
                 max_weight = 2.0/(degree-1)*(max-coordinates[cur_idx]);
             }
 
-            assert( net_weight.count(make_pair(pins[cur_idx], pins[min_idx]) ) == 0 );
-            assert( net_weight.count(make_pair(pins[cur_idx], pins[max_idx]) ) == 0 );
+            assert( net_weight.count( make_pair(pins[cur_idx], pins[min_idx]) ) == 0 );
+            assert( net_weight.count( make_pair(pins[cur_idx], pins[max_idx]) ) == 0 );
 
             net_weight[make_pair(pins[cur_idx], pins[min_idx])] = min_weight;
             net_weight[make_pair(pins[cur_idx], pins[max_idx])] = max_weight;
@@ -248,6 +245,21 @@ namespace tpl {
         _bin_height = pdb.modules.chip_height() / _grid_size;
     }
 
+    void TplStandardMoveForceModel::initialize_move_force_matrix(SpMat &Cx0, SpMat &Cy0)
+    {
+
+    }
+
+    void TplStandardMoveForceModel::compute_move_force_matrix(SpMat &Cx0, SpMat &Cy0)
+    {
+
+    }
+
+    void TplStandardMoveForceModel::compute_heat_flux(VectorXd &x_heat_flux, VectorXd &y_heat_flux)
+    {
+
+    }
+
     double TplStandardMoveForceModel::green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const
     {
 #ifndef NDEBUG
@@ -264,7 +276,7 @@ namespace tpl {
     double TplStandardMoveForceModel::power_density(int i, int j) const
     {
         int gsize(_grid_size);
-z
+
         assert(-gsize <= i && i < 2*gsize);
         assert(-gsize <= j && j < 2*gsize);
 
@@ -277,7 +289,6 @@ z
         else if(j>=gsize) y_idx = -i + 2*gsize - 1;
 
         return _power_density.at(x_idx).at(y_idx);
-
     }
 
     void TplStandardMoveForceModel::update_green_function(unsigned int grid_size)
@@ -321,7 +332,7 @@ z
             _power_density[i].reserve(_grid_size);
         }
 
-        int density_grid_size = _grid_size / 10;
+        unsigned int density_grid_size = _grid_size * 10;
         double x_step = _bin_width  / 10;
         double y_step = _bin_height / 10;
 
