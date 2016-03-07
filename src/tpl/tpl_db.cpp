@@ -1,5 +1,3 @@
-#include "tpl_db.h"
-
 #include <fstream>
 #include <string>
 #include <utility>
@@ -11,6 +9,8 @@
 #include "../bookshelf/bookshelf_pl_parser.hpp"
 #include "../bookshelf/bookshelf_net_parser.hpp"
 #include "../bookshelf/bookshelf_pl_generator.hpp"
+
+#include "tpl_db.h"
 
 namespace tpl {
     using namespace std;
@@ -26,7 +26,7 @@ namespace tpl {
 
         for(size_t i=0; i<bnodes.data.size(); ++i) {
             const BookshelfNode &bnode = bnodes.data[i];
-            const BookshelfPl   &bpl    = bpls.data[i];
+            const BookshelfPl   &bpl   = bpls.data[i];
 
             TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1};
             _modules.push_back(std::move(m));
@@ -150,10 +150,10 @@ namespace tpl {
 
     void TplNets::clear()
     {
-        _netlist.clear();
-
         _num_nets = 0;
         _num_pins = 0;
+
+        _netlist.clear();
     }
 
     TplDB* TplDB::_instance = NULL;

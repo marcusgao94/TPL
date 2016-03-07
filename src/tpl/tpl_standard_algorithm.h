@@ -1,5 +1,5 @@
 /*!
- * \file tpl__standard_algorithm.h
+ * \file tpl_standard_algorithm.h
  * \author Peng Fei
  * \brief Standard definition for TPL algorithm interface
  */
@@ -12,10 +12,10 @@
 #include <map>
 #include <utility>
 
-#include "tpl_db.h"
-
 #include <Eigen/Sparse>
 #include <Eigen/IterativeLinearSolvers>
+
+#include "tpl_db.h"
 
 namespace tpl {
 
@@ -44,7 +44,7 @@ namespace tpl {
     typedef std::map<std::pair<TplPin*, TplPin*>, double> NetWeight;
 
     /*!
-     * \enum Dimension
+     * \enum class Dimension
      * \brief Dimension enum
      */
     enum class Dimension { X, Y };
@@ -85,6 +85,12 @@ namespace tpl {
         //! Pure virtual destructor.
         virtual ~TplMoveForceModelInterface() = 0;
 
+        //virtual void initialize_move_force_matrix(SpMat &Cx0, SpMat &Cy0) = 0;
+
+        virtual void compute_move_force_matrix(SpMat &Cx0, SpMat &Cy0) = 0;
+
+        virtual void compute_heat_flux(VectorXd &x_heat_flux, VectorXd &y_heat_flux) = 0;
+
         ////////////////////////// Member Access ///////////////////////////////////////
         //! Interface for accessing green function value in index pair idx and idx0.
         /*!
@@ -92,14 +98,15 @@ namespace tpl {
          * \param idx0 ranges from -grid_size to 2*grid_size in both x and y direction.
          * \return green function value.
          */
-        virtual double green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const = 0;
+        //virtual double green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const = 0;
+
         //! Interface for accessing power density value in (i,j) position.
         /*!
          * \param i x grid bin index.
          * \param j y grid bin index.
          * \return power density value.
          */
-        virtual double power_density(int i, int j) const = 0;
+        //virtual double power_density(int i, int j) const = 0;
         ////////////////////////// Member Access ///////////////////////////////////////
 
         ///////////////////////// Modifiers   //////////////////////////////////////////
@@ -107,11 +114,12 @@ namespace tpl {
         /*!
          * \param grid_size unsigned int value indicating the new grid size.
          */
-        virtual void update_green_function(unsigned int grid_size) = 0;
+        //virtual void update_green_function(unsigned int grid_size) = 0;
+
         //! Interface for updating the power density.
         /*!
          */
-        virtual void update_power_density() = 0;
+        //virtual void update_power_density() = 0;
         ///////////////////////// Modifiers   //////////////////////////////////////////
     };
 
@@ -205,6 +213,12 @@ namespace tpl {
         //! Virtual destructor.
         virtual ~TplStandardMoveForceModel();
         ///////////////////////// Constructors /////////////////////////////////////////
+
+        virtual void initialize_move_force_matrix(SpMat &Cx0, SpMat &Cy0);
+
+        virtual void compute_move_force_matrix(SpMat &Cx0, SpMat &Cy0);
+
+        virtual void compute_heat_flux(VectorXd &x_heat_flux, VectorXd &y_heat_flux);
 
         //! Standard implementation for interface green_function.
         /*!
