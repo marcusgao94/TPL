@@ -14,7 +14,7 @@ include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/src/bookshelf)
 
 #boost setting
 set(Boost_USE_MULTITHREDED OFF)
-find_package(Boost 1.58.0 COMPONENTS system filesystem REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 if(Boost_FOUND)
     include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 else(Boost_FOUND)

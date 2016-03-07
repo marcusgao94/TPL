@@ -276,7 +276,7 @@ namespace tpl {
     double TplStandardMoveForceModel::power_density(int i, int j) const
     {
         int gsize(_grid_size);
-
+z
         assert(-gsize <= i && i < 2*gsize);
         assert(-gsize <= j && j < 2*gsize);
 
