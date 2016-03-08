@@ -1,134 +1,157 @@
 #include <cassert>
+#include <cmath>
 #include <fstream>
 #include <iterator>
+#include <algorithm>
 
 #include "tpl_standard_algorithm.h"
 
 namespace tpl {
     using namespace std;
 
-    TplNetForceModelInterface::~TplNetForceModelInterface()
+    ////Begin TplStandardNetModel////
+
+    TplNetModelInterface::~TplNetModelInterface()
     {
     }
 
-    TplMoveForceModelInterface::~TplMoveForceModelInterface()
+    TplStandardNetModel::~TplStandardNetModel()
     {
     }
 
-    TplAlgorithmInterface::~TplAlgorithmInterface()
+    void TplStandardNetModel::compute_net_weight(NetWeight &x_net_weight, NetWeight &y_net_weight)
     {
-        delete net_force_model;
-        delete move_force_model;
-    }
+        //preconditions
+        assert( x_net_weight.size() == 0);
+        assert( y_net_weight.size() == 0);
 
-    ////Begin TplStandardNetForceModel////
+        //define pin related data
+        vector<TplPin*> pins = {};
+        vector<double> xs = {};
+        vector<double> ys = {};
+        double xmin=pdb.modules.chip_width(), xmax=-1, ymin=pdb.modules.chip_height(), ymax=-1;
+        size_t xmin_idx=-1, xmax_idx=-1, ymin_idx=-1, ymax_idx=-1;
 
-    TplStandardNetForceModel::~TplStandardNetForceModel()
-    {
-    }
-
-    void TplStandardNetForceModel::compute_net_force_target(vector<double> &x_target, vector<double> &y_target)
-    {
-        assert( x_target.size() == 0 );
-        assert( y_target.size() == 0 );
-
-        unsigned int num_free = pdb.modules.num_free();
-        SpMat Cx(num_free, num_free);
-        SpMat Cy(num_free, num_free);
-        VectorXd dx(num_free);
-        dx = VectorXd::Zero(num_free);
-        VectorXd dy(num_free);
-        dy = VectorXd::Zero(num_free);
-
-        compute_net_force_matrix(Cx, dx, Cy, dy);
-
-        compute_net_force_target(Cx, dx, x_target);
-        compute_net_force_target(Cy, dy, y_target);
-    }
-
-    void TplStandardNetForceModel::compute_net_force_matrix(SpMat &Cx, VectorXd &dx, SpMat &Cy, VectorXd &dy)
-    {
-        NetWeight x_net_weight, y_net_weight;
-
-        compute_net_weight(x_net_weight, y_net_weight);
-
-        compute_net_force_matrix(x_net_weight, Dimension::X, Cx, dx);
-        compute_net_force_matrix(y_net_weight, Dimension::Y, Cy, dy);
-    }
-
-    void TplStandardNetForceModel::compute_net_weight(NetWeight &x_net_weight, NetWeight &y_net_weight)
-    {
-        //define static data
-        static vector<TplPin*> pins;
-        static vector<double> xs, ys;
-        static double xmin=pdb.modules.chip_width(), xmax=-1, ymin=pdb.modules.chip_height(), ymax=-1;
-        static size_t xmin_idx, xmax_idx, ymin_idx, ymax_idx;
-
-        size_t i;
+        //local helper variables
+        size_t idx;
         double curx, cury;
+
         for(TplNets::net_iterator nit=pdb.nets.net_begin(); nit!=pdb.nets.net_end(); ++nit) {
-            i = 0;
+            idx = 0;
             curx = 0;
             cury = 0;
 
-            //initialize static data
+            //initialize current net's pin's related data
             for(TplNets::pin_iterator pit=pdb.nets.pin_begin(nit); pit!=pdb.nets.pin_end(nit); ++pit) {
-                TplModule module =  pdb.modules.module(pit->id);
+                TplModule &module =  pdb.modules.module(pit->id);
                 pins.push_back( &(*pit) );
 
                 curx = module.x + pit->dx;
                 if       (curx < xmin) {
                     xmin = curx;
-                    xmin_idx = i;
+                    xmin_idx = idx;
                 } else if(curx > xmax) {
                     xmax = curx;
-                    xmax_idx = i;
+                    xmax_idx = idx;
                 }
                 xs.push_back(curx);
 
                 cury = module.y + pit->dy;
                 if       (cury < ymin) {
                     ymin = cury;
-                    ymin_idx = i;
+                    ymin_idx = idx;
                 } else if(cury > ymax) {
                     ymax = cury;
-                    ymax_idx = i;
+                    ymax_idx = idx;
                 }
                 ys.push_back(cury);
 
-                ++i;
+                ++idx;
             }
 
-            //call private routine
-            compute_net_weight(pins, xs, xmin, xmax, xmin_idx, xmax_idx, x_net_weight);
-            compute_net_weight(pins, ys, ymin, ymax, ymin_idx, ymax_idx, y_net_weight);
+            const size_t &degree = pins.size();
+            //initialize current net's net weights to zero
+            /*
+            for(size_t i=0; i<degree; ++i) {
+                for(size_t j=0; j<degree; ++j) {
 
-            //restore static data
-            pins.clear();
-            xs.clear();
-            ys.clear();
-            xmin=pdb.modules.chip_width();
-            xmax=-1;
-            ymin=pdb.modules.chip_height();
-            ymax=-1;
+                    assert( x_net_weight.count(make_pair(pins[i], pins[j])) == 0);
+                    assert( y_net_weight.count(make_pair(pins[i], pins[j])) == 0);
+
+                    x_net_weight[make_pair(pins[i], pins[j])] = 0;
+                    y_net_weight[make_pair(pins[i], pins[j])] = 0;
+                }
+            }
+             */
+
+            //loop to compute current net's non zero net weights
+            for(size_t cur_idx=0; cur_idx<degree; ++cur_idx)     {
+                if( cur_idx == xmin_idx || cur_idx == xmax_idx ||
+                    cur_idx == ymin_idx || cur_idx == ymax_idx ) {
+                    continue;
+                } else {
+                    if (xs[cur_idx] == xmin) {
+                        x_net_weight[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+                        x_net_weight[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+
+                    } else if (xs[cur_idx] == xmax) {
+                        x_net_weight[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+                        x_net_weight[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+                    } else {
+                        x_net_weight[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
+                        x_net_weight[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
+                        x_net_weight[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
+                        x_net_weight[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
+                    }
+
+                    if (ys[cur_idx] == ymin) {
+                        y_net_weight[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                        y_net_weight[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                    }
+                    else if (ys[cur_idx] == ymax) {
+                        y_net_weight[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                        y_net_weight[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                    } else {
+                        y_net_weight[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
+                        y_net_weight[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
+                        y_net_weight[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
+                        y_net_weight[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
+                    }
+                }
+            }
+
+            x_net_weight[make_pair(pins[xmin_idx], pins[xmax_idx])] = 2.0/(degree-1)*(xmax-xmin);
+            x_net_weight[make_pair(pins[xmax_idx], pins[xmin_idx])] = 2.0/(degree-1)*(xmax-xmin);
+            y_net_weight[make_pair(pins[ymin_idx], pins[ymax_idx])] = 2.0/(degree-1)*(ymax-ymin);
+            y_net_weight[make_pair(pins[ymax_idx], pins[ymin_idx])] = 2.0/(degree-1)*(ymax-ymin);
         }
     }
 
-    void TplStandardNetForceModel::compute_net_force_target(const SpMat &C, const VectorXd &d, std::vector<double> &target)
+    ////End TplStandardNetModel////
+
+
+    ////Begin TplStandardNetForceModel////
+
+    TplNetForceModelInterface::~TplNetForceModelInterface()
     {
-        assert( target.size() == 0 );
-
-        //solve linear problem using a LLT solver
-        LLTSolver llt;
-        VectorXd eigen_target = llt.compute(C).solve(d*-1);
-
-        target.resize(eigen_target.size());
-        VectorXd::Map(&target[0], eigen_target.size()) = eigen_target;
     }
 
-    void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &net_weight, const Dimension dim, SpMat &C, VectorXd &d)
+    TplStandardNetForceModel::~TplStandardNetForceModel()
     {
-        //prepare data for bound2bound model 
+    }
+
+    void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &NWx, const NetWeight &NWy,
+                                                            SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
+    {
+        //preconditions
+        assert(Cx.cols() == pdb.modules.num_free());
+        assert(Cx.rows() == pdb.modules.num_free());
+        assert(Cy.cols() == pdb.modules.num_free());
+        assert(Cy.rows() == pdb.modules.num_free());
+        assert(dx.size() == pdb.modules.num_free());
+        assert(dy.size() == pdb.modules.num_free());
+
+        //prepare data
         TplPin *pin1, *pin2;
         string id1, id2;
         size_t idx1, idx2;
@@ -136,7 +159,8 @@ namespace tpl {
         map<pair<size_t, size_t>, double> nw;
         vector<SpElem> coefficients;
 
-        for(NetWeight::const_iterator it=net_weight.begin(); it!=net_weight.end(); ++it) {
+        //compute Cx and dx
+        for(NetWeight::const_iterator it=NWx.begin(); it!=NWx.end(); ++it) {
             pin1 = it->first.first;
             pin2 = it->first.second;
             id1 = pin1->id;
@@ -151,38 +175,16 @@ namespace tpl {
                 nw[make_pair(idx1, idx2)] -= weight;
                 nw[make_pair(idx2, idx1)] -= weight;
 
-                switch(dim) {
-                    case Dimension::X:
-                        d(idx1) += weight*(pin1->dx - pin2->dx);
-                        d(idx2) += weight*(pin2->dx - pin1->dx);
-                        break;
-                    case Dimension::Y:
-                        d(idx1) += weight*(pin1->dy - pin2->dy);
-                        d(idx2) += weight*(pin2->dy - pin1->dy);
-                        break;
-                }
+                dx(idx1) += weight*(pin1->dx - pin2->dx);
+                dx(idx2) += weight*(pin2->dx - pin1->dx);
             } else if(!pdb.modules.is_module_fixed(id1) && pdb.modules.is_module_fixed(id2)) {
                 nw[make_pair(idx1, idx1)] += weight;
 
-                switch(dim) {
-                    case Dimension::X:
-                        d(idx1) += weight*(pin1->dx - pin2->dx - pdb.modules[idx2].x);
-                        break;
-                    case Dimension::Y:
-                        d(idx1) += weight*(pin1->dy - pin2->dy - pdb.modules[idx2].y);
-                        break;
-                }
+                dx(idx1) += weight*(pin1->dx - pin2->dx - pdb.modules[idx2].x);
             } else if(pdb.modules.is_module_fixed(id1) && !pdb.modules.is_module_fixed(id2)) {
                 nw[make_pair(idx2, idx2)] += weight;
 
-                switch(dim) {
-                    case Dimension::X:
-                        d(idx2) += weight*(pin2->dx - pin1->dx - pdb.modules[idx1].x);
-                        break;
-                    case Dimension::Y:
-                        d(idx2) += weight*(pin2->dy - pin1->dy - pdb.modules[idx1].y);
-                        break;
-                }
+                dx(idx2) += weight*(pin2->dx - pin1->dx - pdb.modules[idx1].x);
             } else {
                 continue;
             }
@@ -191,86 +193,183 @@ namespace tpl {
         for(map<pair<size_t, size_t>, double>::iterator it=nw.begin(); it!=nw.end(); ++it) {
             coefficients.push_back( SpElem(it->first.first, it->first.second, it->second) );
         }
-        C.setFromTriplets(coefficients.begin(), coefficients.end());
-    }
+        Cx.setFromTriplets(coefficients.begin(), coefficients.end());
 
-    void TplStandardNetForceModel::compute_net_weight(const std::vector<TplPin*> &pins, const std::vector<double> &coordinates,
-                                                      const double &min, const double &max, const size_t &min_idx, const size_t &max_idx, NetWeight &net_weight)
-    {
-        assert( pins.size() == coordinates.size() );
+        //clear temp container
+        nw.clear();
+        coefficients.clear();
 
-        const size_t &degree = pins.size();
-        double min_weight, max_weight;
+        //compute Cy and dy
+        for(NetWeight::const_iterator it=NWy.begin(); it!=NWy.end(); ++it) {
+            pin1 = it->first.first;
+            pin2 = it->first.second;
+            id1 = pin1->id;
+            id2 = pin2->id;
+            idx1    = pdb.modules.module_index(id1);
+            idx2    = pdb.modules.module_index(id2);
+            weight = it->second;
 
-        for(size_t cur_idx=0; cur_idx<degree; ++cur_idx) {
-            if(cur_idx == min_idx || cur_idx == max_idx ) continue;
+            if(!pdb.modules.is_module_fixed(id1) && !pdb.modules.is_module_fixed(id2)) {
+                nw[make_pair(idx1, idx1)] += weight;
+                nw[make_pair(idx2, idx2)] += weight;
+                nw[make_pair(idx1, idx2)] -= weight;
+                nw[make_pair(idx2, idx1)] -= weight;
 
-            if( coordinates[cur_idx] == min ) {
-                min_weight = 0;
-                max_weight = 2.0/(degree-1)*(max-min);
-            } else if( coordinates[cur_idx] == max ) {
-                min_weight = 2.0/(degree-1)*(max-min);
-                max_weight = 0;
+                dy(idx1) += weight*(pin1->dy - pin2->dy);
+                dy(idx2) += weight*(pin2->dy - pin1->dy);
+            } else if(!pdb.modules.is_module_fixed(id1) && pdb.modules.is_module_fixed(id2)) {
+                nw[make_pair(idx1, idx1)] += weight;
+
+                dy(idx1) += weight*(pin1->dy - pin2->dy - pdb.modules[idx2].y);
+            } else if(pdb.modules.is_module_fixed(id1) && !pdb.modules.is_module_fixed(id2)) {
+                nw[make_pair(idx2, idx2)] += weight;
+
+                dy(idx2) += weight*(pin2->dy - pin1->dy - pdb.modules[idx1].y);
             } else {
-                min_weight = 2.0/(degree-1)*(coordinates[cur_idx]-min);
-                max_weight = 2.0/(degree-1)*(max-coordinates[cur_idx]);
+                continue;
             }
-
-            assert( net_weight.count( make_pair(pins[cur_idx], pins[min_idx]) ) == 0 );
-            assert( net_weight.count( make_pair(pins[cur_idx], pins[max_idx]) ) == 0 );
-
-            net_weight[make_pair(pins[cur_idx], pins[min_idx])] = min_weight;
-            net_weight[make_pair(pins[cur_idx], pins[max_idx])] = max_weight;
         }
 
-        assert( net_weight.count(make_pair(pins[min_idx], pins[max_idx]) ) == 0 );
+        for(map<pair<size_t, size_t>, double>::iterator it=nw.begin(); it!=nw.end(); ++it) {
+            coefficients.push_back( SpElem(it->first.first, it->first.second, it->second) );
+        }
+        Cy.setFromTriplets(coefficients.begin(), coefficients.end());
+    }
 
-        double min_max_weight = 2.0/(degree-1)*(max-min);
-        net_weight[make_pair(pins[min_idx], pins[max_idx])] = min_max_weight;
+
+    void TplStandardNetForceModel::compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
+                                                            std::vector<double> &x_target, std::vector<double> &y_target)
+    {
+        assert( x_target.size() == pdb.modules.num_free() );
+        assert( y_target.size() == pdb.modules.num_free() );
+
+        unsigned int num_free = pdb.modules.num_free();
+        SpMat Cx(num_free, num_free);
+        SpMat Cy(num_free, num_free);
+        VectorXd dx(num_free);
+        dx = VectorXd::Zero(num_free);
+        VectorXd dy(num_free);
+        dy = VectorXd::Zero(num_free);
+
+        compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);
+
+        LLTSolver llt;
+
+        VectorXd x_eigen_target = llt.compute(Cx).solve(dx*-1);
+        VectorXd y_eigen_target = llt.compute(Cy).solve(dy*-1);
+
+        assert( x_target.size() == x_eigen_target.size() );
+        assert( y_target.size() == y_eigen_target.size() );
+
+        VectorXd::Map(&x_target[0], x_eigen_target.size()) = x_eigen_target;
+        VectorXd::Map(&y_target[0], y_eigen_target.size()) = y_eigen_target;
     }
 
     ////End TplStandardNetForceModel////
 
 
     ////Begin TplStandardMoveForceModel////
+    TplMoveForceModelInterface::~TplMoveForceModelInterface()
+    {
+    }
 
     TplStandardMoveForceModel::~TplStandardMoveForceModel()
     {
     }
 
-    TplStandardMoveForceModel::TplStandardMoveForceModel(double r1, double r2, unsigned int grid_size) :
-            _r1(r1), _r2(r2), _grid_size(grid_size), _bin_width(0), _bin_height(0)
+    TplStandardMoveForceModel::TplStandardMoveForceModel(SpMat &Cx0, SpMat &Cy0, double r1, double r2,
+                                                         unsigned int grid_size, double mu) :
+            _Cx0(Cx0), _Cy0(Cy0), _r1(r1), _r2(r2), _grid_size(grid_size), _mu(mu)
     {
         _bin_width  = pdb.modules.chip_width()  / _grid_size;
         _bin_height = pdb.modules.chip_height() / _grid_size;
+
+        update_power_density();
+
+        //initialize_move_force_matrix(_Cx0, _Cy0);
     }
 
-    void TplStandardMoveForceModel::initialize_move_force_matrix(SpMat &Cx0, SpMat &Cy0)
+    void TplStandardMoveForceModel::compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy)
     {
+        //compute chip grid temperatures using green function method
+        int dx = static_cast<int>(floor((_r2*10000)/(_bin_width*10000)));
+        int dy = static_cast<int>(floor((_r2*10000)/(_bin_height*10000)));
+        double tss[_grid_size+3][_grid_size+3] = {};
 
+        double ts = 0;
+        for(int i=-1; i<_grid_size+2; ++i) {
+            for(int j=-1; j<_grid_size+2; ++j) {
+                ts = 0;
+                for(int i0=i-dx; i0<=i+dx; ++i0) {
+                    for(int j0=j-dy; j0<=j+dy; ++j0) {
+                        ts += green_function(make_pair(i, j), make_pair(i0, j0)) * power_density(i0, j0);
+                    }
+                }
+                tss[i+1][j+1] = ts;
+            }
+        }
+
+        //compute x and y direction head flux using finite difference method
+        double grid_xhf[_grid_size+2][_grid_size+2] = {};
+        double grid_yhf[_grid_size+2][_grid_size+2] = {};
+
+        for(int i=0; i<_grid_size+2; ++i) {
+            for(int j=0; j<_grid_size+2; ++i) {
+                grid_xhf[i][j] = tss[i+1][j] - tss[i][j];
+                grid_yhf[i][j] = tss[i][j+1] - tss[i][j];
+            }
+        }
+
+        //compute module heat flux using bilinear interpolation method
+        double x=0, y=0;//for module's coordinates
+        int idx_x=0, idx_y=0;//for (x,y)'s containing grid point index
+        double x1=0, x2=0, y1=0, y2=0;//for (x,y)'s containing grid coordinates
+        double xhf=0, yhf=0;//for x and y heat flux value
+        for(size_t i=0; i!=pdb.modules.size(); ++i) {
+            //transform coordinate system
+            x = pdb.modules[i].x + _bin_width/2;
+            y = pdb.modules[i].y + _bin_height/2;
+
+            idx_x = static_cast<int>(floor(x*10000/_bin_width*10000));
+            idx_y = static_cast<int>(floor(y*10000/_bin_height*10000));
+
+            x1 = idx_x * _bin_width;
+            x2 = x1 + _bin_width;
+            y1 = idx_y * _bin_height;
+            y2 = y1 + _bin_height;
+
+            xhf = grid_xhf[idx_x][idx_y]     * (x2-x) * (y2-y) +
+                  grid_xhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
+                  grid_xhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
+                  grid_xhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
+            xhf = (xhf*10000)/(_bin_width*_bin_height*10000);
+
+            yhf = grid_yhf[idx_x][idx_y]     * (x2-x) * (y2-y) +
+                  grid_yhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
+                  grid_yhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
+                  grid_yhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
+            yhf = (yhf*10000)/(_bin_width*_bin_height*10000);
+
+            HFx(i) = xhf;
+            HFy(i) = yhf;
+        }
     }
 
-    void TplStandardMoveForceModel::compute_move_force_matrix(SpMat &Cx0, SpMat &Cy0)
-    {
-
-    }
-
-    void TplStandardMoveForceModel::compute_heat_flux(VectorXd &x_heat_flux, VectorXd &y_heat_flux)
-    {
-
-    }
 
     double TplStandardMoveForceModel::green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const
     {
-#ifndef NDEBUG
-        int gsize(_grid_size);
-#endif
-        assert(0 <= idx.first  && idx.first  < gsize);
-        assert(0 <= idx.second && idx.second < gsize);
-        assert(-gsize <= idx0.first  && idx0.first  < 2*gsize);
-        assert(-gsize <= idx0.second && idx0.second < 2*gsize);
+        const int &i = idx.first;
+        const int &j = idx.second;
+        const int &i0 = idx0.first;
+        const int &j0 = idx0.second;
 
-        return _green_function.at(make_pair(idx, idx0));
+        if(i==i0 && j==j0) return 0;
+
+        double distance = sqrt(pow(abs(i-i0)*_bin_width, 2) + pow(abs(j-j0)*_bin_height, 2));
+
+        if     (distance > _r2)  return 0;
+        else if(distance <= _r1) return 1/distance;
+        else                     return 0.6/sqrt(distance);
     }
 
     double TplStandardMoveForceModel::power_density(int i, int j) const
@@ -281,47 +380,14 @@ namespace tpl {
         assert(-gsize <= j && j < 2*gsize);
 
         int x_idx=i;
-        if(i<0) x_idx = -i + 1;
+        if(i<0) x_idx = -i - 1;
         else if(i>=gsize) x_idx = -i + 2*gsize - 1;
 
         int y_idx=j;
-        if(j<0) y_idx = -i + 1;
-        else if(j>=gsize) y_idx = -i + 2*gsize - 1;
+        if(j<0) y_idx = -j - 1;
+        else if(j>=gsize) y_idx = -j + 2*gsize - 1;
 
         return _power_density.at(x_idx).at(y_idx);
-    }
-
-    void TplStandardMoveForceModel::update_green_function(unsigned int grid_size)
-    {
-        _grid_size = grid_size;
-
-        _bin_width  = pdb.modules.chip_width()  / _grid_size;
-        _bin_height = pdb.modules.chip_height() / _grid_size;
-
-        _green_function.clear();
-        double distance = 0;
-        int gsize(grid_size);
-        for(int i=0; i<gsize; ++i) {
-            for(int j=0; j<gsize; ++j) {
-                for(int i0=-gsize; i0<2*gsize; ++i0) {
-                    for(int j0=-gsize; j0<2*gsize; ++j0) {
-                        if(i==i0 && j==j0) continue;
-                        pair<int, int> idx  = make_pair(i, j);
-                        pair<int, int> idx0 = make_pair(i0, j0);
-
-                        distance = sqrt(pow(abs(i-i0)*_bin_width, 2) + pow(abs(j-j0)*_bin_height, 2));
-
-                        if(distance <= _r1) {
-                            _green_function[make_pair(idx, idx0)] = 1/distance;
-                        } else if( distance > _r2) {
-                            _green_function[make_pair(idx, idx0)] = 0;
-                        } else {
-                            _green_function[make_pair(idx, idx0)] = 0.6/sqrt(distance);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     void TplStandardMoveForceModel::update_power_density()
@@ -331,38 +397,33 @@ namespace tpl {
         for(size_t i=0; i<_power_density.size(); ++i) {
             _power_density[i].reserve(_grid_size);
         }
+        for_each(begin(_power_density), end(_power_density), [](vector<double> &p){
+            for_each(begin(p), end(p), [](double &v){
+                v = 0;
+            });
+        });
 
-        unsigned int density_grid_size = _grid_size * 10;
-        double x_step = _bin_width  / 10;
-        double y_step = _bin_height / 10;
+        double left, right, bottom, top;
+        unsigned int idx_left, idx_right, idx_bottom, idx_top;
+        for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
+            left   = it->x - it->width/2.0;
+            right  = it->x + it->width/2.0;
+            bottom = it->y - it->height/2.0;
+            top    = it->y + it->height/2.0;
 
-        vector<vector<double> > power_density_grid(density_grid_size, vector<double>(density_grid_size, 0));
+            idx_left   = static_cast<unsigned int>(floor((left*10000)  /(_bin_width*10000)) );
+            idx_right  = static_cast<unsigned int>(ceil((right*10000)  /(_bin_width*10000)) );
+            idx_bottom = static_cast<unsigned int>(floor((bottom*10000)/(_bin_height*10000)));
+            idx_top    = static_cast<unsigned int>(ceil((top*10000)    /(_bin_height*10000)));
 
-        double x_orig = x_step / 2.0;
-        double y_orig = y_step / 2.0;
-        double x_cord = 0;
-        double y_cord = 0;
-        for(size_t i=0; i<_grid_size; ++i) {
-            for(size_t j=0; j<_grid_size; ++j) {
-                x_cord = x_orig + i*x_step;
-                y_cord = y_orig + j*y_step;
+            if(fmod(left*10000,  _bin_width*10000   ) > _bin_width/2 ) idx_left   += 1;
+            if(fmod(right*10000,  _bin_width*10000  ) < _bin_width/2 ) idx_right  -= 1;
+            if(fmod(bottom*10000, _bin_height*10000 ) > _bin_height/2) idx_bottom += 1;
+            if(fmod(top*10000,    _bin_height*10000 ) < _bin_height/2) idx_top    -= 1;
 
-                for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
-                    const TplModule &m = *it;
-                    if( m.x-m.width  <= x_cord && x_cord <= m.x+m.width &&
-                        m.y-m.height <= y_cord && y_cord <= m.y+m.height) {
-                        power_density_grid[i][j] += m.power_density;
-                    }
-                }
-            }
-        }
-
-        for(size_t i=0; i<_grid_size; ++i) {
-            for(size_t j=0; j<_grid_size; ++j) {
-                for(size_t x_idx = i*10; x_idx<i*10+10; ++x_idx) {
-                    for(size_t y_idx = j*10; y_idx<j*10+10; ++y_idx) {
-                        _power_density[i][j] += power_density_grid[x_idx][y_idx];
-                    }
+            for(unsigned int i=idx_left; i<idx_right; ++i) {
+                for(unsigned int j=idx_bottom; j<idx_top; ++j) {
+                    _power_density[i][j] += it->power_density;
                 }
             }
         }
@@ -372,6 +433,12 @@ namespace tpl {
 
 
     ////Begin TplStandardAlgorithm////
+
+    TplAlgorithmInterface::~TplAlgorithmInterface()
+    {
+        delete net_force_model;
+        delete move_force_model;
+    }
 
     TplStandardAlgorithm::~TplStandardAlgorithm()
     {
@@ -394,6 +461,35 @@ namespace tpl {
             x_target.clear();
             y_target.clear();
         }
+    }
+
+    void TplStandardAlgorithm::initialize_move_force_matrix()
+    {
+        vector<SpElem> coefficients;
+        unsigned int num_free = pdb.modules.num_free();
+        vector<double> module_power;
+
+        double avg_power = 0;
+        double power;
+        for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
+            power = it->width * it->height * it->power_density;
+            avg_power +=  power;
+
+            if(!it->fixed) module_power.push_back(power);
+        }
+        avg_power /= pdb.modules.size();
+
+        for(size_t i=0; i<module_power.size(); ++i) {
+            coefficients.push_back(SpElem(i, i, module_power[i]/avg_power/num_free));
+        }
+
+        Cx0.setFromTriplets(coefficients.begin(), coefficients.end());
+        Cy0.setFromTriplets(coefficients.begin(), coefficients.end());
+    }
+
+    void TplStandardAlgorithm::update_move_force_matrix()
+    {
+
     }
 
     ////End TplStandardAlgorithm////

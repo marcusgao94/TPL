@@ -1,4 +1,4 @@
-include_directories(${PROJECT_SOURCE_DIR}/src/tpl)
+include_directories(${PROJECT_SOURCE_DIR}/tpl)
 
 #executables
 
