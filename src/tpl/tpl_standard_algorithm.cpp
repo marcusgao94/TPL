@@ -19,11 +19,11 @@ namespace tpl {
     {
     }
 
-    void TplStandardNetModel::compute_net_weight(NetWeight &x_net_weight, NetWeight &y_net_weight)
+    void TplStandardNetModel::compute_net_weight(NetWeight &NWx, NetWeight &NWy)
     {
         //preconditions
-        assert( x_net_weight.size() == 0);
-        assert( y_net_weight.size() == 0);
+        NWx.clear();
+        NWy.clear();
 
         //define pin related data
         vector<TplPin*> pins = {};
@@ -75,55 +75,55 @@ namespace tpl {
             for(size_t i=0; i<degree; ++i) {
                 for(size_t j=0; j<degree; ++j) {
 
-                    assert( x_net_weight.count(make_pair(pins[i], pins[j])) == 0);
-                    assert( y_net_weight.count(make_pair(pins[i], pins[j])) == 0);
+                    assert( NWx.count(make_pair(pins[i], pins[j])) == 0);
+                    assert( NWy.count(make_pair(pins[i], pins[j])) == 0);
 
-                    x_net_weight[make_pair(pins[i], pins[j])] = 0;
-                    y_net_weight[make_pair(pins[i], pins[j])] = 0;
+                    NWx[make_pair(pins[i], pins[j])] = 0;
+                    NWy[make_pair(pins[i], pins[j])] = 0;
                 }
             }
              */
 
-            //loop to compute current net's non zero net weights
+            //loop to compute current pin pair set's non zero net weights
+            //pin pair <==> net weight
             for(size_t cur_idx=0; cur_idx<degree; ++cur_idx)     {
                 if( cur_idx == xmin_idx || cur_idx == xmax_idx ||
                     cur_idx == ymin_idx || cur_idx == ymax_idx ) {
                     continue;
                 } else {
                     if (xs[cur_idx] == xmin) {
-                        x_net_weight[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xmin);
-                        x_net_weight[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
-
+                        NWx[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+                        //NWx[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
                     } else if (xs[cur_idx] == xmax) {
-                        x_net_weight[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xmax - xmin);
-                        x_net_weight[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+                        NWx[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xmax - xmin);
+                        //NWx[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
                     } else {
-                        x_net_weight[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
-                        x_net_weight[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
-                        x_net_weight[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
-                        x_net_weight[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
+                        NWx[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
+                        //NWx[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
+                        NWx[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
+                        //NWx[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
                     }
 
                     if (ys[cur_idx] == ymin) {
-                        y_net_weight[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - ymin);
-                        y_net_weight[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                        NWy[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                        //NWy[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
                     }
                     else if (ys[cur_idx] == ymax) {
-                        y_net_weight[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (ymax - ymin);
-                        y_net_weight[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                        NWy[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (ymax - ymin);
+                        //NWy[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
                     } else {
-                        y_net_weight[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
-                        y_net_weight[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
-                        y_net_weight[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
-                        y_net_weight[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
+                        NWy[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
+                        //NWy[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
+                        NWy[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
+                        //NWy[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
                     }
                 }
             }
 
-            x_net_weight[make_pair(pins[xmin_idx], pins[xmax_idx])] = 2.0/(degree-1)*(xmax-xmin);
-            x_net_weight[make_pair(pins[xmax_idx], pins[xmin_idx])] = 2.0/(degree-1)*(xmax-xmin);
-            y_net_weight[make_pair(pins[ymin_idx], pins[ymax_idx])] = 2.0/(degree-1)*(ymax-ymin);
-            y_net_weight[make_pair(pins[ymax_idx], pins[ymin_idx])] = 2.0/(degree-1)*(ymax-ymin);
+            NWx[make_pair(pins[xmin_idx], pins[xmax_idx])] = 2.0/(degree-1)*(xmax-xmin);
+            //NWx[make_pair(pins[xmax_idx], pins[xmin_idx])] = 2.0/(degree-1)*(xmax-xmin);
+            NWy[make_pair(pins[ymin_idx], pins[ymax_idx])] = 2.0/(degree-1)*(ymax-ymin);
+            //NWy[make_pair(pins[ymax_idx], pins[ymin_idx])] = 2.0/(degree-1)*(ymax-ymin);
         }
     }
 
@@ -144,6 +144,7 @@ namespace tpl {
                                                             SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
     {
         //preconditions
+        //TODO:refine assersions
         assert(Cx.cols() == pdb.modules.num_free());
         assert(Cx.rows() == pdb.modules.num_free());
         assert(Cy.cols() == pdb.modules.num_free());
@@ -436,6 +437,7 @@ namespace tpl {
 
     TplAlgorithmInterface::~TplAlgorithmInterface()
     {
+        delete net_model;
         delete net_force_model;
         delete move_force_model;
     }
@@ -446,6 +448,7 @@ namespace tpl {
 
     void TplStandardAlgorithm::initialize_models()
     {
+        net_model        = new TplStandardNetModel;
         net_force_model  = new TplStandardNetForceModel;
         move_force_model = new TplStandardMoveForceModel(0.1, 0.2, 100000);
     }
@@ -453,13 +456,19 @@ namespace tpl {
     void TplStandardAlgorithm::make_initial_placement()
     {
         vector<double> x_target, y_target;
+        NetWeight NWx, NWy;
+
+        net_model->compute_net_weight(NWx, NWy);
 
         for(size_t i=0; i<5; ++i) {
-            net_force_model->compute_net_force_target(x_target, y_target);
+            net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
             pdb.modules.set_free_module_coordinates(x_target, y_target);
 
             x_target.clear();
+            x_target.reserve(pdb.modules.num_free());
+
             y_target.clear();
+            y_target.reserve(pdb.modules.num_free());
         }
     }
 

@@ -57,10 +57,10 @@ namespace tpl {
 
         //! Interface for computing a net's net weight.
         /*!
-         * \param x_net_weight storing the net weight in x directions.
-         * \param y_net_weight storing the net weight in y directions.
+         * \param NWx The net weight in x directions to be computed.
+         * \param NWy The net weight in y directions to be computed.
          */
-        virtual void compute_net_weight(NetWeight &x_net_weight, NetWeight &y_net_weight) = 0;
+        virtual void compute_net_weight(NetWeight &NWx, NetWeight &NWy) = 0;
     };
 
     class TplStandardNetModel : public TplNetModelInterface {
@@ -69,10 +69,10 @@ namespace tpl {
 
         //! Standard implementation for interface compute_net_weight.
         /*!
-         * \param x_net_weight storing the net weight in x directions.
-         * \param y_net_weight storing the net weight in y directions.
+         * \param NWx The net weight in x directions to be computed.
+         * \param NWy The net weight in y directions to be computed.
          */
-        virtual void compute_net_weight(NetWeight &x_net_weight, NetWeight &y_net_weight);
+        virtual void compute_net_weight(NetWeight &NWx, NetWeight &NWy);
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,8 +87,8 @@ namespace tpl {
         /*!
          * \param NWx Net weight int x direction.
          * \param NWy Net weight int y direction.
-         * \param Cx  SpMat storing the net force matrix in x direction.
-         * \param Cy  SpMat storing the net force matrix in y direction.
+         * \param Cx  SpMat The net force matrix in x direction to be computed.
+         * \param Cy  SpMat The net force matrix in y direction to be computed.
          * \param dx  VectorXd storing the net force vector in x direction.
          * \param dy  VectorXd storing the net force vector in y direction.
          */
@@ -104,7 +104,6 @@ namespace tpl {
          */
         virtual void compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
                                               std::vector<double> &x_target, std::vector<double> &y_target) = 0;
-
     };
 
     //! Standard implementation for tpl net force model.
@@ -119,8 +118,8 @@ namespace tpl {
         /*!
          * \param NWx Net weight int x direction.
          * \param NWy Net weight int y direction.
-         * \param Cx  SpMat storing the net force matrix in x direction.
-         * \param Cy  SpMat storing the net force matrix in y direction.
+         * \param Cx  SpMat The net force matrix in x direction to be computed.
+         * \param Cy  SpMat The net force matrix in y direction to be computed.
          * \param dx  VectorXd storing the net force vector in x direction.
          * \param dy  VectorXd storing the net force vector in y direction.
          */
@@ -223,6 +222,7 @@ namespace tpl {
         virtual void make_global_placement() = 0;
 
     protected:
+        TplNetModelInterface       *net_model;        //!< Pointer to a TplNetModelInterface
         TplNetForceModelInterface  *net_force_model;  //!< Pointer to a TplNetForceModelInterface.
         TplMoveForceModelInterface *move_force_model; //!< Pointer to a TplMoveForceModelInterface.
     };
@@ -249,9 +249,10 @@ namespace tpl {
         virtual void initialize_move_force_matrix();
         virtual void update_move_force_matrix();
 
+        NetWeight NWx, NWy;
         SpMat Cx,  Cy;
-        SpMat Cx0, Cy0;
         VectorXd HFx, HFy;
+        SpMat Cx0, Cy0;
     };
 
 }//end namespace tpl
