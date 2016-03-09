@@ -109,10 +109,8 @@ namespace tpl {
     //! Standard implementation for tpl net force model.
     class TplStandardNetForceModel : public TplNetForceModelInterface {
     public:
-        ///////////////////////// Constructors /////////////////////////////////////////
         //! Virtual destructor.
         virtual ~TplStandardNetForceModel();
-        ///////////////////////// Constructors /////////////////////////////////////////
 
         //! Standard implementation for interface compute_net_force_matrix.
         /*!
@@ -137,6 +135,35 @@ namespace tpl {
                                               std::vector<double> &x_target, std::vector<double> &y_target);
     };
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class TplThermalModelInterface {
+    public:
+        //!< Pure virtual destructor.
+        ~TplThermalModelInterface() = 0;
+
+        virtual double green_function(int i, int j, int i0, int j0) const = 0;
+
+        virtual double power_density(int i, int j) const = 0;
+    };
+
+    class TplStandardThermalModel : public TplThermalModelInterface {
+    public:
+        TplStandardThermalModel();
+        ~TplStandardThermalModel();
+        virtual double green_function(int i, int j, int i0, int j0) const;
+
+        virtual double power_density(int i, int j) const;
+
+    protected:
+        double _r1; //!< Green function R1 radius.
+        double _r2; //!< Green function R2 radius.
+        int _grid_size; //!< Storing grid size during tpl algorithm computation.
+        double _bin_width;  //!< A grid bin's width.
+        double _bin_height; //!< A grid bin's height.
+        std::vector<std::vector<double> > _power_density; //!< Power density container.
+    };
+   
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Interface definition for tpl move force model.
