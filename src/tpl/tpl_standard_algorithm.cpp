@@ -4,9 +4,11 @@
 #include <fstream>
 #include <iterator>
 #include <algorithm>
+#include <stdexcept>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/filesystem.hpp>
 
 #include "tpl_standard_algorithm.h"
 
@@ -16,42 +18,53 @@ namespace tpl {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////Begin TplConfigParser////
 
-    TplConfig *TplConfig::_instance = 0;
+    TplEnv *TplEnv::_instance = 0;
 
-    TplConfig *TplConfig::instance()
+    TplEnv *TplEnv::instance()
     {
         if(_instance == 0) {
-            _instance = new TplConfig;
+            _instance = new TplEnv;
         }
         return _instance;
     }
 
-    void TplConfig::destroy()
+    void TplEnv::destroy()
     {
         delete _instance;
         _instance = 0;
     }
 
-    TplConfig::TplConfig()
+    TplEnv::TplEnv()
     {
         namespace pt = boost::property_tree;
         pt::ptree tree;
 
-        char path[200];
-        char *configpath = std::getenv("TPLCONFIG");
-        std::strcpy(path, configpath);
-        std::strcat(path,"/config.json");
+        namespace fs = boost::filesystem;
+        fs::path path;
 
-        pt::read_json(path, tree);
+        path = fs::current_path();
+        path /= "tplconfig.json";
 
-        _gsize = tree.get<int>("grid_size");
-        _r1 = tree.get<double>("r1");
-        _r2 = tree.get<double>("r2");
-        _mu = tree.get<double>("mu");
-        _times = tree.get<int>("times");
+        if(!fs::exists(path)) {
+            path = fs::path(std::getenv("TPLENV"));
+            path /= "tplconfig.json";
+
+            if(!fs::exists(path)) {
+                throw std::runtime_error("Tpl Enviroment file missing!");
+                exit(-1);
+            }
+        }
+
+        pt::read_json(path.string(), tree);
+
+        config.init_grid_size = tree.get("config").get<int>("init_grid_size");
+        config.r1             = tree.get("config").get<double>("r1");
+        config.r2             = tree.get("config").get<double>("r2");
+        config.mu             = tree.get("config").get<double>("mu");
+        runtime.times         = tree.get("runtime").get<int>("times");
     }
 
-    TplConfig &tplconfig = *TplConfig::instance();
+    TplEnv &tplenv = *TplEnv::instance();
 
     ////End TplConfigParser////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,13 +165,17 @@ namespace tpl {
                                                             SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
     {
         //preconditions
-        //TODO:refine assersions
         assert(Cx.cols() == pdb.modules.num_free());
         assert(Cx.rows() == pdb.modules.num_free());
         assert(Cy.cols() == pdb.modules.num_free());
         assert(Cy.rows() == pdb.modules.num_free());
-        assert(dx.size() == pdb.modules.num_free());
-        assert(dy.size() == pdb.modules.num_free());
+        assert(dx.rows() == pdb.modules.num_free());
+        assert(dy.rows() == pdb.modules.num_free());
+
+        Cx.setZero();
+        Cy.setZero();
+        dx.setZero();
+        dy.setZero();
 
         //prepare data
         TplPin *pin1, *pin2;
@@ -281,9 +298,9 @@ namespace tpl {
 
     TplStandardThermalModel::TplStandardThermalModel()
     {
-        _gsize   = tplconfig.grid_size();
-        _gwidth  = pdb.modules.chip_width()  / tplconfig.grid_size();
-        _gheight = pdb.modules.chip_height() / tplconfig.grid_size();
+        _gsize   = tplenv.config.init_grid_size;
+        _gwidth  = pdb.modules.chip_width()  / _gsize;
+        _gheight = pdb.modules.chip_height() / _gsize;
 
         update_power_density();
     }
@@ -294,9 +311,13 @@ namespace tpl {
 
         double distance = sqrt(pow(abs(i-i0) * _gwidth, 2) + pow(abs(j - j0) * _gheight, 2));
 
-        if     (distance >  tplconfig.r2())  return 0;
-        else if(distance <= tplconfig.r1())  return (1*tplconfig.times())/(distance*tplconfig.times());
-        else                                 return (0.6*tplconfig.times())/(sqrt(distance)*tplconfig.times());
+        const double &r1 = tplenv.config.r1;
+        const double &r2 = tplenv.config.r2;
+        const int &times = tplenv.runtime.times;
+
+        if     (distance >  r2)  return 0;
+        else if(distance <= r1)  return (1*times)/(distance*times);
+        else                     return (0.6*times)/(sqrt(distance)*times);
     }
 
     double TplStandardThermalModel::power_density(int i, int j) const
@@ -325,6 +346,7 @@ namespace tpl {
             _power_density.push_back(vector<double>(_gsize+1, 0));
         }
 
+        const int &times = tplenv.runtime.times;
         double left, right, bottom, top;
         unsigned int idx_left, idx_right, idx_bottom, idx_top;
         for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
@@ -333,10 +355,10 @@ namespace tpl {
             bottom = it->y - it->height/2.0;
             top    = it->y + it->height/2.0;
 
-            idx_left   = static_cast<unsigned int>( ceil ( (left*tplconfig.times()  )/(_gwidth*tplconfig.times() ) ) );
-            idx_right  = static_cast<unsigned int>( floor( (right*tplconfig.times() )/(_gwidth*tplconfig.times() ) ) );
-            idx_bottom = static_cast<unsigned int>( ceil ( (bottom*tplconfig.times())/(_gheight*tplconfig.times()) ) );
-            idx_top    = static_cast<unsigned int>( floor( (top*tplconfig.times()   )/(_gheight*tplconfig.times()) ) );
+            idx_left   = static_cast<unsigned int>( ceil ( (left*times  )/(_gwidth*times ) ) );
+            idx_right  = static_cast<unsigned int>( floor( (right*times )/(_gwidth*times ) ) );
+            idx_bottom = static_cast<unsigned int>( ceil ( (bottom*times)/(_gheight*times) ) );
+            idx_top    = static_cast<unsigned int>( floor( (top*times   )/(_gheight*times) ) );
 
             for(unsigned int i=idx_left; i<idx_right; ++i) {
                 for(unsigned int j=idx_bottom; j<idx_top; ++j) {
@@ -385,9 +407,10 @@ namespace tpl {
         const int    &gsize   = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_size();
         const double &gwidth  = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_width();
         const double &gheight = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_height();
+        const double &times   = tplenv.runtime.times;
 
-        int dx = static_cast<int>(ceil((tplconfig.r2()*tplconfig.times())/(gwidth*tplconfig.times())));
-        int dy = static_cast<int>(ceil((tplconfig.r2()*tplconfig.times())/(gheight*tplconfig.times())));
+        int dx = static_cast<int>(ceil((tplenv.config.r2*times)/(gwidth*times)));
+        int dy = static_cast<int>(ceil((tplenv.config.r2*times)/(gheight*times)));
 
         //compute chip grid temperatures using green function method
         double tss[gsize+3][gsize+3] = {};
@@ -427,8 +450,8 @@ namespace tpl {
             x = pdb.modules[i].x;
             y = pdb.modules[i].y;
 
-            idx_x = static_cast<int>(floor((x*tplconfig.times())/(gwidth*tplconfig.times())));
-            idx_y = static_cast<int>(floor((y*tplconfig.times())/(gheight*tplconfig.times())));
+            idx_x = static_cast<int>(floor((x*times)/(gwidth*times)));
+            idx_y = static_cast<int>(floor((y*times)/(gheight*times)));
 
             x1 = idx_x * gwidth;
             x2 = x1 + gwidth;
@@ -439,13 +462,13 @@ namespace tpl {
                   grid_xhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
                   grid_xhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
                   grid_xhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
-            xhf = (xhf*tplconfig.times())/(gwidth*gheight*tplconfig.times());
+            xhf = (xhf*times)/(gwidth*gheight*times);
 
             yhf = grid_yhf[idx_x][idx_y]     * (x2-x) * (y2-y) +
                   grid_yhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
                   grid_yhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
                   grid_yhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
-            yhf = (yhf*tplconfig.times())/(gwidth*gheight*tplconfig.times());
+            yhf = (yhf*times)/(gwidth*gheight*times);
 
             HFx(i) = xhf;
             HFy(i) = yhf;

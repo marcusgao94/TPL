@@ -26,11 +26,13 @@ namespace tpl {
      * \brief SpMat type
      */
     typedef Eigen::SparseMatrix<double> SpMat;
+
     /*!
      * \typedef Eigen::Triplet<double> SpElem;
      * \brief SpElem type
      */
     typedef Eigen::Triplet<double>      SpElem;
+
     /*!
      * \typedef Eigen::SimplicialLLT<SpMat> LLTSolver;
      * \brief LLTSolver type
@@ -51,54 +53,28 @@ namespace tpl {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class TplConfig {
+    class TplEnv {
     public:
-        static TplConfig *instance();
+        static TplEnv *instance();
         static void destroy();
 
-        const int &grid_size() const
-        {
-            return _gsize;
-        }
+        struct Config {
+            int init_grid_size;
+            double r1;
+            double r2;
+            double mu;
+        } config;
 
-        void set_grid_size(int gsize)
-        {
-            _gsize = gsize;
-        }
-
-        const double &r1() const
-        {
-            return _r1;
-        }
-
-        const double &r2() const
-        {
-            return _r2;
-        }
-
-        const double &mu() const
-        {
-            return _mu;
-        }
-
-        const int &times() const
-        {
-            return _times;
-        }
+        struct Runtime {
+            int times;
+        } runtime;
 
     private:
-        TplConfig();
-
-        static TplConfig *_instance;
-
-        int _gsize;
-        double _r1;
-        double _r2;
-        double _mu;
-        int _times;
+        TplEnv();
+        static TplEnv *_instance;
     };
 
-    extern TplConfig &tplconfig;
+    extern TplEnv &tplenv;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
