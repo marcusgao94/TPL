@@ -277,6 +277,7 @@ namespace tpl {
         nets = std::move( TplNets(bnets) );
     }
 
+    TplDB &pdb = *TplDB::db();
 
 }//end namespace tpl
 

@@ -51,9 +51,62 @@ namespace tpl {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    class TplConfig {
+    public:
+        static TplConfig *instance();
+        static void destroy();
+
+        const int &grid_size() const
+        {
+            return _gsize;
+        }
+
+        void set_grid_size(int gsize)
+        {
+            _gsize = gsize;
+        }
+
+        const double &r1() const
+        {
+            return _r1;
+        }
+
+        const double &r2() const
+        {
+            return _r2;
+        }
+
+        const double &mu() const
+        {
+            return _mu;
+        }
+
+        const int &times() const
+        {
+            return _times;
+        }
+
+    private:
+        TplConfig();
+
+        static TplConfig *_instance;
+
+        int _gsize;
+        double _r1;
+        double _r2;
+        double _mu;
+        int _times;
+    };
+
+    extern TplConfig &tplconfig;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     class TplNetModelInterface {
     public:
-        virtual ~TplNetModelInterface() = 0;
+        //! Pure virtual destructor.
+        virtual ~TplNetModelInterface() = 0 {}
 
         //! Interface for computing a net's net weight.
         /*!
@@ -65,7 +118,7 @@ namespace tpl {
 
     class TplStandardNetModel : public TplNetModelInterface {
     public:
-        virtual ~TplStandardNetModel();
+        virtual ~TplStandardNetModel() {}
 
         //! Standard implementation for interface compute_net_weight.
         /*!
@@ -76,12 +129,13 @@ namespace tpl {
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Interface definition for tpl net force model.
     class TplNetForceModelInterface {
     public:
         //! Pure virtual destructor.
-        virtual ~TplNetForceModelInterface() = 0;
+        virtual ~TplNetForceModelInterface() = 0 {}
 
         //! Interface for computing all the free modules' net force matrix.
         /*!
@@ -110,7 +164,7 @@ namespace tpl {
     class TplStandardNetForceModel : public TplNetForceModelInterface {
     public:
         //! Virtual destructor.
-        virtual ~TplStandardNetForceModel();
+        virtual ~TplStandardNetForceModel() {}
 
         //! Standard implementation for interface compute_net_force_matrix.
         /*!
@@ -136,70 +190,47 @@ namespace tpl {
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     class TplThermalModelInterface {
     public:
         //!< Pure virtual destructor.
-        ~TplThermalModelInterface() = 0;
+        virtual ~TplThermalModelInterface() = 0 {}
 
+        //! Interface for green function.
+        /*!
+         * \param i  x index for green function's first point.
+         * \param j  y index for green function's first point.
+         * \param i0  x index for green function's second point.
+         * \param j0  y index for green function's second point.
+         */
         virtual double green_function(int i, int j, int i0, int j0) const = 0;
 
+        //! Interface for power density.
+        /*!
+         * \param i x index for power density.
+         * \param j y index for power density.
+         */
         virtual double power_density(int i, int j) const = 0;
+
+        //! Interface for updating the power density.
+        virtual void update_power_density() = 0;
     };
 
     class TplStandardThermalModel : public TplThermalModelInterface {
     public:
         TplStandardThermalModel();
-        ~TplStandardThermalModel();
-        virtual double green_function(int i, int j, int i0, int j0) const;
-
-        virtual double power_density(int i, int j) const;
-
-    protected:
-        double _r1; //!< Green function R1 radius.
-        double _r2; //!< Green function R2 radius.
-        int _grid_size; //!< Storing grid size during tpl algorithm computation.
-        double _bin_width;  //!< A grid bin's width.
-        double _bin_height; //!< A grid bin's height.
-        std::vector<std::vector<double> > _power_density; //!< Power density container.
-    };
-   
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //! Interface definition for tpl move force model.
-    class TplMoveForceModelInterface {
-    public:
-        //! Pure virtual destructor.
-        virtual ~TplMoveForceModelInterface() = 0;
-
-        //virtual void compute_move_force_matrix(SpMat &Cx0, SpMat &Cy0) = 0;
-
-        virtual void compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy) = 0;
-    };
-
-    //! Standard implementation for tpl move force model.
-    class TplStandardMoveForceModel : public TplMoveForceModelInterface {
-    public:
-        ///////////////////////// Constructors /////////////////////////////////////////
-        //! Constructor using grid_size, r1 and r2 radius.
-        TplStandardMoveForceModel(SpMat &Cx0, SpMat &Cy0, double r1, double r2, unsigned int grid_size, double mu);
-        //! Virtual destructor.
-        virtual ~TplStandardMoveForceModel();
-        ///////////////////////// Constructors /////////////////////////////////////////
-
-
-        //virtual void compute_move_force_matrix(SpMat &Cx0, SpMat &Cy0);
-
-        virtual void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux);
-
-    protected:
+        //!< virtual destructor.
+        virtual ~TplStandardThermalModel() {}
 
         //! Standard implementation for interface green_function.
         /*!
-         * \param idx  x and y index for green function.
-         * \param idx0 x0 and y0 index for green function.
+         * \param i  x index for green function's first point.
+         * \param j  y index for green function's first point.
+         * \param i0  x index for green function's second point.
+         * \param j0  y index for green function's second point.
          */
-        virtual double green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const;
+        virtual double green_function(int i, int j, int i0, int j0) const;
 
         //! Standard implementation for interface power_density.
         /*!
@@ -208,30 +239,83 @@ namespace tpl {
          */
         virtual double power_density(int i, int j) const;
 
-        //! Standard implementation for interface update_green_function.
-        /*!
-         * \param grid_size New grid size for the chip.
-         */
-        //virtual void update_green_function(unsigned int grid_size);
-
         //! Standard implementation for interface update_power_density.
         virtual void update_power_density();
 
-        double _r1; //!< Green function R1 radius.
-        double _r2; //!< Green function R2 radius.
-        unsigned int _grid_size; //!< Storing grid size during tpl algorithm computation.
-        double _bin_width;       //!< A grid bin's width.
-        double _bin_height;      //!< A grid bin's height.
+        const int &grid_size() const
+        {
+            return _gsize;
+        }
+
+        void set_grid_size(int gsize)
+        {
+            _gsize = gsize;
+        }
+
+        const double &grid_width() const
+        {
+            return _gwidth;
+        }
+
+        void set_grid_width(double gwidth)
+        {
+            _gwidth = gwidth;
+        }
+
+        const double &grid_height() const
+        {
+            return _gheight;
+        }
+
+        void set_grid_heihgt(double gheight)
+        {
+            _gheight = gheight;
+        }
+
+    protected:
+        int    _gsize;   //!< Chip grid size.
+        double _gwidth;  //!< A grid bin's width.
+        double _gheight; //!< A grid bin's height.
         std::vector<std::vector<double> > _power_density; //!< Power density container.
-
-        double _mu; //!< User defined algorithm precision parameter.
-        //double _avg_move_distances; //!< Average module movement distance in Move Force Model.
-        //std::map<size_t, std::pair<unsigned, unsigned> > _x_m2idx;
-        //std::map<size_t, std::pair<unsigned, unsigned> > _y_m2idx;
-
-        SpMat &_Cx0;
-        SpMat &_Cy0;
     };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //! Interface definition for tpl move force model.
+    class TplThermalForceModelInterface {
+    public:
+        //! Constructor.
+        TplThermalForceModelInterface(TplThermalModelInterface *thermal_model);
+
+        //! Pure virtual destructor.
+        virtual ~TplThermalForceModelInterface() = 0;
+
+        virtual void compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy) = 0;
+
+    protected:
+        virtual void initialize_thermal_model(TplThermalModelInterface *thermal_model) = 0;
+
+        TplThermalModelInterface * _tmodel;
+    };
+
+    //! Standard implementation for tpl move force model.
+    class TplStandardThermalForceModel : public TplThermalForceModelInterface {
+    public:
+        //! Constructor.
+        TplStandardThermalForceModel(TplThermalModelInterface *thermal_model);
+
+        //! Virtual destructor.
+        virtual ~TplStandardThermalForceModel() {}
+
+        virtual void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux);
+
+    protected:
+        virtual void initialize_thermal_model(TplThermalModelInterface *thermal_model);
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Interface definition for tpl algorithm.
     class TplAlgorithmInterface {
@@ -249,19 +333,20 @@ namespace tpl {
         virtual void make_global_placement() = 0;
 
     protected:
-        TplNetModelInterface       *net_model;        //!< Pointer to a TplNetModelInterface
-        TplNetForceModelInterface  *net_force_model;  //!< Pointer to a TplNetForceModelInterface.
-        TplMoveForceModelInterface *move_force_model; //!< Pointer to a TplMoveForceModelInterface.
+        TplNetModelInterface          *net_model;        //!< Pointer to a TplNetModel.
+        TplNetForceModelInterface     *net_force_model;  //!< Pointer to a TplNetForceModel.
+        TplThermalModelInterface      *thermal_model;    //!< Pointer to a TplThermalModel.
+        TplThermalForceModelInterface *thermal_force_model; //!< Pointer to a TplMoveForceModel.
     };
 
     //! Standard implementation for tpl algorithm.
     class TplStandardAlgorithm : public TplAlgorithmInterface {
     public:
         //! Constructor.
-        TplStandardAlgorithm();
+        //TplStandardAlgorithm();
 
         //! Virtual destructor.
-        virtual ~TplStandardAlgorithm();
+        virtual ~TplStandardAlgorithm() {}
 
         //! Standard implementation for interface initialize_models.
         virtual void initialize_models();
@@ -281,6 +366,8 @@ namespace tpl {
         VectorXd HFx, HFy;
         SpMat Cx0, Cy0;
     };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }//end namespace tpl
 
