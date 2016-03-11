@@ -53,28 +53,24 @@ namespace tpl {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    class TplEnv {
+    class TplConfig {
     public:
-        static TplEnv *instance();
-        static void destroy();
+        //!< Single pattern for TplConfig.
+        static TplConfig &instance();
 
-        struct Config {
-            int init_grid_size;
-            double r1;
-            double r2;
-            double mu;
-        } config;
+        //!< Load configuration file into TplConfig singleton.
+        bool load_configuration(const std::string &configfile);
 
-        struct Runtime {
-            int times;
-        } runtime;
+        int init_grid_size;
+        double r1;
+        double r2;
+        double mu;
+        std::string benchmark;
 
     private:
-        TplEnv();
-        static TplEnv *_instance;
+        TplConfig()  = default;
+        ~TplConfig() = default;
     };
-
-    extern TplEnv &tplenv;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,8 +106,11 @@ namespace tpl {
     //! Interface definition for tpl net force model.
     class TplNetForceModelInterface {
     public:
-        //! Pure virtual destructor.
-        virtual ~TplNetForceModelInterface() = 0 {}
+        //! Constructor.
+        TplNetForceModelInterface();
+
+        //! Virtual destructor.
+        virtual ~TplNetForceModelInterface();
 
         //! Interface for computing all the free modules' net force matrix.
         /*!
@@ -134,11 +133,22 @@ namespace tpl {
          */
         virtual void compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
                                               std::vector<double> &x_target, std::vector<double> &y_target) = 0;
+
+        TplNetModelInterface *net_model();
+
+    protected:
+        virtual void initialize_net_model() = 0;
+
+        TplNetModelInterface *_nmodel;
     };
 
     //! Standard implementation for tpl net force model.
     class TplStandardNetForceModel : public TplNetForceModelInterface {
     public:
+
+        //! Constructor.
+        TplStandardNetForceModel();
+
         //! Virtual destructor.
         virtual ~TplStandardNetForceModel() {}
 
@@ -163,6 +173,9 @@ namespace tpl {
          */
         virtual void compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
                                               std::vector<double> &x_target, std::vector<double> &y_target);
+
+    protected:
+        virtual void initialize_net_model();
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -264,8 +277,8 @@ namespace tpl {
         //! Constructor.
         TplThermalForceModelInterface(TplThermalModelInterface *thermal_model);
 
-        //! Pure virtual destructor.
-        virtual ~TplThermalForceModelInterface() = 0;
+        //! Virtual destructor.
+        virtual ~TplThermalForceModelInterface();
 
         virtual void compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy) = 0;
 

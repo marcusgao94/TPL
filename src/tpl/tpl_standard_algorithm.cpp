@@ -15,56 +15,36 @@
 namespace tpl {
     using namespace std;
 
+    static const int TIMES = 10000;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////Begin TplConfigParser////
 
-    TplEnv *TplEnv::_instance = 0;
-
-    TplEnv *TplEnv::instance()
+    TplConfig &TplConfig::instance()
     {
-        if(_instance == 0) {
-            _instance = new TplEnv;
-        }
+        static TplConfig _instance;
         return _instance;
     }
 
-    void TplEnv::destroy()
+    bool TplConfig::load_configuration(const std::string &configfile)
     {
-        delete _instance;
-        _instance = 0;
-    }
+        try {
+            namespace pt = boost::property_tree;
+            pt::ptree tree;
+            pt::read_json(configfile, tree);
 
-    TplEnv::TplEnv()
-    {
-        namespace pt = boost::property_tree;
-        pt::ptree tree;
+            init_grid_size = tree.get<int>("init_grid_size");
+            r1             = tree.get<double>("r1");
+            r2             = tree.get<double>("r2");
+            mu             = tree.get<double>("mu");
+            benchmark      = tree.get<string>("benchmark");
 
-        namespace fs = boost::filesystem;
-        fs::path path;
+            return true;
 
-        path = fs::current_path();
-        path /= "tplconfig.json";
-
-        if(!fs::exists(path)) {
-            path = fs::path(std::getenv("TPLENV"));
-            path /= "tplconfig.json";
-
-            if(!fs::exists(path)) {
-                throw std::runtime_error("Tpl Enviroment file missing!");
-                exit(-1);
-            }
+        } catch(...) {
+            return false;
         }
-
-        pt::read_json(path.string(), tree);
-
-        config.init_grid_size = tree.get("config").get<int>("init_grid_size");
-        config.r1             = tree.get("config").get<double>("r1");
-        config.r2             = tree.get("config").get<double>("r2");
-        config.mu             = tree.get("config").get<double>("mu");
-        runtime.times         = tree.get("runtime").get<int>("times");
     }
-
-    TplEnv &tplenv = *TplEnv::instance();
 
     ////End TplConfigParser////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -160,6 +140,31 @@ namespace tpl {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////Begin TplStandardNetForceModel////
+
+    TplNetForceModelInterface::TplNetForceModelInterface()
+    {
+        initialize_net_model();
+    }
+
+    TplNetForceModelInterface::~TplNetForceModelInterface()
+    {
+        delete _nmodel;
+        _nmodel = nullptr;
+    }
+
+    TplNetModelInterface *TplNetForceModelInterface::net_model()
+    {
+        return _nmodel;
+    }
+
+    TplStandardNetForceModel::TplStandardNetForceModel() : TplNetForceModelInterface()
+    {
+    }
+
+    void TplStandardNetForceModel::initialize_net_model()
+    {
+        _nmodel = new TplStandardNetModel;
+    }
 
     void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &NWx, const NetWeight &NWy,
                                                             SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
@@ -298,7 +303,7 @@ namespace tpl {
 
     TplStandardThermalModel::TplStandardThermalModel()
     {
-        _gsize   = tplenv.config.init_grid_size;
+        _gsize   = TplConfig::instance().init_grid_size;
         _gwidth  = pdb.modules.chip_width()  / _gsize;
         _gheight = pdb.modules.chip_height() / _gsize;
 
@@ -311,13 +316,12 @@ namespace tpl {
 
         double distance = sqrt(pow(abs(i-i0) * _gwidth, 2) + pow(abs(j - j0) * _gheight, 2));
 
-        const double &r1 = tplenv.config.r1;
-        const double &r2 = tplenv.config.r2;
-        const int &times = tplenv.runtime.times;
+        const double &r1 = TplConfig::instance().r1;
+        const double &r2 = TplConfig::instance().r2;
 
         if     (distance >  r2)  return 0;
-        else if(distance <= r1)  return (1*times)/(distance*times);
-        else                     return (0.6*times)/(sqrt(distance)*times);
+        else if(distance <= r1)  return (1*TIMES)/(distance*TIMES);
+        else                     return (0.6*TIMES)/(sqrt(distance)*TIMES);
     }
 
     double TplStandardThermalModel::power_density(int i, int j) const
@@ -346,7 +350,6 @@ namespace tpl {
             _power_density.push_back(vector<double>(_gsize+1, 0));
         }
 
-        const int &times = tplenv.runtime.times;
         double left, right, bottom, top;
         unsigned int idx_left, idx_right, idx_bottom, idx_top;
         for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
@@ -355,10 +358,10 @@ namespace tpl {
             bottom = it->y - it->height/2.0;
             top    = it->y + it->height/2.0;
 
-            idx_left   = static_cast<unsigned int>( ceil ( (left*times  )/(_gwidth*times ) ) );
-            idx_right  = static_cast<unsigned int>( floor( (right*times )/(_gwidth*times ) ) );
-            idx_bottom = static_cast<unsigned int>( ceil ( (bottom*times)/(_gheight*times) ) );
-            idx_top    = static_cast<unsigned int>( floor( (top*times   )/(_gheight*times) ) );
+            idx_left   = static_cast<unsigned int>( ceil ( (left*TIMES  )/(_gwidth*TIMES ) ) );
+            idx_right  = static_cast<unsigned int>( floor( (right*TIMES )/(_gwidth*TIMES ) ) );
+            idx_bottom = static_cast<unsigned int>( ceil ( (bottom*TIMES)/(_gheight*TIMES) ) );
+            idx_top    = static_cast<unsigned int>( floor( (top*TIMES   )/(_gheight*TIMES) ) );
 
             for(unsigned int i=idx_left; i<idx_right; ++i) {
                 for(unsigned int j=idx_bottom; j<idx_top; ++j) {
@@ -407,10 +410,9 @@ namespace tpl {
         const int    &gsize   = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_size();
         const double &gwidth  = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_width();
         const double &gheight = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_height();
-        const double &times   = tplenv.runtime.times;
 
-        int dx = static_cast<int>(ceil((tplenv.config.r2*times)/(gwidth*times)));
-        int dy = static_cast<int>(ceil((tplenv.config.r2*times)/(gheight*times)));
+        int dx = static_cast<int>(ceil((TplConfig::instance().r2 * TIMES) / (gwidth  * TIMES)));
+        int dy = static_cast<int>(ceil((TplConfig::instance().r2 * TIMES) / (gheight * TIMES)));
 
         //compute chip grid temperatures using green function method
         double tss[gsize+3][gsize+3] = {};
@@ -450,8 +452,8 @@ namespace tpl {
             x = pdb.modules[i].x;
             y = pdb.modules[i].y;
 
-            idx_x = static_cast<int>(floor((x*times)/(gwidth*times)));
-            idx_y = static_cast<int>(floor((y*times)/(gheight*times)));
+            idx_x = static_cast<int>(floor((x*TIMES)/(gwidth*TIMES)));
+            idx_y = static_cast<int>(floor((y*TIMES)/(gheight*TIMES)));
 
             x1 = idx_x * gwidth;
             x2 = x1 + gwidth;
@@ -462,13 +464,13 @@ namespace tpl {
                   grid_xhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
                   grid_xhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
                   grid_xhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
-            xhf = (xhf*times)/(gwidth*gheight*times);
+            xhf = (xhf*TIMES)/(gwidth*gheight*TIMES);
 
             yhf = grid_yhf[idx_x][idx_y]     * (x2-x) * (y2-y) +
                   grid_yhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
                   grid_yhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
                   grid_yhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
-            yhf = (yhf*times)/(gwidth*gheight*times);
+            yhf = (yhf*TIMES)/(gwidth*gheight*TIMES);
 
             HFx(i) = xhf;
             HFy(i) = yhf;

@@ -17,10 +17,6 @@
 #include "../bookshelf/bookshelf_pl.h"
 #include "../bookshelf/bookshelf_net.h"
 
-//#ifndef pdb
-//#define pdb (*(tpl::TplDB::db()))
-//#endif
-
 namespace tpl {
     using namespace thueda;
 

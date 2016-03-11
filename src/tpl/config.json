@@ -1,0 +1,7 @@
+{
+  "init_grid_size" : 100000,
+  "r1" : 0.1,
+  "r2" : 0.5,
+  "mu" : 10,
+  "benchmark" : "/home/fpeng/Documents/benchmark"
+}
