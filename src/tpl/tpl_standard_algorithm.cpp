@@ -1,23 +1,75 @@
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iterator>
 #include <algorithm>
+#include <stdexcept>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/filesystem.hpp>
 
 #include "tpl_standard_algorithm.h"
 
 namespace tpl {
     using namespace std;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////Begin TplConfigParser////
+
+    TplEnv *TplEnv::_instance = 0;
+
+    TplEnv *TplEnv::instance()
+    {
+        if(_instance == 0) {
+            _instance = new TplEnv;
+        }
+        return _instance;
+    }
+
+    void TplEnv::destroy()
+    {
+        delete _instance;
+        _instance = 0;
+    }
+
+    TplEnv::TplEnv()
+    {
+        namespace pt = boost::property_tree;
+        pt::ptree tree;
+
+        namespace fs = boost::filesystem;
+        fs::path path;
+
+        path = fs::current_path();
+        path /= "tplconfig.json";
+
+        if(!fs::exists(path)) {
+            path = fs::path(std::getenv("TPLENV"));
+            path /= "tplconfig.json";
+
+            if(!fs::exists(path)) {
+                throw std::runtime_error("Tpl Enviroment file missing!");
+                exit(-1);
+            }
+        }
+
+        pt::read_json(path.string(), tree);
+
+        config.init_grid_size = tree.get("config").get<int>("init_grid_size");
+        config.r1             = tree.get("config").get<double>("r1");
+        config.r2             = tree.get("config").get<double>("r2");
+        config.mu             = tree.get("config").get<double>("mu");
+        runtime.times         = tree.get("runtime").get<int>("times");
+    }
+
+    TplEnv &tplenv = *TplEnv::instance();
+
+    ////End TplConfigParser////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////Begin TplStandardNetModel////
-
-    TplNetModelInterface::~TplNetModelInterface()
-    {
-    }
-
-    TplStandardNetModel::~TplStandardNetModel()
-    {
-    }
 
     void TplStandardNetModel::compute_net_weight(NetWeight &NWx, NetWeight &NWy)
     {
@@ -69,21 +121,8 @@ namespace tpl {
                 ++idx;
             }
 
+
             const size_t &degree = pins.size();
-            //initialize current net's net weights to zero
-            /*
-            for(size_t i=0; i<degree; ++i) {
-                for(size_t j=0; j<degree; ++j) {
-
-                    assert( NWx.count(make_pair(pins[i], pins[j])) == 0);
-                    assert( NWy.count(make_pair(pins[i], pins[j])) == 0);
-
-                    NWx[make_pair(pins[i], pins[j])] = 0;
-                    NWy[make_pair(pins[i], pins[j])] = 0;
-                }
-            }
-             */
-
             //loop to compute current pin pair set's non zero net weights
             //pin pair <==> net weight
             for(size_t cur_idx=0; cur_idx<degree; ++cur_idx)     {
@@ -93,64 +132,50 @@ namespace tpl {
                 } else {
                     if (xs[cur_idx] == xmin) {
                         NWx[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xmin);
-                        //NWx[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
                     } else if (xs[cur_idx] == xmax) {
                         NWx[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xmax - xmin);
-                        //NWx[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xmin);
                     } else {
                         NWx[make_pair(pins[cur_idx], pins[xmin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
-                        //NWx[make_pair(pins[xmin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - xmin);
                         NWx[make_pair(pins[cur_idx], pins[xmax_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
-                        //NWx[make_pair(pins[xmax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xmax - xs[cur_idx]);
                     }
 
                     if (ys[cur_idx] == ymin) {
                         NWy[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - ymin);
-                        //NWy[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
                     }
                     else if (ys[cur_idx] == ymax) {
                         NWy[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (ymax - ymin);
-                        //NWy[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - ymin);
                     } else {
                         NWy[make_pair(pins[cur_idx], pins[ymin_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
-                        //NWy[make_pair(pins[ymin_idx], pins[cur_idx])] = 2.0 / (degree-1) * (xs[cur_idx] - ymin);
                         NWy[make_pair(pins[cur_idx], pins[ymax_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
-                        //NWy[make_pair(pins[ymax_idx], pins[cur_idx])] = 2.0 / (degree-1) * (ymax - xs[cur_idx]);
                     }
                 }
             }
 
             NWx[make_pair(pins[xmin_idx], pins[xmax_idx])] = 2.0/(degree-1)*(xmax-xmin);
-            //NWx[make_pair(pins[xmax_idx], pins[xmin_idx])] = 2.0/(degree-1)*(xmax-xmin);
             NWy[make_pair(pins[ymin_idx], pins[ymax_idx])] = 2.0/(degree-1)*(ymax-ymin);
-            //NWy[make_pair(pins[ymax_idx], pins[ymin_idx])] = 2.0/(degree-1)*(ymax-ymin);
         }
     }
 
     ////End TplStandardNetModel////
-
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////Begin TplStandardNetForceModel////
-
-    TplNetForceModelInterface::~TplNetForceModelInterface()
-    {
-    }
-
-    TplStandardNetForceModel::~TplStandardNetForceModel()
-    {
-    }
 
     void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &NWx, const NetWeight &NWy,
                                                             SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
     {
         //preconditions
-        //TODO:refine assersions
         assert(Cx.cols() == pdb.modules.num_free());
         assert(Cx.rows() == pdb.modules.num_free());
         assert(Cy.cols() == pdb.modules.num_free());
         assert(Cy.rows() == pdb.modules.num_free());
-        assert(dx.size() == pdb.modules.num_free());
-        assert(dy.size() == pdb.modules.num_free());
+        assert(dx.rows() == pdb.modules.num_free());
+        assert(dy.rows() == pdb.modules.num_free());
+
+        Cx.setZero();
+        Cy.setZero();
+        dx.setZero();
+        dy.setZero();
 
         //prepare data
         TplPin *pin1, *pin2;
@@ -267,43 +292,135 @@ namespace tpl {
     }
 
     ////End TplStandardNetForceModel////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////Begin TplStandardThermalModel////
 
-
-    ////Begin TplStandardMoveForceModel////
-    TplMoveForceModelInterface::~TplMoveForceModelInterface()
+    TplStandardThermalModel::TplStandardThermalModel()
     {
-    }
-
-    TplStandardMoveForceModel::~TplStandardMoveForceModel()
-    {
-    }
-
-    TplStandardMoveForceModel::TplStandardMoveForceModel(SpMat &Cx0, SpMat &Cy0, double r1, double r2,
-                                                         unsigned int grid_size, double mu) :
-            _Cx0(Cx0), _Cy0(Cy0), _r1(r1), _r2(r2), _grid_size(grid_size), _mu(mu)
-    {
-        _bin_width  = pdb.modules.chip_width()  / _grid_size;
-        _bin_height = pdb.modules.chip_height() / _grid_size;
+        _gsize   = tplenv.config.init_grid_size;
+        _gwidth  = pdb.modules.chip_width()  / _gsize;
+        _gheight = pdb.modules.chip_height() / _gsize;
 
         update_power_density();
-
-        //initialize_move_force_matrix(_Cx0, _Cy0);
     }
 
-    void TplStandardMoveForceModel::compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy)
+    double TplStandardThermalModel::green_function(int i, int j, int i0, int j0) const
     {
-        //compute chip grid temperatures using green function method
-        int dx = static_cast<int>(floor((_r2*10000)/(_bin_width*10000)));
-        int dy = static_cast<int>(floor((_r2*10000)/(_bin_height*10000)));
-        double tss[_grid_size+3][_grid_size+3] = {};
+        if(i==i0 && j==j0) return 0;
 
+        double distance = sqrt(pow(abs(i-i0) * _gwidth, 2) + pow(abs(j - j0) * _gheight, 2));
+
+        const double &r1 = tplenv.config.r1;
+        const double &r2 = tplenv.config.r2;
+        const int &times = tplenv.runtime.times;
+
+        if     (distance >  r2)  return 0;
+        else if(distance <= r1)  return (1*times)/(distance*times);
+        else                     return (0.6*times)/(sqrt(distance)*times);
+    }
+
+    double TplStandardThermalModel::power_density(int i, int j) const
+    {
+
+        assert(-_gsize <= i && i < 2*_gsize);
+        assert(-_gsize <= j && j < 2*_gsize);
+
+        int               x_idx = i;//[0...gsize] remain
+        if     (i<0)      x_idx = -i;//-1<==>1
+        else if(i>_gsize) x_idx = 2*_gsize-i;//gsize+1<==>gsize-1
+
+        int               y_idx = j;
+        if     (j<0)      y_idx = -j;
+        else if(j>_gsize) y_idx = 2*_gsize-j;
+
+        return _power_density.at(x_idx).at(y_idx);
+    }
+
+    void TplStandardThermalModel::update_power_density()
+    {
+        //reset _power_density
+        _power_density.clear();
+
+        for(int i=0; i<=_gsize; ++i) {
+            _power_density.push_back(vector<double>(_gsize+1, 0));
+        }
+
+        const int &times = tplenv.runtime.times;
+        double left, right, bottom, top;
+        unsigned int idx_left, idx_right, idx_bottom, idx_top;
+        for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
+            left   = it->x - it->width/2.0;
+            right  = it->x + it->width/2.0;
+            bottom = it->y - it->height/2.0;
+            top    = it->y + it->height/2.0;
+
+            idx_left   = static_cast<unsigned int>( ceil ( (left*times  )/(_gwidth*times ) ) );
+            idx_right  = static_cast<unsigned int>( floor( (right*times )/(_gwidth*times ) ) );
+            idx_bottom = static_cast<unsigned int>( ceil ( (bottom*times)/(_gheight*times) ) );
+            idx_top    = static_cast<unsigned int>( floor( (top*times   )/(_gheight*times) ) );
+
+            for(unsigned int i=idx_left; i<idx_right; ++i) {
+                for(unsigned int j=idx_bottom; j<idx_top; ++j) {
+                    _power_density[i][j] += it->power_density;
+                }
+            }
+        }
+    }
+
+    ////End TplStandardThermalModel////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////Begin TplStandardThermalForceModel////
+
+    TplThermalForceModelInterface::TplThermalForceModelInterface(TplThermalModelInterface *thermal_model)
+    {
+        initialize_thermal_model(thermal_model);
+    }
+
+    TplThermalForceModelInterface::~TplThermalForceModelInterface()
+    {
+        delete _tmodel;
+        _tmodel = 0;
+    }
+
+    TplStandardThermalForceModel::TplStandardThermalForceModel(TplThermalModelInterface *thermal_model)
+            : TplThermalForceModelInterface(thermal_model)
+    {
+    }
+
+    void TplStandardThermalForceModel::initialize_thermal_model(TplThermalModelInterface *thermal_model)
+    {
+        _tmodel = thermal_model;
+    }
+
+    void TplStandardThermalForceModel::compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy)
+    {
+        //preconditions
+        assert(HFx.rows() == pdb.modules.num_free());
+        assert(HFy.rows() == pdb.modules.num_free());
+
+        HFx = VectorXd::Zero(pdb.modules.num_free());
+        HFy = VectorXd::Zero(pdb.modules.num_free());
+
+        //local data
+        const int    &gsize   = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_size();
+        const double &gwidth  = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_width();
+        const double &gheight = dynamic_cast<TplStandardThermalModel*>(_tmodel)->grid_height();
+        const double &times   = tplenv.runtime.times;
+
+        int dx = static_cast<int>(ceil((tplenv.config.r2*times)/(gwidth*times)));
+        int dy = static_cast<int>(ceil((tplenv.config.r2*times)/(gheight*times)));
+
+        //compute chip grid temperatures using green function method
+        double tss[gsize+3][gsize+3] = {};
         double ts = 0;
-        for(int i=-1; i<_grid_size+2; ++i) {
-            for(int j=-1; j<_grid_size+2; ++j) {
+        for(int i=-1; i<gsize+2; ++i) {
+            for(int j=-1; j<gsize+2; ++j) {
                 ts = 0;
                 for(int i0=i-dx; i0<=i+dx; ++i0) {
                     for(int j0=j-dy; j0<=j+dy; ++j0) {
-                        ts += green_function(make_pair(i, j), make_pair(i0, j0)) * power_density(i0, j0);
+                        ts += _tmodel->green_function(i, j, i0, j0) * _tmodel->power_density(i0, j0);
                     }
                 }
                 tss[i+1][j+1] = ts;
@@ -311,13 +428,13 @@ namespace tpl {
         }
 
         //compute x and y direction head flux using finite difference method
-        double grid_xhf[_grid_size+2][_grid_size+2] = {};
-        double grid_yhf[_grid_size+2][_grid_size+2] = {};
+        double grid_xhf[gsize+2][gsize+2] = {};
+        double grid_yhf[gsize+2][gsize+2] = {};
 
-        for(int i=0; i<_grid_size+2; ++i) {
-            for(int j=0; j<_grid_size+2; ++i) {
-                grid_xhf[i][j] = tss[i+1][j] - tss[i][j];
-                grid_yhf[i][j] = tss[i][j+1] - tss[i][j];
+        for(int i=0; i<gsize+1; ++i) {
+            for(int j=0; j<gsize+1; ++j) {
+                grid_xhf[i][j] = (tss[i+2][j+1] - tss[i][j+1])/2.0;
+                grid_yhf[i][j] = (tss[i+1][j+2] - tss[i+1][j])/2.0;
             }
         }
 
@@ -328,28 +445,30 @@ namespace tpl {
         double xhf=0, yhf=0;//for x and y heat flux value
         for(size_t i=0; i!=pdb.modules.size(); ++i) {
             //transform coordinate system
-            x = pdb.modules[i].x + _bin_width/2;
-            y = pdb.modules[i].y + _bin_height/2;
+            //x = pdb.modules[i].x + gwidth/2;
+            //y = pdb.modules[i].y + gheight/2;
+            x = pdb.modules[i].x;
+            y = pdb.modules[i].y;
 
-            idx_x = static_cast<int>(floor(x*10000/_bin_width*10000));
-            idx_y = static_cast<int>(floor(y*10000/_bin_height*10000));
+            idx_x = static_cast<int>(floor((x*times)/(gwidth*times)));
+            idx_y = static_cast<int>(floor((y*times)/(gheight*times)));
 
-            x1 = idx_x * _bin_width;
-            x2 = x1 + _bin_width;
-            y1 = idx_y * _bin_height;
-            y2 = y1 + _bin_height;
+            x1 = idx_x * gwidth;
+            x2 = x1 + gwidth;
+            y1 = idx_y * gheight;
+            y2 = y1 + gheight;
 
             xhf = grid_xhf[idx_x][idx_y]     * (x2-x) * (y2-y) +
                   grid_xhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
                   grid_xhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
                   grid_xhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
-            xhf = (xhf*10000)/(_bin_width*_bin_height*10000);
+            xhf = (xhf*times)/(gwidth*gheight*times);
 
             yhf = grid_yhf[idx_x][idx_y]     * (x2-x) * (y2-y) +
                   grid_yhf[idx_x+1][idx_y]   * (x-x1) * (y2-y) +
                   grid_yhf[idx_x][idx_y+1]   * (x2-x) * (y-y1) +
                   grid_yhf[idx_x+1][idx_y+1] * (x-x1) * (y-y1) ;
-            yhf = (yhf*10000)/(_bin_width*_bin_height*10000);
+            yhf = (yhf*times)/(gwidth*gheight*times);
 
             HFx(i) = xhf;
             HFy(i) = yhf;
@@ -357,100 +476,29 @@ namespace tpl {
     }
 
 
-    double TplStandardMoveForceModel::green_function(const std::pair<int, int> &idx, const std::pair<int, int> &idx0) const
-    {
-        const int &i = idx.first;
-        const int &j = idx.second;
-        const int &i0 = idx0.first;
-        const int &j0 = idx0.second;
-
-        if(i==i0 && j==j0) return 0;
-
-        double distance = sqrt(pow(abs(i-i0)*_bin_width, 2) + pow(abs(j-j0)*_bin_height, 2));
-
-        if     (distance > _r2)  return 0;
-        else if(distance <= _r1) return 1/distance;
-        else                     return 0.6/sqrt(distance);
-    }
-
-    double TplStandardMoveForceModel::power_density(int i, int j) const
-    {
-        int gsize(_grid_size);
-
-        assert(-gsize <= i && i < 2*gsize);
-        assert(-gsize <= j && j < 2*gsize);
-
-        int x_idx=i;
-        if(i<0) x_idx = -i - 1;
-        else if(i>=gsize) x_idx = -i + 2*gsize - 1;
-
-        int y_idx=j;
-        if(j<0) y_idx = -j - 1;
-        else if(j>=gsize) y_idx = -j + 2*gsize - 1;
-
-        return _power_density.at(x_idx).at(y_idx);
-    }
-
-    void TplStandardMoveForceModel::update_power_density()
-    {
-        _power_density.clear();
-        _power_density.reserve(_grid_size);
-        for(size_t i=0; i<_power_density.size(); ++i) {
-            _power_density[i].reserve(_grid_size);
-        }
-        for_each(begin(_power_density), end(_power_density), [](vector<double> &p){
-            for_each(begin(p), end(p), [](double &v){
-                v = 0;
-            });
-        });
-
-        double left, right, bottom, top;
-        unsigned int idx_left, idx_right, idx_bottom, idx_top;
-        for(TplModules::iterator it=pdb.modules.begin(); it!=pdb.modules.end(); ++it) {
-            left   = it->x - it->width/2.0;
-            right  = it->x + it->width/2.0;
-            bottom = it->y - it->height/2.0;
-            top    = it->y + it->height/2.0;
-
-            idx_left   = static_cast<unsigned int>(floor((left*10000)  /(_bin_width*10000)) );
-            idx_right  = static_cast<unsigned int>(ceil((right*10000)  /(_bin_width*10000)) );
-            idx_bottom = static_cast<unsigned int>(floor((bottom*10000)/(_bin_height*10000)));
-            idx_top    = static_cast<unsigned int>(ceil((top*10000)    /(_bin_height*10000)));
-
-            if(fmod(left*10000,  _bin_width*10000   ) > _bin_width/2 ) idx_left   += 1;
-            if(fmod(right*10000,  _bin_width*10000  ) < _bin_width/2 ) idx_right  -= 1;
-            if(fmod(bottom*10000, _bin_height*10000 ) > _bin_height/2) idx_bottom += 1;
-            if(fmod(top*10000,    _bin_height*10000 ) < _bin_height/2) idx_top    -= 1;
-
-            for(unsigned int i=idx_left; i<idx_right; ++i) {
-                for(unsigned int j=idx_bottom; j<idx_top; ++j) {
-                    _power_density[i][j] += it->power_density;
-                }
-            }
-        }
-    }
-
-    ////End TplStandardMoveForceModel////
-
-
+    ////End TplStandardThermalForceModel////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////Begin TplStandardAlgorithm////
 
     TplAlgorithmInterface::~TplAlgorithmInterface()
     {
         delete net_model;
+        net_model = 0;
         delete net_force_model;
-        delete move_force_model;
-    }
-
-    TplStandardAlgorithm::~TplStandardAlgorithm()
-    {
+        net_force_model = 0;
+        delete thermal_model;
+        thermal_model = 0;
+        delete thermal_force_model;
+        thermal_force_model = 0;
     }
 
     void TplStandardAlgorithm::initialize_models()
     {
-        net_model        = new TplStandardNetModel;
-        net_force_model  = new TplStandardNetForceModel;
-        move_force_model = new TplStandardMoveForceModel(0.1, 0.2, 100000);
+        net_model           = new TplStandardNetModel;
+        net_force_model     = new TplStandardNetForceModel;
+        thermal_model       = new TplStandardThermalModel;
+        thermal_force_model = new TplStandardThermalForceModel(thermal_model);
     }
 
     void TplStandardAlgorithm::make_initial_placement()
@@ -502,6 +550,7 @@ namespace tpl {
     }
 
     ////End TplStandardAlgorithm////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }//end namespace tpl
 

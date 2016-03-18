@@ -17,9 +17,9 @@
 #include "../bookshelf/bookshelf_pl.h"
 #include "../bookshelf/bookshelf_net.h"
 
-#ifndef pdb
-#define pdb (*(tpl::TplDB::db()))
-#endif
+//#ifndef pdb
+//#define pdb (*(tpl::TplDB::db()))
+//#endif
 
 namespace tpl {
     using namespace thueda;
@@ -367,6 +367,8 @@ namespace tpl {
 
         std::string _benchmark_name; //!< The current loading circuit's name.
     };
+
+    extern TplDB &pdb;
 
 }//end namespace tpl
 
