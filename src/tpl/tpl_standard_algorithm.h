@@ -344,6 +344,27 @@ namespace tpl {
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//! standard implementation for detail placement
+    class TplStandardDetailPlacement {
+	public:
+		//! Virtual deconstructor
+		virtual ~TplStandardDetailPlacement() {}
+
+		//! standard implementation of legalization in detail placement
+		virtual std::vector<std::vector<TplModule*> > legalization();
+
+        //! standard implementation of detail placement
+		/*!
+		 * \param rows modules placed in each row
+		 */
+        virtual void detailPlacement(std::vector<std::vector<TplModule*> > rows);
+	protected:
+		int _rowHeight;
+		int _chipWidth;
+		int _chipHeight;
+	};
 
 }//end namespace tpl
 

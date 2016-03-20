@@ -16,10 +16,10 @@ namespace tpl {
         ~TplGYNetForceModel();
     };
 
-    class TplGYMoveForceModel final : public TplStandardMoveForceModel {
+    class TplGYThermalForceModel final : public TplStandardThermalForceModel {
     public:
-        TplGYMoveForceModel(double r1, double r2, unsigned int grid_size);
-        ~TplGYMoveForceModel();
+		TplGYThermalForceModel(TplThermalModelInterface *thermal_model);
+        ~TplGYThermalForceModel();
     };
 
     class TplGYAlgorithm final : public TplStandardAlgorithm {
@@ -27,6 +27,12 @@ namespace tpl {
         ~TplGYAlgorithm();
         void initialize_models() override;
     };
+
+	class TplGYDetailPlacement final : public TplStandardDetailPlacement {
+	public:
+		std::vector<std::vector<TplModule*> > legalization();
+		void detailPlacement(std::vector<std::vector<TplModule*> > rows);
+	};
 
 }//end namespace tpl
 
