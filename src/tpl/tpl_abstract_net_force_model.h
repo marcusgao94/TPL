@@ -21,7 +21,7 @@ namespace tpl {
         TplAbstractNetForceModel() = default;
 
         //! Pure virtual destructor.
-        virtual ~TplAbstractNetForceModel() = 0;
+        virtual ~TplAbstractNetForceModel() {};
 
         //! Interface for computing all the free modules' net force matrix.
         /*!
@@ -45,10 +45,6 @@ namespace tpl {
         virtual void compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
                                               std::vector<double> &x_target, std::vector<double> &y_target) = 0;
     };
-
-    TplAbstractNetForceModel::~TplAbstractNetForceModel()
-    {
-    }
 
 }//namespace tpl
 

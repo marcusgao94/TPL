@@ -13,19 +13,18 @@
 using namespace std;
 using namespace tpl;
 
-SCENARIO("adaptec1", "[adaptec1]") {
+SCENARIO("bigblue1", "[bigblue1]") {
 
-    GIVEN("A circuit adaptec1") {
+    GIVEN("A circuit bigblue1") {
         char path[200];
         char *benchmark;
         benchmark = std::getenv("BENCHMARK");
         std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/adaptec1");
+        std::strcat(path, "/ispd2005/bigblue1");
 
         TplDB::db().load_circuit(path);
 
         TplStandardNetModel nmodel;
-
 
         WHEN("we compute the first net's weight") {
             NetWeight x_net_weight, y_net_weight;
@@ -37,5 +36,79 @@ SCENARIO("adaptec1", "[adaptec1]") {
             }
         }
     }
+}//end SCENARIO
 
+SCENARIO("bigblue2", "[bigblue2]") {
+
+    GIVEN("A circuit bigblue2") {
+        char path[200];
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/bigblue2");
+
+        TplDB::db().load_circuit(path);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+            }
+        }
+    }
+}//end SCENARIO
+
+SCENARIO("bigblue3", "[bigblue3]") {
+
+    GIVEN("A circuit bigblue3") {
+        char path[200];
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/bigblue3");
+
+        TplDB::db().load_circuit(path);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+            }
+        }
+    }
+}//end SCENARIO
+
+SCENARIO("bigblue4", "[bigblue4]") {
+
+    GIVEN("A circuit bigblue4") {
+        char path[200];
+        char *benchmark;
+        benchmark = std::getenv("BENCHMARK");
+        std::strcpy(path, benchmark);
+        std::strcat(path, "/ispd2005/bigblue4");
+
+        TplDB::db().load_circuit(path);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+            }
+        }
+    }
 }//end SCENARIO

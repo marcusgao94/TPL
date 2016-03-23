@@ -1,5 +1,11 @@
 #include "tpl_standard_net_model.h"
 
+#ifndef NDEBUG
+#include <iostream>
+using std::cout;
+using std::endl;
+#endif
+
 namespace tpl {
 
     using std::vector;
@@ -16,13 +22,30 @@ namespace tpl {
         vector<double> xs = {};
         vector<double> ys = {};
         double xmin=TplDB::db().modules.chip_width(), xmax=-1, ymin=TplDB::db().modules.chip_height(), ymax=-1;
-        size_t xmin_idx=-1, xmax_idx=-1, ymin_idx=-1, ymax_idx=-1;
+        int xmin_idx=-1, xmax_idx=-1, ymin_idx=-1, ymax_idx=-1;
 
         //local helper variables
-        size_t idx;
-        double curx, cury;
+        int idx=0;
+        double curx=0, cury=0;
 
         for(TplNets::net_iterator nit=TplDB::db().nets.net_begin(); nit!=TplDB::db().nets.net_end(); ++nit) {
+
+            //restore local variable to initial state
+            pins.clear();
+            xs.clear();
+            ys.clear();
+
+            xmin=TplDB::db().modules.chip_width();
+            ymin=TplDB::db().modules.chip_height();
+
+            xmax=-1;
+            ymax=-1;
+
+            xmin_idx=-1;
+            xmax_idx=-1;
+            ymin_idx=-1;
+            ymax_idx=-1;
+
             idx = 0;
             curx = 0;
             cury = 0;
@@ -56,10 +79,10 @@ namespace tpl {
             }
 
 
-            const size_t &degree = pins.size();
+            int degree = pins.size();
             //loop to compute current pin pair set's non zero net weights
             //pin pair <==> net weight
-            for(size_t cur_idx=0; cur_idx<degree; ++cur_idx)     {
+            for(int cur_idx=0; cur_idx<degree; ++cur_idx)     {
                 if( cur_idx == xmin_idx || cur_idx == xmax_idx ||
                         cur_idx == ymin_idx || cur_idx == ymax_idx ) {
                     continue;

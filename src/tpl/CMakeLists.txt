@@ -1,7 +1,5 @@
 include_directories(${PROJECT_SOURCE_DIR}/tpl)
 
-#executables
-
 #1.TplDB
 add_library(db_obj OBJECT tpl_db.cpp)
 add_executable(tpl_db_test $<TARGET_OBJECTS:db_obj> tpl_db_test.cpp)
@@ -12,14 +10,29 @@ add_library(config_obj OBJECT tpl_config.cpp)
 add_executable(tpl_config_test $<TARGET_OBJECTS:config_obj> tpl_config_test.cpp)
 target_link_libraries(tpl_config_test ${Boost_LIBRARIES})
 
-#3.TplNetModel
+#3.TplStandardNetModel
 add_library(net_model_obj OBJECT tpl_standard_net_model.cpp)
-set(TPL_STANDARD_NET_MODEL_TEST_SRC
+set(TPL_STANDARD_NET_MODEL_SRC
         $<TARGET_OBJECTS:db_obj>
         $<TARGET_OBJECTS:net_model_obj>
-        tpl_standard_net_model_test.cpp)
-add_executable(tpl_net_model_test ${TPL_STANDARD_NET_MODEL_TEST_SRC})
+        )
+add_executable(tpl_net_model_test
+        ${TPL_STANDARD_NET_MODEL_SRC}
+        tpl_standard_net_model_test.cpp
+        )
 target_link_libraries(tpl_net_model_test bookshelf ${Boost_LIBRARIES})
+
+#4.TplStandardNetForceModel
+add_library(net_force_model_obj OBJECT tpl_standard_net_force_model.cpp)
+set(TPL_STANDARD_NET_FORCE_MODEL_SRC
+        ${TPL_STANDARD_NET_MODEL_SRC}
+        $<TARGET_OBJECTS:net_force_model_obj>
+        )
+add_executable(tpl_net_force_model_test
+        ${TPL_STANDARD_NET_FORCE_MODEL_SRC}
+        tpl_standard_net_force_model_test.cpp
+        )
+target_link_libraries(tpl_net_force_model_test bookshelf ${Boost_LIBRARIES})
 
 #3.TplStandardAlgorithm
 #set(TPL_STANDARD_ALGORITHM_TEST_SRC

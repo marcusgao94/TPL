@@ -13,7 +13,6 @@
 
 namespace tpl {
 
-
     /*!
      * \typedef std::map<std::pair<TplPin*, TplPin*>, double> NetWeight;
      * \brief NetWeight type
@@ -26,7 +25,7 @@ namespace tpl {
         //! Default constructor.
         TplAbstractNetModel() = default;
 
-        //! Pure virtual destructor.
+        //! Virtual destructor.
         virtual ~TplAbstractNetModel() {}
 
         //! Interface for computing a net's net weight.
@@ -36,12 +35,6 @@ namespace tpl {
          */
         virtual void compute_net_weight(NetWeight &NWx, NetWeight &NWy) = 0;
     };
-
-    /*
-    TplAbstractNetModel::~TplAbstractNetModel()
-    {
-    }
-     */
 
 }//namespace tpl
 

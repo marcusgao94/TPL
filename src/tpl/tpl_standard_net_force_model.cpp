@@ -1,7 +1,5 @@
 #include "tpl_standard_net_force_model.h"
 
-#include "tpl_db.h"
-
 namespace tpl {
 
     using std::string;
@@ -14,12 +12,12 @@ namespace tpl {
                                                             SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
     {
         //preconditions
-        assert(Cx.cols() == TplDB::db().modules.num_free());
-        assert(Cx.rows() == TplDB::db().modules.num_free());
-        assert(Cy.cols() == TplDB::db().modules.num_free());
-        assert(Cy.rows() == TplDB::db().modules.num_free());
-        assert(dx.rows() == TplDB::db().modules.num_free());
-        assert(dy.rows() == TplDB::db().modules.num_free());
+        assert(Cx.cols() == static_cast<int>(TplDB::db().modules.num_free()));
+        assert(Cx.rows() == static_cast<int>(TplDB::db().modules.num_free()));
+        assert(Cy.cols() == static_cast<int>(TplDB::db().modules.num_free()));
+        assert(Cy.rows() == static_cast<int>(TplDB::db().modules.num_free()));
+        assert(dx.rows() == static_cast<int>(TplDB::db().modules.num_free()));
+        assert(dy.rows() == static_cast<int>(TplDB::db().modules.num_free()));
 
         Cx.setZero();
         Cy.setZero();
@@ -115,10 +113,14 @@ namespace tpl {
     void TplStandardNetForceModel::compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
                                                             std::vector<double> &x_target, std::vector<double> &y_target)
     {
-        assert( x_target.size() == TplDB::db().modules.num_free() );
-        assert( y_target.size() == TplDB::db().modules.num_free() );
+        //preconditions
+        x_target.clear();
+        y_target.clear();
 
         unsigned int num_free = TplDB::db().modules.num_free();
+        x_target.reserve(num_free);
+        y_target.reserve(num_free);
+
         SpMat Cx(num_free, num_free);
         SpMat Cy(num_free, num_free);
         VectorXd dx(num_free);
@@ -133,8 +135,8 @@ namespace tpl {
         VectorXd x_eigen_target = llt.compute(Cx).solve(dx*-1);
         VectorXd y_eigen_target = llt.compute(Cy).solve(dy*-1);
 
-        assert( x_target.size() == x_eigen_target.size() );
-        assert( y_target.size() == y_eigen_target.size() );
+        assert(static_cast<int>(x_target.size()) == x_eigen_target.size() );
+        assert(static_cast<int>(y_target.size()) == y_eigen_target.size() );
 
         VectorXd::Map(&x_target[0], x_eigen_target.size()) = x_eigen_target;
         VectorXd::Map(&y_target[0], y_eigen_target.size()) = y_eigen_target;
