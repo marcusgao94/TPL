@@ -7,11 +7,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <cstring>
-
 #include "tpl_db.h"
 
 using namespace std;
@@ -26,12 +21,12 @@ SCENARIO("adaptec1", "[adaptec1]") {
         std::strcpy(path, benchmark);
         std::strcat(path, "/ispd2005/adaptec1");
 
-        bool load_status = pdb.load_circuit(path);
+        bool load_status = TplDB::db().load_circuit(path);
 
         REQUIRE(load_status == true);
-        REQUIRE(pdb.modules.chip_width()  == 11589);
-        REQUIRE(pdb.modules.chip_height() == 11589);
-        REQUIRE(pdb.modules.num_free()    == 210904);
+        REQUIRE(TplDB::db().modules.chip_width()  == 11589);
+        REQUIRE(TplDB::db().modules.chip_height() == 11589);
+        REQUIRE(TplDB::db().modules.num_free()    == 210904);
     }
 }//end adaptec1
 
@@ -44,12 +39,12 @@ SCENARIO("adaptec2", "[adaptec2]") {
         std::strcpy(path, benchmark);
         std::strcat(path, "/ispd2005/adaptec2");
 
-        bool load_status = pdb.load_circuit(path);
+        bool load_status = TplDB::db().load_circuit(path);
 
         REQUIRE(load_status == true);
-        REQUIRE(pdb.modules.chip_width()  == 15244);
-        REQUIRE(pdb.modules.chip_height() == 15244);
-        REQUIRE(pdb.modules.num_free()    == 254457);
+        REQUIRE(TplDB::db().modules.chip_width()  == 15244);
+        REQUIRE(TplDB::db().modules.chip_height() == 15244);
+        REQUIRE(TplDB::db().modules.num_free()    == 254457);
     }
 }//end adaptec2
 
@@ -62,12 +57,12 @@ SCENARIO("adaptec3", "[adaptec3]") {
         std::strcpy(path, benchmark);
         std::strcat(path, "/ispd2005/adaptec3");
 
-        bool load_status = pdb.load_circuit(path);
+        bool load_status = TplDB::db().load_circuit(path);
 
         REQUIRE(load_status == true);
-        REQUIRE(pdb.modules.chip_width()  == 23190);
-        REQUIRE(pdb.modules.chip_height() == 23386);
-        REQUIRE(pdb.modules.num_free()    == 450927);
+        REQUIRE(TplDB::db().modules.chip_width()  == 23190);
+        REQUIRE(TplDB::db().modules.chip_height() == 23386);
+        REQUIRE(TplDB::db().modules.num_free()    == 450927);
     }
 }//end adaptec3
 
@@ -80,12 +75,12 @@ SCENARIO("adaptec4", "[adaptec4]") {
         std::strcpy(path, benchmark);
         std::strcat(path, "/ispd2005/adaptec4");
 
-        bool load_status = pdb.load_circuit(path);
+        bool load_status = TplDB::db().load_circuit(path);
 
         REQUIRE(load_status == true);
-        REQUIRE(pdb.modules.chip_width()  == 23226);
-        REQUIRE(pdb.modules.chip_height() == 23386);
-        REQUIRE(pdb.modules.num_free()    == 494716);
+        REQUIRE(TplDB::db().modules.chip_width()  == 23226);
+        REQUIRE(TplDB::db().modules.chip_height() == 23386);
+        REQUIRE(TplDB::db().modules.num_free()    == 494716);
     }
 }//end adaptec4
 

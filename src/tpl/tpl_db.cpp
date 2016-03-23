@@ -1,7 +1,8 @@
-#include <fstream>
-#include <string>
-#include <utility>
+#include "tpl_db.h"
+
 #include <cmath>
+#include <sstream>
+#include <fstream>
 
 #include <boost/filesystem.hpp>
 
@@ -10,7 +11,6 @@
 #include "../bookshelf/bookshelf_net_parser.hpp"
 #include "../bookshelf/bookshelf_pl_generator.hpp"
 
-#include "tpl_db.h"
 
 namespace tpl {
     using namespace std;
@@ -39,7 +39,7 @@ namespace tpl {
         }
     }
 
-    TplModules::TplModules(TplModules &&temp) :
+    TplModules::TplModules(BOOST_RV_REF(TplModules) temp) :
             _num_modules(std::move(temp._num_modules)),
             _num_free(std::move(temp._num_free)),
             _chip_width(std::move(temp._chip_width)),
@@ -49,7 +49,7 @@ namespace tpl {
     {
     }
 
-    TplModules &TplModules::operator=(TplModules &&temp)
+    TplModules &TplModules::operator=(BOOST_RV_REF(TplModules) temp)
     {
         _num_modules  = std::move(temp._num_modules);
         _num_free     = std::move(temp._num_free);
@@ -132,14 +132,14 @@ namespace tpl {
         copy(bnets.data.begin(), bnets.data.end(), back_inserter(_netlist));
     }
 
-    TplNets::TplNets(TplNets &&temp) :
+    TplNets::TplNets(BOOST_RV_REF(TplNets) temp) :
             _num_nets(std::move(temp._num_nets)),
             _num_pins(std::move(temp._num_pins)),
             _netlist(std::move(temp._netlist))
     {
     }
 
-    TplNets& TplNets::operator=(TplNets &&temp)
+    TplNets& TplNets::operator=(BOOST_RV_REF(TplNets) temp)
     {
         _num_nets = std::move(temp._num_nets);
         _num_pins = std::move(temp._num_pins);
@@ -156,21 +156,13 @@ namespace tpl {
         _netlist.clear();
     }
 
-    TplDB* TplDB::_instance = NULL;
 
-    TplDB *TplDB::db()
+    TplDB &TplDB::db()
     {
-        if(_instance == NULL) {
-            _instance = new TplDB;
-        }
+        static TplDB _instance;
         return _instance;
     }
 
-    void TplDB::destroy_db()
-    {
-        delete _instance;
-        _instance = NULL;
-    }
 
     //////////////////////////////////Helper Functions///////////////////////////////////
     bool TplDB::load_circuit(const char *path)
@@ -181,15 +173,15 @@ namespace tpl {
 
             //load modules
             boost::filesystem::path node_file_path(benchmark_path);
-            node_file_path /= _benchmark_name + ".nodes";
+            node_file_path /= _benchmark_name + string(".nodes");
             boost::filesystem::path pl_file_path(benchmark_path);
-            pl_file_path /= _benchmark_name + ".pl";
+            pl_file_path /= _benchmark_name + string(".pl");
 
             initialize_modules(node_file_path.c_str(), pl_file_path.c_str());
 
             //load nets
             boost::filesystem::path net_file_path(benchmark_path);
-            net_file_path /= _benchmark_name + ".nets";
+            net_file_path /= _benchmark_name + string(".nets");
 
             initialize_nets(net_file_path.c_str());
 
@@ -206,7 +198,9 @@ namespace tpl {
         BookshelfPls bpls;
         modules.get_bookshelf_pls(bpls);
 
-        string out_file_name = _benchmark_name + string("_") + std::to_string(version++) + ".pl";
+        string out_file_name;
+        stringstream ss(out_file_name);
+        ss << _benchmark_name << "_" << version++ << ".pl";
 
         ofstream out(out_file_name.c_str(), ios_base::out);
         ostream_iterator<char> ositer(out, "");
@@ -276,8 +270,6 @@ namespace tpl {
 
         nets = std::move( TplNets(bnets) );
     }
-
-    TplDB &pdb = *TplDB::db();
 
 }//end namespace tpl
 
