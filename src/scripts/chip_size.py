@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 
+import os
 import pathlib
 import numpy as np
 
-benchmark_path = pathlib.Path("/home/fpeng/Workspace/TPL/benchmark/ispd2005")
+benchmark_path = pathlib.Path(os.environ['BENCHMARK'])
 file_names = ["adaptec1", "adaptec2", "adaptec3", "adaptec4", "bigblue1", "bigblue2", "bigblue3", "bigblue4"]
 
 with open("chip_size.txt", 'w') as out_file:
 
     lines = []
     for fn in file_names:
-        node_file_name = benchmark_path / "{0}/{0}.nodes".format(fn)
-        pl_file_name   = benchmark_path / "{0}/{0}.pl".format(fn)
+        node_file_name = benchmark_path / "ispd2005/{0}/{0}.nodes".format(fn)
+        pl_file_name   = benchmark_path / "ispd2005/{0}/{0}.pl".format(fn)
 
         sizes       = np.genfromtxt(node_file_name.as_posix(), skip_header=6, usecols=(1,2))
         coordinates = np.genfromtxt(pl_file_name.as_posix(),   skip_header=4, usecols=(1,2))

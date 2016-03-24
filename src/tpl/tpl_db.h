@@ -327,7 +327,7 @@ namespace tpl {
          * \param path The benchmark file's directory path.
          * \return A boolean variable indicating wether the operation is success.
          */
-        bool load_circuit(const char *path);
+        bool load_circuit(const std::string &path);
 
         //! Take a snapshot of the current placement.
         void generate_placement_snapshot() const;
@@ -337,11 +337,11 @@ namespace tpl {
 
     private:
         //! Private helper routine loading a file into string.
-        bool read_file(const char *file_name, std::string &storage);
+        bool read_file(const std::string &file_name, std::string &storage);
         //! Private helper routine initialize the modules member variable.
-        void initialize_modules(const char *node_file, const char *pl_file);
+        void initialize_modules(const std::string &node_file, const std::string &pl_file);
         //! Private helper routine initialize the nets member variable.
-        void initialize_nets   (const char *net_file);
+        void initialize_nets   (const std::string &net_file);
 
         std::string _benchmark_name; //!< The current loading circuit's name.
     };

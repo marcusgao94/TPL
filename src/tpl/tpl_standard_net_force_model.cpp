@@ -1,5 +1,12 @@
 #include "tpl_standard_net_force_model.h"
 
+#ifndef NDEBUG
+#include <iostream>
+using std::cout;
+using std::endl;
+#endif
+
+
 namespace tpl {
 
     using std::string;

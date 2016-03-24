@@ -165,7 +165,7 @@ namespace tpl {
 
 
     //////////////////////////////////Helper Functions///////////////////////////////////
-    bool TplDB::load_circuit(const char *path)
+    bool TplDB::load_circuit(const std::string &path)
     {
         try {
             boost::filesystem::path   benchmark_path(path);
@@ -177,13 +177,13 @@ namespace tpl {
             boost::filesystem::path pl_file_path(benchmark_path);
             pl_file_path /= _benchmark_name + string(".pl");
 
-            initialize_modules(node_file_path.c_str(), pl_file_path.c_str());
+            initialize_modules(node_file_path.string(), pl_file_path.string());
 
             //load nets
             boost::filesystem::path net_file_path(benchmark_path);
             net_file_path /= _benchmark_name + string(".nets");
 
-            initialize_nets(net_file_path.c_str());
+            initialize_nets(net_file_path.string());
 
             return true;
         } catch(...) {
@@ -210,7 +210,7 @@ namespace tpl {
 
     //private routines
 
-    bool TplDB::read_file(const char *file_name, std::string &storage)
+    bool TplDB::read_file(const std::string &file_name, std::string &storage)
     {
         using namespace std;
 
@@ -225,7 +225,7 @@ namespace tpl {
         return in.good();
     }//end TplDB::read_file
 
-    void TplDB::initialize_modules(const char *node_file, const char *pl_file)
+    void TplDB::initialize_modules(const std::string &node_file, const std::string &pl_file)
     {
         modules.clear();
 
@@ -253,7 +253,7 @@ namespace tpl {
         modules = std::move( TplModules(bnodes, bpls) );
     }
 
-    void TplDB::initialize_nets(const char *net_file)
+    void TplDB::initialize_nets(const std::string &net_file)
     {
         nets.clear();
 
