@@ -13,6 +13,8 @@ with open("chip_size.txt", 'w') as out_file:
     for fn in file_names:
         node_file_name = benchmark_path / "ispd2005/{0}/{0}.nodes".format(fn)
         pl_file_name   = benchmark_path / "ispd2005/{0}/{0}.pl".format(fn)
+        print(node_file_name.as_posix())
+        print(pl_file_name.as_posix())
 
         sizes       = np.genfromtxt(node_file_name.as_posix(), skip_header=6, usecols=(1,2))
         coordinates = np.genfromtxt(pl_file_name.as_posix(),   skip_header=4, usecols=(1,2))
