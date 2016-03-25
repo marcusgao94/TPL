@@ -35,7 +35,6 @@ namespace tpl {
             const BookshelfNode &bnode = bnodes.data[i];
             const BookshelfPl   &bpl   = bpls.data[i];
 
-//            TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1};
             _modules.emplace_back(bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1);
             _id_index_map.insert( make_pair(bnode.id, i) );
 
@@ -139,6 +138,14 @@ namespace tpl {
         copy(bnets.data.begin(), bnets.data.end(), back_inserter(_netlist));
     }
 
+    TplNets::TplNets(BookshelfNets &&bnets)
+    {
+        _num_nets = bnets.num_nets;
+        _num_pins = bnets.num_pins;
+
+        _netlist = std::move(bnets.data);
+    }
+
     TplNets::TplNets(BOOST_RV_REF(TplNets) temp) :
             _num_nets(temp._num_nets),
             _num_pins(temp._num_pins),
@@ -217,23 +224,6 @@ namespace tpl {
 
     //private routines
 
-    /*
-    bool TplDB::read_file(const std::string &file_name, std::string &storage)
-    {
-        using namespace std;
-
-        ifstream in(file_name, ios_base::in);
-        in.unsetf(ios::skipws);
-
-        storage.clear();
-        copy(istream_iterator<char>(in), istream_iterator<char>(), back_inserter(storage));
-
-        in.close();
-
-        return in.good();
-    }//end TplDB::read_file
-     */
-
     void TplDB::initialize_modules(const std::string &node_file, const std::string &pl_file)
     {
         modules.clear();
@@ -272,7 +262,7 @@ namespace tpl {
         BookshelfNets bnets;
         parse_bookshelf_net(net_begin, net_end, bnets);
 
-        nets = std::move( TplNets(bnets) );
+        nets = std::move( TplNets( std::move(bnets) ) );
     }
 
 }//end namespace tpl

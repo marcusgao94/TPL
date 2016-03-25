@@ -11,10 +11,6 @@ namespace thueda {
     BookshelfNode::BookshelfNode() : id(""), width(0), height(0), fixed(false)
     {
     }
-    /*
-    BookshelfNode::BookshelfNode(Id id, Length width, Length height, bool fixed)
-            : id(id), width(width), height(height), fixed(fixed) {}
-            */
 
     std::ostream & operator<<(std::ostream &out, const BookshelfNode &node) 
     {

@@ -8,6 +8,7 @@
 #define BOOKSHELF_NET_H
 
 #include <vector>
+#include <list>
 #include <iostream>
 
 #include "utils.h"
@@ -23,8 +24,6 @@ namespace thueda {
         IOType   io; //!< A pin's IO type
         Distance dx; //!< A pin's x offset from the center of its node
         Distance dy; //!< A pin's y offset from the center of its node
-
-        //explicit BookshelfPin(Id id="", IOType io=IOType::Input, Distance dx=0, Distance dy=0);
     };
 
     /*!
@@ -64,9 +63,7 @@ namespace thueda {
     struct BookshelfNets {
         unsigned int num_nets;              //!< Number of nets in .nets files
         unsigned int num_pins;              //!< Number of pins in .nets files
-        std::vector<BookshelfNet> data;     //!< Vector storing all the nets in .nets files
-
-        BookshelfNets();                //!< Default constructor for BookshelfNets
+        std::list<BookshelfNet> data;     //!< Vector storing all the nets in .nets files
     };
 
 }//end namespace thueda

@@ -36,7 +36,7 @@ BOOST_FUSION_ADAPT_STRUCT(
         thueda::BookshelfNets,
         (unsigned int,                  num_nets)
         (unsigned int,                  num_pins)
-        (std::vector<thueda::BookshelfNet>, data)
+        (std::list<thueda::BookshelfNet>, data)
 )
 
 namespace thueda {

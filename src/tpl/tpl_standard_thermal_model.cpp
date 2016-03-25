@@ -25,9 +25,9 @@ namespace tpl {
     {
         //precondition
         distribution.clear();
-        distribution.reserve(_gsize+3);
+        distribution.resize(_gsize+3);
         for(int i=0; i<_gsize+3; ++i) {
-            distribution[i].reserve(_gsize+3);
+            distribution[i].resize(_gsize+3);
         }
 
         double radius = boost::get<double>(TplConfig::instance()["r2"]);
