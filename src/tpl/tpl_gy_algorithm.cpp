@@ -59,10 +59,13 @@ namespace tpl {
 					f[j][v] = max(f[j-1][v], f[j-1][v - width] + value);
 				}
 			}
+			// find which module is selected in each line when total cost is least
 			vector<TplModule*> select;
 			vector<TplModule*> defer;
 			int target = _chipWidth;
 			for (int j = modulesInThisRow; j >= 1; j--) {
+				// f[j][target] == f[j-1][target - width[j]] + value[j] > f[j-1][target] indicates that the jth
+				// module is selected, in this case the jth module is rows[i][j-1] because f[0] is additional
 				if (f[j][target] > f[j-1][target]) {
 					select.push_back(rows[i][j-1]);
 					target -= rows[i][j-1]->width;
@@ -72,6 +75,7 @@ namespace tpl {
 
 			}
 			rows[i] = select;
+			// add deferred modules to next line
 			if (i < totalRows - 1)
 				rows[i+1].insert(rows[i+1].end(), defer.begin(), defer.end());
 		}
