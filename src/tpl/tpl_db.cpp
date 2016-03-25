@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <boost/filesystem.hpp>
+#include <boost/spirit/include/support_istream_iterator.hpp>
 
 #include "../bookshelf/bookshelf_node_parser.hpp"
 #include "../bookshelf/bookshelf_pl_parser.hpp"
@@ -15,6 +16,12 @@
 namespace tpl {
     using namespace std;
     using namespace thueda;
+
+    TplModule::TplModule(Id id, Coordinate x, Coordinate y, Length width, Length height,
+                         bool fixed, double power_density) :
+            id(id), x(x), y(y), width(width), height(height), fixed(fixed), power_density(power_density)
+    {
+    }
 
     TplModules::TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls) :
             _num_modules(bnodes.num_nodes),
@@ -28,8 +35,8 @@ namespace tpl {
             const BookshelfNode &bnode = bnodes.data[i];
             const BookshelfPl   &bpl   = bpls.data[i];
 
-            TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1};
-            _modules.push_back(std::move(m));
+//            TplModule m = {bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1};
+            _modules.emplace_back(bnode.id, bpl.x, bpl.y, bnode.width, bnode.height, bnode.fixed, 1);
             _id_index_map.insert( make_pair(bnode.id, i) );
 
             double right_border = bpl.x + bnode.width;
@@ -40,10 +47,10 @@ namespace tpl {
     }
 
     TplModules::TplModules(BOOST_RV_REF(TplModules) temp) :
-            _num_modules(std::move(temp._num_modules)),
-            _num_free(std::move(temp._num_free)),
-            _chip_width(std::move(temp._chip_width)),
-            _chip_height(std::move(temp._chip_height)),
+            _num_modules(temp._num_modules),
+            _num_free(temp._num_free),
+            _chip_width(temp._chip_width),
+            _chip_height(temp._chip_height),
             _modules(std::move(temp._modules)),
             _id_index_map(std::move(temp._id_index_map))
     {
@@ -51,11 +58,11 @@ namespace tpl {
 
     TplModules &TplModules::operator=(BOOST_RV_REF(TplModules) temp)
     {
-        _num_modules  = std::move(temp._num_modules);
-        _num_free     = std::move(temp._num_free);
+        _num_modules  = temp._num_modules;
+        _num_free     = temp._num_free;
 
-        _chip_width   = std::move(temp._chip_width);
-        _chip_height  = std::move(temp._chip_height);
+        _chip_width   = temp._chip_width;
+        _chip_height  = temp._chip_height;
 
         _modules      = std::move(temp._modules);
         _id_index_map = std::move(temp._id_index_map);
@@ -116,11 +123,11 @@ namespace tpl {
 
     void TplModules::get_bookshelf_pls(thueda::BookshelfPls &bpls) const
     {
-        assert(bpls.data.size() == 0);
+        bpls.data.clear();
 
         for(size_t i=0; i<_num_modules; ++i) {
             const TplModule &m = _modules.at(i);
-            bpls.data.push_back( {m.id, m.x, m.y, m.fixed} );
+            bpls.data.emplace_back( m.id, m.x, m.y, m.fixed );
         }
     }
 
@@ -133,16 +140,16 @@ namespace tpl {
     }
 
     TplNets::TplNets(BOOST_RV_REF(TplNets) temp) :
-            _num_nets(std::move(temp._num_nets)),
-            _num_pins(std::move(temp._num_pins)),
+            _num_nets(temp._num_nets),
+            _num_pins(temp._num_pins),
             _netlist(std::move(temp._netlist))
     {
     }
 
     TplNets& TplNets::operator=(BOOST_RV_REF(TplNets) temp)
     {
-        _num_nets = std::move(temp._num_nets);
-        _num_pins = std::move(temp._num_pins);
+        _num_nets = temp._num_nets;
+        _num_pins = temp._num_pins;
         _netlist  = std::move(temp._netlist);
 
         return *this;
@@ -210,6 +217,7 @@ namespace tpl {
 
     //private routines
 
+    /*
     bool TplDB::read_file(const std::string &file_name, std::string &storage)
     {
         using namespace std;
@@ -224,31 +232,29 @@ namespace tpl {
 
         return in.good();
     }//end TplDB::read_file
+     */
 
     void TplDB::initialize_modules(const std::string &node_file, const std::string &pl_file)
     {
         modules.clear();
 
-        string storage;
-        string::const_iterator iter, end;
-
         //process .nodes file
-        read_file(node_file, storage);
+        ifstream node_stream(node_file);
+        node_stream.unsetf(ios::skipws);
 
-        iter = storage.begin();
-        end  = storage.end();
+        boost::spirit::istream_iterator node_begin(node_stream), node_end;
 
         BookshelfNodes bnodes;
-        parse_bookshelf_node(iter, end, bnodes);
+        parse_bookshelf_node(node_begin, node_end, bnodes);
 
         //process .pl file
-        read_file(pl_file, storage);
+        ifstream pl_stream(pl_file);
+        pl_stream.unsetf(ios::skipws);
 
-        iter = storage.begin();
-        end  = storage.end();
+        boost::spirit::istream_iterator pl_begin(pl_stream), pl_end;
 
         BookshelfPls bpls;
-        parse_bookshelf_pl(iter, end, bpls);
+        parse_bookshelf_pl(pl_begin, pl_end, bpls);
 
         modules = std::move( TplModules(bnodes, bpls) );
     }
@@ -257,16 +263,14 @@ namespace tpl {
     {
         nets.clear();
 
-        string storage;
-        string::const_iterator iter, end;
+        //process .nets file
+        ifstream net_stream(net_file);
+        net_stream.unsetf(ios::skipws);
 
-        read_file(net_file, storage);
-
-        iter = storage.begin();
-        end  = storage.end();
+        boost::spirit::istream_iterator net_begin(net_stream), net_end;
 
         BookshelfNets bnets;
-        parse_bookshelf_net(iter, end, bnets);
+        parse_bookshelf_net(net_begin, net_end, bnets);
 
         nets = std::move( TplNets(bnets) );
     }

@@ -125,15 +125,16 @@ namespace tpl {
         y_target.clear();
 
         unsigned int num_free = TplDB::db().modules.num_free();
-        x_target.reserve(num_free);
-        y_target.reserve(num_free);
+        x_target.resize(num_free);
+        y_target.resize(num_free);
 
-        SpMat Cx(num_free, num_free);
-        SpMat Cy(num_free, num_free);
-        VectorXd dx(num_free);
-        dx = VectorXd::Zero(num_free);
-        VectorXd dy(num_free);
-        dy = VectorXd::Zero(num_free);
+        SpMat Cx(num_free, num_free), Cy(num_free, num_free);
+        Cx.setZero();
+        Cy.setZero();
+
+        VectorXd dx(num_free), dy(num_free);
+        dx.setZero();
+        dy.setZero();
 
         compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);
 
@@ -141,6 +142,8 @@ namespace tpl {
 
         VectorXd x_eigen_target = llt.compute(Cx).solve(dx*-1);
         VectorXd y_eigen_target = llt.compute(Cy).solve(dy*-1);
+
+//        cout << num_free << " " << x_eigen_target.size() << " " << y_eigen_target.size() << endl;
 
         assert(static_cast<int>(x_target.size()) == x_eigen_target.size() );
         assert(static_cast<int>(y_target.size()) == y_eigen_target.size() );

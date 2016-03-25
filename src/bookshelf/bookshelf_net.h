@@ -23,6 +23,8 @@ namespace thueda {
         IOType   io; //!< A pin's IO type
         Distance dx; //!< A pin's x offset from the center of its node
         Distance dy; //!< A pin's y offset from the center of its node
+
+        //explicit BookshelfPin(Id id="", IOType io=IOType::Input, Distance dx=0, Distance dy=0);
     };
 
     /*!

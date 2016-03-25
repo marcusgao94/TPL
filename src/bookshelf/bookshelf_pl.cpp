@@ -10,7 +10,12 @@
 
 namespace thueda {
 
-    std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl) 
+    BookshelfPl::BookshelfPl(Id id, Coordinate x, Coordinate y, bool fixed)
+            : id(id), x(x), y(y), fixed(fixed)
+    {
+    }
+
+    std::ostream & operator<<(std::ostream &out, const BookshelfPl &pl)
     {
         using std::setw;
         using std::fixed;

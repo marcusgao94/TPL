@@ -34,6 +34,10 @@ namespace tpl {
         Length height; //!< A module's height
         bool    fixed; //!< A module's fixed flag
         double power_density; //!< A module's power density
+
+        TplModule() = default;
+        explicit TplModule(Id id, Coordinate x, Coordinate y, Length width, Length height,
+                           bool fixed, double power_density);
     };
 
     //! class storing all the modules' positions and sizes information.
@@ -337,7 +341,8 @@ namespace tpl {
 
     private:
         //! Private helper routine loading a file into string.
-        bool read_file(const std::string &file_name, std::string &storage);
+        //bool read_file(const std::string &file_name, std::string &storage);
+
         //! Private helper routine initialize the modules member variable.
         void initialize_modules(const std::string &node_file, const std::string &pl_file);
         //! Private helper routine initialize the nets member variable.
