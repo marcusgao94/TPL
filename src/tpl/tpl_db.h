@@ -11,15 +11,13 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <stdexcept>
+
+#include <boost/move/utility_core.hpp>
+#include <boost/core/noncopyable.hpp>
 
 #include "../bookshelf/bookshelf_node.h"
 #include "../bookshelf/bookshelf_pl.h"
 #include "../bookshelf/bookshelf_net.h"
-
-//#ifndef pdb
-//#define pdb (*(tpl::TplDB::db()))
-//#endif
 
 namespace tpl {
     using namespace thueda;
@@ -36,10 +34,17 @@ namespace tpl {
         Length height; //!< A module's height
         bool    fixed; //!< A module's fixed flag
         double power_density; //!< A module's power density
+
+        TplModule() = default;
+        explicit TplModule(Id id, Coordinate x, Coordinate y, Length width, Length height,
+                           bool fixed, double power_density);
     };
 
     //! class storing all the modules' positions and sizes information.
     class TplModules {
+    private:
+        BOOST_MOVABLE_BUT_NOT_COPYABLE(TplModules)
+
     public:
         ///////////////////////// Member Type //////////////////////////////////////////
         //! \typedef std::vector<TplModule>::iterator iterator;
@@ -49,20 +54,17 @@ namespace tpl {
         ///////////////////////// Member Type //////////////////////////////////////////
 
         ///////////////////////// Constructors /////////////////////////////////////////
-        //! Default constructor defaulted.
-        TplModules() = default;
         //! Constructor using bookshelf data structures.
-        TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls);
-        //! Destructor defaulted.
+        explicit TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls);
+
+        //! Default constructor.
+        TplModules() = default;
+        //! Default destructor.
         ~TplModules() = default;
-        //! Copy constructor deleted.
-        TplModules(const TplModules &) = delete;
-        //! Copy assignment operator deleted.
-        TplModules& operator=(const TplModules &) = delete;
         //! Move constructor.
-        TplModules(TplModules &&temp);
-        //! Move assignment opeartor.
-        TplModules &operator=(TplModules &&temp);
+        TplModules(BOOST_RV_REF(TplModules) temp);
+        //! Move assignment operator.
+        TplModules &operator=(BOOST_RV_REF(TplModules) temp);
         ///////////////////////// Constructors /////////////////////////////////////////
 
         ////////////////////////// Member Access ///////////////////////////////////////
@@ -199,6 +201,9 @@ namespace tpl {
 
     //! class storing all the nets and pins.
     class TplNets {
+    private:
+        BOOST_MOVABLE_BUT_NOT_COPYABLE(TplNets)
+
     public:
         ///////////////////////// Member Type //////////////////////////////////////////
         //! \typedef std::list<TplNet>::iterator net_iterator;
@@ -212,20 +217,17 @@ namespace tpl {
         ///////////////////////// Member Type //////////////////////////////////////////
 
         ///////////////////////// Constructors /////////////////////////////////////////
-        //! Default constructor defaulted.
-        TplNets() = default;
         //! Constructor using bookshelf data structures.
-        TplNets(const BookshelfNets &bnets);
-        //! Destructor defaulted.
+        explicit TplNets(const BookshelfNets &bnets);
+
+        //! Default constructor.
+        TplNets()  = default;
+        //! Default destructor.
         ~TplNets() = default;
-        //! Copy constructor deleted.
-        TplNets(const TplNets &) = delete;
-        //! Copy assignment operator deleted.
-        TplNets& operator=(const TplNets &) = delete;
         //! Move constructor.
-        TplNets(TplNets &&temp);
+        TplNets(BOOST_RV_REF(TplNets) temp);
         //! Move assignment operator deleted.
-        TplNets& operator=(TplNets &&temp);
+        TplNets& operator=(BOOST_RV_REF(TplNets) temp);
         ///////////////////////// Constructors /////////////////////////////////////////
 
         ////////////////////////// Member Access ///////////////////////////////////////
@@ -319,18 +321,17 @@ namespace tpl {
     };
 
     //! The main class for data savings and manipulations.
-    class TplDB {
+    class TplDB : boost::noncopyable {
     public:
         //! Realize the singleton design pattern.
-        static TplDB *db();
-        static void destroy_db();
+        static TplDB &db();
 
         //! Load benchmark circuit into in-memory data structures.
         /*!
          * \param path The benchmark file's directory path.
          * \return A boolean variable indicating wether the operation is success.
          */
-        bool load_circuit(const char *path);
+        bool load_circuit(const std::string &path);
 
         //! Take a snapshot of the current placement.
         void generate_placement_snapshot() const;
@@ -339,36 +340,16 @@ namespace tpl {
         TplNets    nets;        //!< storing the nets
 
     private:
-        ///////////////////////// Constructors /////////////////////////////////////////
-        //! TplDB constructor.
-        TplDB() = default;
-        //! TplDB destructor.
-        ~TplDB() = default;
-        //! TplDB copy constructor deleted.
-        TplDB(const TplDB&) = delete;
-        //! TplDB copy assignment operator deleted.
-        TplDB &operator=(const TplDB&) = delete;
-        //! TplDB move constructor deleted.
-        TplDB(const TplDB&&) = delete;
-        //! TplDB move assignment operator deleted.
-        TplDB &operator=(const TplDB&&) = delete;
-        ///////////////////////// Constructors /////////////////////////////////////////
-
-        //////////////////////////////////Helper Functions///////////////////////////////////
         //! Private helper routine loading a file into string.
-        bool read_file(const char *file_name, std::string &storage);
-        //! Private helper routine initialize the modules member variable.
-        void initialize_modules(const char *node_file, const char *pl_file);
-        //! Private helper routine initialize the nets member variable.
-        void initialize_nets   (const char *net_file);
-        //////////////////////////////////Helper Functions///////////////////////////////////
+        //bool read_file(const std::string &file_name, std::string &storage);
 
-        static TplDB *_instance; //!< The TplDB singleton
+        //! Private helper routine initialize the modules member variable.
+        void initialize_modules(const std::string &node_file, const std::string &pl_file);
+        //! Private helper routine initialize the nets member variable.
+        void initialize_nets   (const std::string &net_file);
 
         std::string _benchmark_name; //!< The current loading circuit's name.
     };
-
-    extern TplDB &pdb;
 
 }//end namespace tpl
 

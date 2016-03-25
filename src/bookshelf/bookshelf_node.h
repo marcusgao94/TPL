@@ -26,7 +26,9 @@ namespace thueda {
         Length height;   //!< A node's height
         bool    fixed;   //!< A node's move mode flag
 
-        BookshelfNode(); //!< Default constructor for BookshelfNode
+        //! Default constructor for BookshelfNode
+        BookshelfNode();
+        //explicit BookshelfNode(Id id="", Length width=0, Length height=0, bool fixed=false);
     };
 
     /*!

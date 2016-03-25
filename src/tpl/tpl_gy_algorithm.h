@@ -18,7 +18,7 @@ namespace tpl {
 
     class TplGYThermalForceModel final : public TplStandardThermalForceModel {
     public:
-		TplGYThermalForceModel(TplThermalModelInterface *thermal_model);
+        TplGYThermalForceModel(TplThermalModelInterface *thermal_model);
         ~TplGYThermalForceModel();
     };
 
@@ -28,11 +28,11 @@ namespace tpl {
         void initialize_models() override;
     };
 
-	class TplGYDetailPlacement final : public TplStandardDetailPlacement {
-	public:
-		std::vector<std::vector<TplModule*> > legalization();
-		void detailPlacement(std::vector<std::vector<TplModule*> > rows);
-	};
+    class TplGYDetailPlacement final : public TplStandardDetailPlacement {
+    public:
+        std::vector<std::vector<TplModule*> > legalization();
+        void detailPlacement(std::vector<std::vector<TplModule*> > rows);
+    };
 
 }//end namespace tpl
 

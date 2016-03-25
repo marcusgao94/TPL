@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.2.2)
 project (TPL)
 
 #build flags setting
-set(CMAKE_CXX_FLAGS         "$ENV{CXXFLAGS} -Wall -std=c++11")
+set(CMAKE_CXX_FLAGS         "$ENV{CXXFLAGS} -Wall -std=c++14")
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS} -O0 -g -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 
@@ -24,4 +24,5 @@ endif(Boost_FOUND)
 #subdirs
 add_subdirectory(bookshelf)
 add_subdirectory(tpl)
+add_subdirectory(test)
 

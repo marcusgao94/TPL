@@ -26,6 +26,9 @@ namespace thueda {
         Coordinate x;  //!< A node's x coordinate.
         Coordinate y;  //!< A node's y coordinate.
         bool   fixed;  //!< A node's move mode flag.
+
+        BookshelfPl() = default;
+        BookshelfPl(Id id, Coordinate x, Coordinate y, bool fixed);
     };
 
     /*!

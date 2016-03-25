@@ -1,18 +1,45 @@
 include_directories(${PROJECT_SOURCE_DIR}/tpl)
 
-#executables
-
 #1.TplDB
-set(TPL_DB_TEST_SRC tpl_db.cpp tpl_db_test.cpp)
-add_executable(tpl_db_test ${TPL_DB_TEST_SRC})
+add_library(db_obj OBJECT tpl_db.cpp)
+add_executable(tpl_db_test $<TARGET_OBJECTS:db_obj> tpl_db_test.cpp)
 target_link_libraries(tpl_db_test bookshelf ${Boost_LIBRARIES})
 
-#2.TplStandardAlgorithm
-set(TPL_STANDARD_ALGORITHM_TEST_SRC tpl_db.cpp tpl_standard_algorithm.cpp tpl_standard_algorithm_test.cpp)
-add_executable(tpl_standard_algorithm_test ${TPL_STANDARD_ALGORITHM_TEST_SRC})
-target_link_libraries(tpl_standard_algorithm_test bookshelf ${Boost_LIBRARIES})
+#2.TplConfig
+add_library(config_obj OBJECT tpl_config.cpp)
+add_executable(tpl_config_test $<TARGET_OBJECTS:config_obj> tpl_config_test.cpp)
+target_link_libraries(tpl_config_test ${Boost_LIBRARIES})
 
-#3.TplGYAlgorithm
-set(TPL_GY_ALGORITHM_TEST_SRC tpl_db.cpp tpl_standard_algorithm.cpp tpl_gy_algorithm.cpp tpl_gy_algorithm_test.cpp)
-add_executable(tpl_gy_algorithm_test ${TPL_GY_ALGORITHM_TEST_SRC})
-target_link_libraries(tpl_gy_algorithm_test       bookshelf ${Boost_LIBRARIES})
+#3.TplStandardNetModel
+add_library(net_model_obj OBJECT tpl_standard_net_model.cpp)
+set(TPL_STANDARD_NET_MODEL_SRC
+        $<TARGET_OBJECTS:db_obj>
+        $<TARGET_OBJECTS:net_model_obj>
+        )
+add_executable(tpl_net_model_test
+        ${TPL_STANDARD_NET_MODEL_SRC}
+        tpl_standard_net_model_test.cpp
+        )
+target_link_libraries(tpl_net_model_test bookshelf ${Boost_LIBRARIES})
+
+#4.TplStandardNetForceModel
+add_library(net_force_model_obj OBJECT tpl_standard_net_force_model.cpp)
+set(TPL_STANDARD_NET_FORCE_MODEL_SRC
+        ${TPL_STANDARD_NET_MODEL_SRC}
+        $<TARGET_OBJECTS:net_force_model_obj>
+        )
+add_executable(tpl_net_force_model_test
+        ${TPL_STANDARD_NET_FORCE_MODEL_SRC}
+        tpl_standard_net_force_model_test.cpp
+        )
+target_link_libraries(tpl_net_force_model_test bookshelf ${Boost_LIBRARIES})
+
+#3.TplStandardAlgorithm
+#set(TPL_STANDARD_ALGORITHM_TEST_SRC
+#    tpl_config.cpp                 tpl_db.cpp
+#    tpl_standard_net_model.cpp     tpl_standard_net_force_model.cpp
+#    tpl_standard_thermal_model.cpp tpl_standard_thermal_force_model.cpp
+#    tpl_standard_algorithm.cpp     tpl_standard_algorithm_test.cpp)
+#
+#add_executable(tpl_standard_algorithm_test ${TPL_STANDARD_ALGORITHM_TEST_SRC})
+#target_link_libraries(tpl_standard_algorithm_test bookshelf ${Boost_LIBRARIES})
