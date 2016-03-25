@@ -24,4 +24,5 @@ endif(Boost_FOUND)
 #subdirs
 add_subdirectory(bookshelf)
 add_subdirectory(tpl)
+add_subdirectory(test)
 

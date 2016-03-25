@@ -6,16 +6,17 @@ import time
 
 from pyparsing import Literal, Word, Regex, nums, alphanums, Group, ZeroOrMore, OneOrMore, Optional
 
-#import matplotlib
-#matplotlib.use('GTKAgg')
+# import matplotlib
+# matplotlib.use('GTKAgg')
 
 import numpy as np
+
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 
 
-#define globals
+# define globals
 x_max = 0
 y_max = 0
 
@@ -23,22 +24,22 @@ ids         = []
 sizes       = []
 coordinates = []
 
-#define sematic actions
+# define sematic actions
 def add_id(s, loc, tok):
     ids.append( tok[0] )
 
 def add_size(s, loc, tok):
     sizes.append( tok[1] )
-    #print( '{0}\t\t : width({1}) height({2})'.format(tok[0], tok[1][0], tok[1][1]) )
+    # print( '{0}\t\t : width({1}) height({2})'.format(tok[0], tok[1][0], tok[1][1]) )
 
 def add_coordinate(s, loc, tok):
     coordinates.append( tuple(tok[1]) )
-    #print( '{0}\t\t : x({1}) y({2})'.format(tok[0], tok[1][0], tok[1][1]) )
+    # print( '{0}\t\t : x({1}) y({2})'.format(tok[0], tok[1][0], tok[1][1]) )
 
 #define grammars
-###########################################################################################################################
+#########################################################################################################################
 #========================================================common rule======================================================#
-###########################################################################################################################
+#########################################################################################################################
 header        = Regex(r"^UCLA.*")#.setParseAction( lambda tokens : print( tokens[0]) )                                    #
 comment       = Regex(r"#.*"    )#.setParseAction( lambda tokens : print( tokens[0]) )                                    #
 node_id       = Word(alphanums  ).setParseAction( add_id )                                                                #
