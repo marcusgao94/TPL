@@ -13,6 +13,7 @@
 #include "tpl_abstract_net_force_model.h"
 #include "tpl_abstract_thermal_model.h"
 #include "tpl_abstract_thermal_force_model.h"
+#include "tpl_abstract_detail_placement.h"
 
 namespace tpl {
 
@@ -20,6 +21,7 @@ namespace tpl {
     class TplAbstractNetForceModel;
     class TplAbstractThermalModel;
     class TplAbstractThermalForceModel;
+    class TplAbstractDetailPlacement;
 
     //! Interface definition for tpl algorithm.
     class TplAbstractAlgorithm {

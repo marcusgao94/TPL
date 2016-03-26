@@ -83,7 +83,24 @@ namespace tpl {
     }
 
     void TplGYDetailPlacement(vector<vector<TplModule*>> rows) {
-
+		// evenly disperse modules in each row
+		for (int i = 0; i < rows.size(); i++) {
+			if (rows[i].size() <= 1)
+				continue;
+			int widthOccupied = 0;
+			for (vector<TplModule*>::iterator iter = rows[i].begin();
+				 iter != rows[i].end(); iter++) {
+				widthOccupied += (*iter)->width;
+			}
+			int space = (_chipWidth - widthOccupied) / (rows[i].size() - 1);
+			int location = 0;
+			for (vector<TplModule*>::iterator iter = rows[i].begin();
+				 iter != rows[i].end(); iter++) {
+				(*iter)->x = location;
+				(*iter)->y = i * _rowHeight;
+				location += (*iter)->width + space;
+			}
+		}
     }
 
 }
