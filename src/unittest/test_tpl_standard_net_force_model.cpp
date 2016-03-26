@@ -14,7 +14,6 @@
 using namespace std;
 using namespace tpl;
 
-/*
 SCENARIO("bigblue1", "[bigblue1]") {
 
     GIVEN("A circuit bigblue1") {
@@ -137,8 +136,8 @@ SCENARIO("bigblue3", "[bigblue3]") {
         }
     }
 }//end SCENARIO
- */
 
+/*
 SCENARIO("bigblue4", "[bigblue4]") {
 
     GIVEN("A circuit bigblue4") {
@@ -179,8 +178,8 @@ SCENARIO("bigblue4", "[bigblue4]") {
         }
     }
 }//end SCENARIO
+ */
 
-/*
 SCENARIO("adaptec1", "[adaptec1]") {
 
     GIVEN("A circuit adaptec1") {
@@ -344,4 +343,3 @@ SCENARIO("adaptec4", "[adaptec4]") {
         }
     }
 }//end SCENARIO
- */

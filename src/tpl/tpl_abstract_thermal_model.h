@@ -17,14 +17,10 @@ namespace tpl {
         TplAbstractThermalModel() {}
 
         //!< Pure virtual destructor.
-        virtual ~TplAbstractThermalModel() = 0;
+        virtual ~TplAbstractThermalModel() {}
 
         virtual void compute_thermal_distribution(std::vector<std::vector<double>> &distribution) const = 0;
     };
-
-    TplAbstractThermalModel::~TplAbstractThermalModel()
-    {
-    }
 }
 
 #endif //TPL_ABSTRACT_THERMAL_MODEL_H

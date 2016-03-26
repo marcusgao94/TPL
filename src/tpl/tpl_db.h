@@ -217,8 +217,10 @@ namespace tpl {
         ///////////////////////// Member Type //////////////////////////////////////////
 
         ///////////////////////// Constructors /////////////////////////////////////////
-        //! Constructor using bookshelf data structures.
+        //! Constructor using bookshelf data structures, copy version.
         explicit TplNets(const BookshelfNets &bnets);
+        //! Constructor using bookshelf data structures, move version.
+        explicit TplNets(BookshelfNets &&bnets);
 
         //! Default constructor.
         TplNets()  = default;
@@ -340,9 +342,6 @@ namespace tpl {
         TplNets    nets;        //!< storing the nets
 
     private:
-        //! Private helper routine loading a file into string.
-        //bool read_file(const std::string &file_name, std::string &storage);
-
         //! Private helper routine initialize the modules member variable.
         void initialize_modules(const std::string &node_file, const std::string &pl_file);
         //! Private helper routine initialize the nets member variable.

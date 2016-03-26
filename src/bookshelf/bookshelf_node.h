@@ -28,7 +28,6 @@ namespace thueda {
 
         //! Default constructor for BookshelfNode
         BookshelfNode();
-        //explicit BookshelfNode(Id id="", Length width=0, Length height=0, bool fixed=false);
     };
 
     /*!

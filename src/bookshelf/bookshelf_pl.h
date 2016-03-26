@@ -28,7 +28,7 @@ namespace thueda {
         bool   fixed;  //!< A node's move mode flag.
 
         BookshelfPl() = default;
-        BookshelfPl(Id id, Coordinate x, Coordinate y, bool fixed);
+        explicit BookshelfPl(Id id, Coordinate x, Coordinate y, bool fixed);
     };
 
     /*!

@@ -11,7 +11,7 @@
 using namespace std;
 using namespace tpl;
 
-int assert_free_nodes_first(const string &benchmark) {
+int check_free_nodes_first(const string &benchmark) {
     string path(getenv("BENCHMARK"));
     path += "/ispd2005/" + benchmark;
 
@@ -41,7 +41,7 @@ int main()
                               "adaptec1", "adaptec2", "adaptec3", "adaptec4" };
 
     for(auto bench : benchs) {
-        assert_free_nodes_first(bench);
+        check_free_nodes_first(bench);
     }
 
     return 0;

@@ -143,10 +143,8 @@ namespace tpl {
         VectorXd x_eigen_target = llt.compute(Cx).solve(dx*-1);
         VectorXd y_eigen_target = llt.compute(Cy).solve(dy*-1);
 
-//        cout << num_free << " " << x_eigen_target.size() << " " << y_eigen_target.size() << endl;
-
-        assert(static_cast<int>(x_target.size()) == x_eigen_target.size() );
-        assert(static_cast<int>(y_target.size()) == y_eigen_target.size() );
+        assert(static_cast<long>(x_target.size()) == x_eigen_target.size() );
+        assert(static_cast<long>(y_target.size()) == y_eigen_target.size() );
 
         VectorXd::Map(&x_target[0], x_eigen_target.size()) = x_eigen_target;
         VectorXd::Map(&y_target[0], y_eigen_target.size()) = y_eigen_target;

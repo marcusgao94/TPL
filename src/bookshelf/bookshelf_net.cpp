@@ -46,10 +46,5 @@ namespace thueda {
         return out;
     }
 
-    BookshelfNets::BookshelfNets() : num_nets(0), num_pins(0) 
-    {
-        data.reserve(10000);
-    }
-
 }//end namespace thueda
 
