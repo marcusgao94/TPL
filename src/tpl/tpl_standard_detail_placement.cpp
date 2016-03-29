@@ -1,4 +1,5 @@
 #include "tpl_standard_detail_placement.h"
+#include "cmath"
 
 #ifndef NDEBUG
 #include <iostream>
@@ -9,15 +10,15 @@ namespace tpl {
     using namespace std;
 
     vector<vector<TplModule*> > TplStandardDetailPlacement ::legalization() {
-        _rowHeight = pdb.modules[0].height;
-        _chipHeight = (int(pdb.modules.chip_height() / _rowHeight) + 1) * _rowHeight;
-        _chipWidth = int(pdb.modules.chip_width()) + 1;
+        _rowHeight = TplDB::db().modules[0].height;
+        _chipHeight = (int(TplDB::db().modules.chip_height() / _rowHeight) + 1) * _rowHeight;
+        _chipWidth = int(TplDB::db().modules.chip_width()) + 1;
         int totalRows = _chipHeight / _rowHeight;
 
         // assign each module to the nearest legal row
         vector<vector<TplModule*>> rows(totalRows);
-        for (TplModules::iterator iter = pdb.modules.begin();
-             iter != pdb.modules.end(); iter++) {
+        for (TplModules::iterator iter = TplDB::db().modules.begin();
+             iter != TplDB::db().modules.end(); iter++) {
             if (iter->fixed)
                 continue;
             int belongRow = int(iter->y / _rowHeight);
@@ -26,7 +27,9 @@ namespace tpl {
         // select part of candidates that smaller than chip width
         for (int i = 0; i < totalRows; i++) {
             int modulesInThisRow = rows[i].size();
-            double f[modulesInThisRow+1][_chipWidth+1] = {0.0};
+			vector<vector<double> > f(modulesInThisRow + 1, vector<double>(0, _chipWidth + 1));
+
+            // double f[modulesInThisRow+1][_chipWidth+1] = {0.0};
             // 01 knapsack problem, dynamic programming
             for (int j = 1; j <= modulesInThisRow; j++) {
                 // cost equals distance from illegal to legal

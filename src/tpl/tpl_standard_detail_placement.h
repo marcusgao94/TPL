@@ -8,6 +8,7 @@
 #define TPL_STANDARD_DETAIL_PLACEMENT_H
 
 #include "tpl_abstract_detail_placement.h"
+#include "tpl_db.h"
 
 namespace tpl {
 
@@ -17,7 +18,7 @@ namespace tpl {
         TplStandardDetailPlacement() : TplAbstractDetailPlacement() {}
 
         //! Virtual destructor.
-        virtual ~TplStandardNetModel() {}
+        virtual ~TplStandardDetailPlacement() {}
 
         //! standard implementation of legalization in detail placement
         virtual std::vector<std::vector<TplModule*> > legalization();
