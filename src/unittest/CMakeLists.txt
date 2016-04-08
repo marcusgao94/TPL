@@ -42,6 +42,18 @@ add_executable(test_tpl_thermal_model
 		)
 target_link_libraries(test_tpl_thermal_model bookshelf ${Boost_LIBRARIES})
 
+#6.TplStandardDetailPlacement
+set(TPL_STANDARD_DETAIL_PLACEMENT_SRC
+		$<TARGET_OBJECTS:db_obj>
+		$<TARGET_OBJECTS:config_obj>
+		$<TARGET_OBJECTS:detail_placement_obj>
+		)
+add_executable(test_tpl_detail_placement
+		${TPL_STANDARD_DETAIL_PLACEMENT_SRC}
+		test_tpl_standard_detail_placement.cpp
+		)
+target_link_libraries(test_tpl_detail_placement bookshelf ${Boost_LIBRARIES})
+
 #Checks
 add_executable(check_free_nodes_order $<TARGET_OBJECTS:db_obj> check_free_nodes_order.cpp)
 target_link_libraries(check_free_nodes_order bookshelf ${Boost_LIBRARIES})
