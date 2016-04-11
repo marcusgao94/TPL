@@ -8,7 +8,9 @@
 #include "catch.hpp"
 
 #include "tpl_db.h"
+#include "tpl_config.h"
 #include "tpl_standard_thermal_model.h"
+#include <vector>
 
 using namespace std;
 using namespace tpl;
@@ -19,11 +21,12 @@ SCENARIO("bigblue1", "[bigblue1]") {
         path += "/ispd2005/bigblue1";
 
         TplDB::db().load_circuit(path);
+        TplConfig::instance().load_configuration(getenv("TPLCONFIG"));
 
         TplStandardThermalModel tmodel;
 
         WHEN("We compute the chip's thermal distribution") {
-            vector<vector<double>> tss;
+            vector< vector<double> > tss;
             tmodel.compute_thermal_distribution(tss);
 
             THEN("We get the current thermal distribution") {

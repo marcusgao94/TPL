@@ -23,10 +23,10 @@ SCENARIO("load configuration file", "[config]") {
             THEN("We can get the algorithm running parameters") {
 
                 REQUIRE(load_status == true);
-                REQUIRE(boost::get<int>(TplConfig::instance()["init_grid_size"]) == 100000);
-                REQUIRE(boost::get<double>(TplConfig::instance()["r1"]) == 0.1);
-                REQUIRE(boost::get<double>(TplConfig::instance()["r2"]) == 0.5);
-                REQUIRE(boost::get<int>(TplConfig::instance()["mu"]) == 10);
+                REQUIRE(TplConfig::instance().init_grid_size == 100000);
+                REQUIRE(TplConfig::instance().r1 == 0.1);
+                REQUIRE(TplConfig::instance().r2 == 0.5);
+                REQUIRE(TplConfig::instance().mu == 10);
             }
         }
     }

@@ -24,10 +24,10 @@ namespace tpl {
             pt::ptree tree;
             pt::read_json(configfile, tree);
 
-            _data.insert(make_pair(string("init_grid_size"), tree.get<int>("init_grid_size")));
-            _data.insert(make_pair(string("r1"), tree.get<double>("r1")));
-            _data.insert(make_pair(string("r2"), tree.get<double>("r2")));
-            _data.insert(make_pair(string("mu"), tree.get<int>("mu")));
+            init_grid_size = tree.get<int>("init_grid_size");
+            r1             = tree.get<double>("r1");
+            r2             = tree.get<double>("r2");
+            mu             = tree.get<int>("mu");
 
             return true;
 
@@ -35,10 +35,4 @@ namespace tpl {
             return false;
         }
     }
-
-    const boost::variant<int, double> &TplConfig::operator[](const string &key)
-    {
-        return _data[key];
-    }
-
 }

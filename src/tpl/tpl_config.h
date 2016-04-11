@@ -25,10 +25,12 @@ namespace tpl {
         //!< Load configuration file into TplConfig singleton.
         bool load_configuration(const std::string &configfile);
 
-        const boost::variant<int, double> &operator[](const std::string &key);
+        int init_grid_size;
+        double r1;
+        double r2;
+        int mu;
 
     private:
-        std::map<std::string, boost::variant<int, double> > _data;
 
         TplConfig()  = default;
         ~TplConfig() = default;
