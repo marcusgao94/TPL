@@ -25,6 +25,7 @@ namespace tpl {
 
 		// detail placement
 		virtual void detailPlacement(std::vector<std::vector<TplModule*> > rows) = 0;
+
     };
 
 }

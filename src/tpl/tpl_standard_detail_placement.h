@@ -9,6 +9,10 @@
 
 #include "tpl_abstract_detail_placement.h"
 #include "tpl_db.h"
+#include "../tools/def/defwWriter.hpp"
+#include "../tools/rippledp/rippledp.h"
+#include <cstring>
+#include <string>
 
 namespace tpl {
 
@@ -28,6 +32,18 @@ namespace tpl {
 		 * \param rows modules placed in each row
 		 */
         virtual void detailPlacement(std::vector<std::vector<TplModule*> > rows);
+
+		//! standard implementation of saving global placement to def format
+		/*!
+		 * \param benchmark benchmark name
+		 */
+		virtual void saveDEF(std::string benchmark);
+
+		//! implementation of detail placement using reppledp toolkit
+		/*!
+		 * \param filename name of the global placement result file
+		 */
+		virtual void detailPlacement(std::string filename);
 
 	protected:
 		int _rowHeight;

@@ -1,13 +1,69 @@
 #include "tpl_standard_detail_placement.h"
-#include "cmath"
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <cmath>
+
+using namespace std;
 
 #ifndef NDEBUG
-#include <iostream>
 #endif
 
+#define checkStatus(status, process) \
+if (status != 0) { \
+    cout << "error in " << process << endl; \
+    return ; \
+}
 
 namespace tpl {
-    using namespace std;
+
+
+    void TplStandardDetailPlacement::saveDEF(string benchmark) {
+		string name = benchmark + "_gp.def";
+        FILE* fout = fopen(name.c_str(), "w");
+        int version1 = 5, version2 = 7;
+        const char* caseSensitive = "";
+        const char* dividerChar = ":";
+        const char* busBitChars = "[]";
+        const char* designName = benchmark.c_str();
+        int res = defwInit(fout, version1, version2, caseSensitive, dividerChar,
+                           busBitChars, designName, NULL, NULL, NULL, -1);
+        checkStatus(res, "init");
+        res = defwVersion(version1, version2);
+        checkStatus(res, "version");
+        res = defwDividerChar(dividerChar);
+        checkStatus(res, "dividerChar");
+        res = defwBusBitChars(busBitChars);
+        checkStatus(res, "busBitChars");
+        res = defwDesignName(designName);
+        checkStatus(res, "designName");
+        res = defwStartComponents(TplDB::db().modules.size());
+        checkStatus(res, "start components");
+        for (TplModules::iterator iter = TplDB::db().modules.begin();
+                iter != TplDB::db().modules.end(); iter++) {
+            res = defwComponent(iter->id.c_str(), "module", 0, NULL, NULL, NULL,
+                    NULL, NULL, 0, NULL, NULL, NULL, NULL, "PLACED",
+                    int(iter->x), int(iter->y), 0, -1.0, NULL, 0, 0, 0, 0);
+            checkStatus(res, "component");
+        }
+        res = defwEndComponents();
+        checkStatus(res, "end components");
+        res = defwEnd();
+        checkStatus(res, "end");
+        fclose(fout);
+    }
+
+    void TplStandardDetailPlacement::detailPlacement(string benchmark) {
+		const double density = 0.7;
+		const double misplacement = 150.0;
+        string tech_file = benchmark + ".aux.lef";
+		string cell_file = benchmark + ".aux.lef";
+		string floorplan_file = benchmark + ".aux.def";
+		string placed_file = benchmark + "_gp.def";
+		rippledp_read((char*)tech_file.c_str(), (char*)cell_file.c_str(),
+					  (char*)floorplan_file.c_str(), (char*)placed_file.c_str());
+		rippledp(density, misplacement);
+    }
 
     vector<vector<TplModule*> > TplStandardDetailPlacement ::legalization() {
         _rowHeight = TplDB::db().modules[0].height;

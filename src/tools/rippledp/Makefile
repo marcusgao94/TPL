@@ -1,6 +1,6 @@
 #--------------------------------------------------#
-#  Ripple-DP (ISPD2015 contest version)            #
-#  Copyright (c) 2015                              #
+#  Ripple-DP (ISPD2014 contest version)            #
+#  Copyright (c) 2014                              #
 #  Department of Computer Science and Engineering  #
 #  The Chinese Univeristy of Hong Kong             #
 #                                                  #
