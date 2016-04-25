@@ -1,0 +1,32 @@
+/*!
+ * Bookshelf Parsing/Generation Framework
+ * Copyright (C) 2016, Tsinghua University
+ * All rights reserved.
+ *
+ * @file README
+ *
+ * @date 2016/01/13
+ * @version 0.1
+ * @author Peng Fei
+ * @email fpeng1985@126.com
+ *
+ * Update History:
+ * <date>      | <version> | <author> | <brief>
+ * 2016/01/15  | 0.1       | Peng Fei | create this file
+ */
+
+1. source file structure 
+------------------------
+utility.h defines the common functionality, enums, typedefs, et cetera.
+Each file format corresponds to 4 source files. Take .nodes file for example, file bookshelf_node.h and bookshelf_node.cpp defines the basic BookshelfNode class and other related infrastrucuture. Template class BookshelfNodeParser, which is the parsing workhouse, is defined in  file bookshelf_node_parser.hpp. The hpp appendix indicates it contains a template class definition(both declaration and implementation). The final bookshelf_node_parser_test.cpp file defines the unittests for class
+BookshelfNodeParser. Every other bookshelf file format obeys the same rule.
+
+2.naming conventions
+--------------------
+Based on the source file structure, we make more clear the naming conventions.
+File names are lower case seperated by "_". For example, bookshelf_node.
+Class names are first letter captilized. For example, BookshelfNode.
+Every class's name begins with Bookshelf, then followed by the file format it processes, e.g. Node, Pl et cetera. 
+Parser class ends with the word Parser, like BookshelfNodeParser. The same rule goes for the generator class. 
+Unittest file's name ends with test, like bookshelf_node_parser_test.cpp.
+

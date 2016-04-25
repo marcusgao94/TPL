@@ -1,0 +1,87 @@
+--------------------------------------------------
+  Ripple-DP (ISPD2015 contest version)            
+  Copyright (c) 2015                              
+  Department of Computer Science and Engineering  
+  The Chinese Univeristy of Hong Kong             
+                                                  
+  Contact:                                        
+  William Wing-Kai Chow <wkchow@cse.cuhk.edu.hk>          
+  Evangeline F.Y. Young <fyyoung@cse.cuhk.edu.hk> 
+--------------------------------------------------
+
+------------------
+-- Introduction --
+------------------
+
+Ripple-DP API provides a few functions to perform detailed placement and 
+legalization. Ripple-DP loads a global-placed solution from files in 
+LEF/DEF format. It performs legalization and detailed placement 
+simultaneously and writes the results into a file in LEF/DEF format.
+
+LEF/DEF (v.5.7) parser library (libdef.a and liblef.a) is required. It can 
+be obtained by downloading the LEF/DEF toolkit from:
+http://www.si2.org/openeda.si2.org/projects/lefdef
+
+-----------------
+-- Quick Start --
+-----------------
+
+Before compiling the source code, you may want to modify main.c to 
+locate your benchmark files and the output file correctly.
+
+To compile the sample program of using Ripple-DP API, use command:
+
+make
+
+To run the binary, use command:
+
+./rippledp
+
+-------------------
+-- API functions --
+-------------------
+
+void rippledp_read ( char *tech_file, char *cell_file, char *floorplan_file, char *placed_file);
+
+    Loads the benchmark and the global placement solution as input.
+
+    Parameters:
+    tech_file       benahmark technology file in LEF format (tech.lef)
+    cell_file       benchmark cell library in LEF format (cells.lef)
+    floorplan_file  benchmark floorplan file in DEF format (floorplan.def)
+    placed_file     placed global placement solution in DEF format
+
+
+void rippledp(double target_util, double max_disp);
+
+    Performs displacement-constrained legalization and detailed placement.
+
+    Parameters:
+    target_util     target bin density
+    max_disp        maximum displacement constraint
+
+    *For more details about the detailed placement objective, please refer 
+    to the ICCAD2013 contest website:
+    http://cad_contest.cs.nctu.edu.tw/CAD-contest-at-ICCAD2013/problem_b
+
+
+void rippledp_write(char *output_file);
+    Writes the detailed placement result in DEF format
+
+    Parameter:
+    output_file     file to write
+
+-------------
+-- Contact --
+-------------
+
+For technical support, please contact:
+
+William Wing-Kai Chow <wkchow@cse.cuhk.edu.hk>
+Department of Computer Science and Engineering
+The Chinese University of Hong Kong
+
+Evangeline F.Y. Young <fyyoung@cse.cuhk.edu.hk> 
+Department of Computer Science and Engineering
+The Chinese University of Hong Kong
+
