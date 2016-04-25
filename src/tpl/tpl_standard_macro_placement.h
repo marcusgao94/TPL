@@ -23,7 +23,7 @@ namespace tpl {
         virtual ~TplStandardMacroPlacement() { }
 
         //! Standard implementation for shredding macros into cells
-        virtual void shred() {}
+        virtual void shred();
 
     };
 }//namespace tpl
