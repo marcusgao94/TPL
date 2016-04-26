@@ -130,6 +130,33 @@ namespace tpl {
         }
     }
 
+    void TplModules::add_cells(unordered_map<Id, vector<TplModule>> map) {
+		typedef unordered_map<Id, vector<TplModule>>::iterator MapIterator;
+		for (MapIterator iter = map.begin(); iter != map.end(); iter++) {
+			Id moduleId = iter->first;
+			vector<TplModule> newCells = iter->second;
+
+			// delete origin macro
+			for (vector<TplModule>::iterator it = _modules.begin();
+					it != _modules.end(); it++) {
+				if (it->id == moduleId) {
+					_modules.erase(it);
+					break;
+				}
+			}
+			_id_index_map.erase(moduleId);
+
+			// add new cells
+			_modules.insert(_modules.end(), newCells.begin(), newCells.end());
+			// set up id relationship in _id_index_map
+			for (int i = _modules.size() - newCells.size();
+					i != _modules.size(); i++) {
+				_id_index_map.insert(make_pair(_modules[i].id, i));
+			}
+		}
+    }
+
+
     TplNets::TplNets(const BookshelfNets &bnets)
     {
         _num_nets = bnets.num_nets;
@@ -169,6 +196,10 @@ namespace tpl {
 
         _netlist.clear();
     }
+
+	void TplNets::add_net(std::list<TplNet> newNets) {
+		_netlist.insert(_netlist.end(), newNets.begin(), newNets.end());
+	}
 
 
     TplDB &TplDB::db()

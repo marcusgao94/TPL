@@ -11,6 +11,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <unordered_map>
 
 #include <boost/move/utility_core.hpp>
 #include <boost/core/noncopyable.hpp>
@@ -150,6 +151,12 @@ namespace tpl {
          * \param ys The free modules' y coordinates.
          */
         void set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys);
+
+        //! add shredded cells from macros to modules
+        /*!
+         * \param map map of original macro id and new celsl
+         */
+        void add_cells(std::unordered_map<Id, std::vector<TplModule>> map);
         ///////////////////////// Modifiers   //////////////////////////////////////////
 
         ///////////////////////// Id based Member Access ///////////////////////////////
@@ -314,6 +321,12 @@ namespace tpl {
         ///////////////////////// Modifiers   //////////////////////////////////////////
         //! Clear the netlist.
         void clear();
+
+		//! add nets of shredded cells
+		/*!
+		 * \param newNets nets of shredded  cells
+		 */
+		void add_net(std::list<TplNet> newNets);
         ///////////////////////// Modifiers   //////////////////////////////////////////
     private:
         unsigned int _num_nets;           //!< Number of nets.
