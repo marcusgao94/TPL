@@ -9,6 +9,7 @@
 
 #include "tpl_abstract_macro_placement.h"
 #include "tpl_db.h"
+#include "utils.h"
 #include <cstring>
 #include <string>
 
