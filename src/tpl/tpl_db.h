@@ -199,6 +199,8 @@ namespace tpl {
 
         std::vector<TplModule> _modules;                //!< vector of TplModule.
         std::map<std::string, size_t> _id_index_map;    //!< A ID index map for all the modules
+
+        std::unordered_map<Id, std::vector<TplModule>> _shredded_cells;
     };
 
     //! \typedef BookshelfPin TplPin;
@@ -316,6 +318,11 @@ namespace tpl {
         {
             return _num_pins;
         }
+
+		//! Number of nets before shred
+		unsigned int num_origin_nets() const {
+			return _num_nets - _num_shred_nets;
+		}
         ///////////////////////// Capacity    //////////////////////////////////////////
 
         ///////////////////////// Modifiers   //////////////////////////////////////////
@@ -331,6 +338,7 @@ namespace tpl {
     private:
         unsigned int _num_nets;           //!< Number of nets.
         unsigned int _num_pins;           //!< Number of pins.
+		unsigned int _num_shred_nets;     //!< Number of shredded cells nets
 
         std::list<TplNet> _netlist; //!< A sequential container representing the netlist.
     };

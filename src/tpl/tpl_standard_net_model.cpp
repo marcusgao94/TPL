@@ -176,5 +176,34 @@ namespace tpl {
         }
     }
 
+    void TplStandardNetModel::update_shred_net_weight(NetWeight &NWx,
+                                                      NetWeight &NWy, int k) {
+		// calculate kth fibonacci
+		int multiply = 0;
+		if (k <= 1) multiply = 1;
+		int a = 0, b = 1;
+		for (int i = 2; i <= k; i++) {
+			multiply = a + b;
+			a = b;
+			b = multiply;
+		}
+		int i = 0;
+		double DELTA = 1e-5;
+        for (TplNets::net_iterator iter = TplDB::db().nets.net_begin();
+				iter != TplDB::db().nets.net_end(); iter++, i++) {
+			if (i < TplDB::db().nets.num_origin_nets()) continue;
+			TplPin pin1 = iter->pins[0];
+			TplPin pin2 = iter->pins[1];
+			TplModule module1 = TplDB::db().modules.module(pin1.id);
+			TplModule module2 = TplDB::db().modules.module(pin2.id);
+			if ((module1.x - module2.x) > DELTA) {
+				NWx[make_pair(pin1, pin2)] = multiply * 2.0 / (module1.x - module2.x);
+			}
+			if ((module1.y - module2.y > DELTA)) {
+				NWy[make_pair(pin1, pin2)] = multiply * 2.0 / (module1.y - module2.y);
+			}
+		}
+    }
+
 }//namespace tpl
 

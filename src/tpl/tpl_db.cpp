@@ -154,6 +154,7 @@ namespace tpl {
 				_id_index_map.insert(make_pair(_modules[i].id, i));
 			}
 		}
+		_shredded_cells = map;
     }
 
 
@@ -197,7 +198,9 @@ namespace tpl {
         _netlist.clear();
     }
 
-	void TplNets::add_net(std::list<TplNet> newNets) {
+	void TplNets::add_net(list<TplNet> newNets) {
+		_num_shred_nets = newNets.size();
+		_num_nets += _num_shred_nets;
 		_netlist.insert(_netlist.end(), newNets.begin(), newNets.end());
 	}
 
