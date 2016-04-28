@@ -9,7 +9,7 @@ target_link_libraries(test_tpl_db bookshelf ${Boost_LIBRARIES})
 
 #2.TplConfig
 add_executable(test_tpl_config $<TARGET_OBJECTS:config_obj> test_tpl_config.cpp)
-#target_link_libraries(test_tpl_config ${Boost_LIBRARIES} ${STXXL_LIBRARIES})
+#target_link_libraries(test_tpl_config ${Boost_LIBRARIES})
 
 #3.TplStandardNetModel
 set(TPL_STANDARD_NET_MODEL_SRC
@@ -43,7 +43,7 @@ add_executable(test_tpl_thermal_model
 		${TPL_STANDARD_THERMAL_MODEL_SRC}
 		test_tpl_standard_thermal_model.cpp
 		)
-target_link_libraries(test_tpl_thermal_model bookshelf ${Boost_LIBRARIES} ${STXXL_LIBRARIES})
+target_link_libraries(test_tpl_thermal_model bookshelf ${Boost_LIBRARIES})
 
 #6.TplStandardDetailPlacement
 set(TPL_STANDARD_DETAIL_PLACEMENT_SRC

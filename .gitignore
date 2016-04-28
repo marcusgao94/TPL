@@ -1,6 +1,7 @@
+*.[oa]
 *~
 *.xml
 .DS_Store
 build/
 benchmark/
-**/.idea/
+.idea/
