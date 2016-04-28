@@ -17,9 +17,20 @@ set(Boost_USE_MULTITHREDED OFF)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 if(Boost_FOUND)
     include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+    message(STATUS "Boost LIB : ${Boost_LIBRARIES}")
 else(Boost_FOUND)
     message("Boost not found!")
 endif(Boost_FOUND)
+
+#stxxl setting
+find_package(STXXL REQUIRED)
+if(STXXL_FOUND)
+    message(STATUS "STXXL LIB : ${STXXL_LIBRARIES}")
+    include_directories(SYSTEM ${STXXL_INCLUDE_DIRS})
+else(STXXL_FOUND)
+    message("stxxl not found!")
+endif(STXXL_FOUND)
+
 
 #subdirs
 add_subdirectory(bookshelf)

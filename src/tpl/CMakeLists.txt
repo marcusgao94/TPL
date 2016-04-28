@@ -13,4 +13,4 @@ add_library(net_model_obj OBJECT tpl_standard_net_model.cpp)
 add_library(net_force_model_obj OBJECT tpl_standard_net_force_model.cpp)
 
 #5.TplStandardThermalModel
- add_library(thermal_model_obj OBJECT tpl_standard_thermal_model.cpp)
+add_library(thermal_model_obj OBJECT tpl_standard_thermal_model.cpp)

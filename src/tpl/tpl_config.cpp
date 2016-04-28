@@ -1,15 +1,9 @@
 #include "tpl_config.h"
 
-#include <map>
-
-
 #include <boost/property_tree/json_parser.hpp>
 
 namespace tpl {
     using std::string;
-    using std::map;
-    using std::make_pair;
-
 
     TplConfig &TplConfig::instance()
     {
@@ -28,6 +22,8 @@ namespace tpl {
             r1             = tree.get<double>("r1");
             r2             = tree.get<double>("r2");
             mu             = tree.get<int>("mu");
+
+
 
             return true;
 

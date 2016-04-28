@@ -5,8 +5,6 @@
 #include "utils.h"
 #include "tpl_config.h"
 #include "tpl_db.h"
-#include <iostream>
-
 
 namespace tpl {
 
@@ -14,22 +12,28 @@ namespace tpl {
 
     const int TplStandardThermalModel::TIMES = 10000;
 
-    TplStandardThermalModel::TplStandardThermalModel() : TplAbstractThermalModel()
+    TplStandardThermalModel::TplStandardThermalModel() : TplAbstractThermalModel(), _bs(64*1024*1024)
     {
         _gsize   = TplConfig::instance().init_grid_size;
         _gwidth  = TplDB::db().modules.chip_width()  / _gsize;
         _gheight = TplDB::db().modules.chip_height() / _gsize;
 
+        _power_density = std::make_shared<TMat>(_bs, _gsize+3, _gsize+3);
+
         update_power_density();
     }
 
-    void TplStandardThermalModel::compute_thermal_distribution(std::vector<std::vector<double>> &distribution) const
+    void TplStandardThermalModel::compute_thermal_distribution( std::shared_ptr<TMat> distribution)
     {
         // precondition
-        distribution.clear();
-        for (int i = 0; i < _gsize+3; ++i) {
-            distribution.push_back(vector<double>(_gsize+3, 0));
+        if (!distribution) {
+            distribution = std::make_shared<TMat>(_bs, _gsize+3, _gsize+3);
         }
+
+        assert( distribution->get_height() == _gsize+3 );
+        assert( distribution->get_width()  == _gsize+3 );
+
+        distribution->set_zero();
 
         double radius = TplConfig::instance().r2;
         int dx = static_cast<int>(ceil((radius * TIMES) / (_gwidth  * TIMES)));
@@ -45,7 +49,7 @@ namespace tpl {
                         ts += green_function(i, j, i0, j0) * power_density(i0, j0);
                     }
                 }
-                distribution[i+1][j+1] = ts;
+                *(distribution->operator()(i+1, j+1)) = ts;
             }
         }
     }
@@ -84,17 +88,14 @@ namespace tpl {
             std::cout << "j index error" << std::endl;
         }
 
-        return _power_density.at(x_idx).at(y_idx);
+        return *(_power_density->operator()(x_idx,y_idx));
     }
 
     void TplStandardThermalModel::update_power_density()
     {
         try {
             // reset _power_density
-            _power_density.clear();
-            for(int i=0; i<=_gsize; ++i) {
-                _power_density.push_back(vector<double>(_gsize+1, 0));
-            }
+            _power_density->set_zero();
 
             double left, right, bottom, top;
             unsigned int idx_left, idx_right, idx_bottom, idx_top;
@@ -112,7 +113,7 @@ namespace tpl {
 
                 for(unsigned int i=idx_left; i<=idx_right; ++i) {
                     for(unsigned int j=idx_bottom; j<=idx_top; ++j) {
-                        _power_density[i][j] += it->power_density;
+                        *(_power_density->operator()(i,j)) += it->power_density;
                     }
                 }
             }

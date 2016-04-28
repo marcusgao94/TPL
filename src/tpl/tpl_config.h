@@ -11,9 +11,6 @@
 #define TPL_CONFIG_H
 
 #include <string>
-#include <map>
-
-#include <boost/variant.hpp>
 
 namespace tpl {
 
