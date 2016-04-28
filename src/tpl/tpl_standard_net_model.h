@@ -25,6 +25,10 @@ namespace tpl {
          * \param NWy The net weight in y directions to be computed.
          */
         virtual void compute_net_weight(NetWeight &NWx, NetWeight &NWy);
+
+
+        //! Standard implementation for update_shred_net_weight
+        virtual void update_shred_net_weight(NetWeight &NWx, NetWeight &NWy, int i);
     };
 
 }//namespace tpl
