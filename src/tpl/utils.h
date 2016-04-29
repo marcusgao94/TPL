@@ -12,7 +12,7 @@
 
 namespace tpl {
 
-    using Eigen::VectorXd;
+    using VectorXd = Eigen::VectorXd;
 
     /*!
      * \typedef Eigen::SparseMatrix<double> SpMat;

@@ -4,22 +4,25 @@
  * \brief Standard implementation for Thermal Model.
  */
 
-#ifndef TPL_TPL_STANDARD_THERMAL_MODEL_H
-#define TPL_TPL_STANDARD_THERMAL_MODEL_H
+#ifndef TPL_STANDARD_THERMAL_MODEL_H
+#define TPL_STANDARD_THERMAL_MODEL_H
 
 #include "tpl_abstract_thermal_model.h"
 
 namespace tpl {
 
+    typedef stxxl::block_scheduler<stxxl::matrix_swappable_block<double, 64> > block_schedular_type;
+
     class TplStandardThermalModel : public TplAbstractThermalModel {
     public:
+
         //! Default constructor.
         TplStandardThermalModel();
 
         //!< virtual destructor.
         virtual ~TplStandardThermalModel() {}
 
-        virtual void compute_thermal_distribution(std::vector<std::vector<double>> &distribution) const;
+        virtual void compute_thermal_distribution( std::shared_ptr<TMat> distribution);
 
         const int &grid_size() const
         {
@@ -55,6 +58,7 @@ namespace tpl {
         void update_power_density();
 
     protected:
+
         //! Compute green function for head conduction equation.
         /*!
          * \param i  x index for green function's first point.
@@ -74,13 +78,12 @@ namespace tpl {
         int    _gsize;   //!< Chip grid size.
         double _gwidth;  //!< A grid bin's width.
         double _gheight; //!< A grid bin's height.
-        std::vector<std::vector<double> > _power_density; //!< Power density container.
+        std::shared_ptr<TMat> _power_density; //!< Power density container.
 
     private:
+        block_schedular_type _bs;
         static const int TIMES;
-
     };
-
 }
 
-#endif //TPL_TPL_STANDARD_THERMAL_MODEL_H
+#endif //TPL_STANDARD_THERMAL_MODEL_H
