@@ -197,10 +197,10 @@ namespace tpl {
 			TplModule module1 = TplDB::db().modules.module(pin1.id);
 			TplModule module2 = TplDB::db().modules.module(pin2.id);
 			if ((module1.x - module2.x) > DELTA) {
-				NWx[make_pair(pin1, pin2)] = multiply * 2.0 / (module1.x - module2.x);
+				NWx[make_pair(&pin1, &pin2)] = multiply * 2.0 / (module1.x - module2.x);
 			}
 			if ((module1.y - module2.y > DELTA)) {
-				NWy[make_pair(pin1, pin2)] = multiply * 2.0 / (module1.y - module2.y);
+				NWy[make_pair(&pin1, &pin2)] = multiply * 2.0 / (module1.y - module2.y);
 			}
 		}
     }
