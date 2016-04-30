@@ -249,6 +249,17 @@ namespace tpl {
 		_netlist.insert(_netlist.end(), newNets.begin(), newNets.end());
 	}
 
+	void TplNets::backup_net() {
+		_netlist_backup = _netlist;
+	}
+
+	void TplNets::delete_net() {
+		_num_nets -= _num_shred_nets;
+		_num_shred_nets = 0;
+		_netlist = _netlist_backup;
+		_netlist_backup.clear();
+	}
+
 
     TplDB &TplDB::db()
     {

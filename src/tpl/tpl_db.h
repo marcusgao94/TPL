@@ -337,6 +337,13 @@ namespace tpl {
 		 * \param newNets nets of shredded  cells
 		 */
 		void add_net(std::list<TplNet> newNets);
+        //! back up original nets before shred macros
+        void backup_net();
+        //! delete nets of shredder cells
+        /*!
+         *
+         */
+        void delete_net();
         ///////////////////////// Modifiers   //////////////////////////////////////////
     private:
         unsigned int _num_nets;           //!< Number of nets.
@@ -344,6 +351,7 @@ namespace tpl {
 		unsigned int _num_shred_nets;     //!< Number of shredded cells nets
 
         std::list<TplNet> _netlist; //!< A sequential container representing the netlist.
+        std::list<TplNet> _netlist_backup; //!< original netlist before shred macros
     };
 
     //! The main class for data savings and manipulations.

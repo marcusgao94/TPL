@@ -83,6 +83,7 @@ namespace tpl {
 			map.insert(make_pair(module.id, cells));
 		}
 
+		TplDB::db().nets.backup_net();
 		// modify original nets
 		for (list<TplNet>::iterator iter = TplDB::db().nets.net_begin();
 			 	iter != TplDB::db().nets.net_end(); iter++) {
@@ -91,8 +92,7 @@ namespace tpl {
 			// iterate over original pins, exclude pins of new added cells
 			while (it != iter->pins.end() && cnt < limit) {
 				cnt++;
-				size_t index = TplDB::db().modules.module_index(it->id);
-				TplModule module = TplDB::db().modules[index];
+				TplModule module = TplDB::db().modules.module(it->id);
 				if (!module.fixed) {
 					it++;
 					continue;
@@ -120,7 +120,8 @@ namespace tpl {
 	}
 
 	void TplStandardAlgorithm::aggregate() {
-
+		TplDB::db().modules.aggregate_cells();
+		TplDB::db().nets.delete_net();
 	}
 
     void TplStandardAlgorithm::make_initial_placement()
