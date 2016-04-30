@@ -17,6 +17,112 @@ namespace tpl {
         _thermal_force_model = shared_ptr<TplAbstractThermalForceModel>(new TplStandardThermalForceModel(_thermal_model));
     }
 
+    void TplStandardAlgorithm::shred() {
+        list<TplNet> shreddedNets;
+		// find shredded cells of a module through the module id
+		unordered_map<Id, vector<TplModule>> map;
+		unsigned int rowHeight = TplDB::db().modules[0].height;
+        unsigned int colWidth = rowHeight;
+		for (unsigned int i = TplDB::db().modules.num_free();
+			 	i < TplDB::db().modules.size(); i++) {
+			TplModule module = TplDB::db().modules[i];
+			vector<TplModule> cells;
+			int rowNum = (module.width - 1) / colWidth + 1;
+			int colNum = (module.height - 1) / rowHeight + 1;
+			for (int m = 0; m < rowNum; m++) {
+				for (int n = 0; n < colNum; n++) {
+                    // create new small cells
+					Id id = module.id + "_" + to_string(m * rowNum + n);
+					Coordinate x = module.x + n * colWidth;
+                    Coordinate y = module.y + m * rowHeight;
+                    Length width = colWidth;
+                    Length height = rowHeight;
+                    bool fixed = false;
+                    double density = 1.0;
+                    TplModule cell(id, x, y, width, height, fixed, density);
+					cells.push_back(cell);
+
+                    // add new cells to new nets
+                    TplPin pin;
+                    pin.id = id;
+                    pin.io = IOType::Input;
+                    pin.dx = 0;
+                    pin.dy = 0;
+                    // new net with left cell
+                    if (n != 0) {
+                        TplModule frontCell = cells[cells.size() - 2];
+                        TplPin frontPin;
+                        frontPin.id = frontCell.id;
+                        frontPin.io = IOType::Input;
+                        frontPin.dx = 0;
+                        frontPin.dy = 0;
+                        TplNet net;
+                        net.id = module.id + "_row_" + to_string(m * rowNum + n);
+                        net.degree = 2;
+                        net.pins.push_back(frontPin);
+                        net.pins.push_back(pin);
+                        shreddedNets.push_back(net);
+                    }
+                    // new net with under cell
+                    if (m != 0) {
+                        TplModule underCell = cells[cells.size() - rowNum];
+                        TplPin underPin;
+                        underPin.id = underCell.id;
+                        underPin.io = IOType::Input;
+                        underPin.dx = 0;
+                        underPin.dy = 0;
+                        TplNet net;
+                        net.id = module.id + "_col_" + to_string(m * rowNum + n);
+                        net.degree = 2;
+                        net.pins.push_back(underPin);
+                        net.pins.push_back(pin);
+                        shreddedNets.push_back(net);
+                    }
+				}
+			}
+			map.insert(make_pair(module.id, cells));
+		}
+
+		// modify original nets
+		for (list<TplNet>::iterator iter = TplDB::db().nets.net_begin();
+			 	iter != TplDB::db().nets.net_end(); iter++) {
+			vector<TplPin>::iterator it = iter->pins.begin();
+			int cnt = 0, limit = iter->pins.size();
+			// iterate over original pins, exclude pins of new added cells
+			while (it != iter->pins.end() && cnt < limit) {
+				cnt++;
+				size_t index = TplDB::db().modules.module_index(it->id);
+				TplModule module = TplDB::db().modules[index];
+				if (!module.fixed) {
+					it++;
+					continue;
+				}
+				// if this net contains a macro,
+				// then add new shredded cells to this net
+				for (vector<TplModule>::iterator cell = map[module.id].begin();
+						cell != map[module.id].end(); cell++) {
+					TplPin pin;
+					pin.id = cell->id;
+					pin.io = IOType::Input;
+					pin.dx = 0;
+					pin.dy = 0;
+					iter->pins.push_back(pin);
+				}
+				// delete original macro from this net and move it to next
+				it = iter->pins.erase(it);
+			}
+		}
+
+		// add new cells
+		TplDB::db().modules.shred_macros(map);
+		// add new nets
+		TplDB::db().nets.add_net(shreddedNets);
+	}
+
+	void TplStandardAlgorithm::aggregate() {
+
+	}
+
     void TplStandardAlgorithm::make_initial_placement()
     {
         vector<double> x_target, y_target;
@@ -68,6 +174,53 @@ namespace tpl {
     void TplStandardAlgorithm::update_move_force_matrix()
     {
 
+    }
+
+    void TplStandardAlgorithm::saveDEF(string benchmark) {
+		string name = benchmark + "_gp.def";
+        FILE* fout = fopen(name.c_str(), "w");
+        int version1 = 5, version2 = 7;
+        const char* caseSensitive = "";
+        const char* dividerChar = ":";
+        const char* busBitChars = "[]";
+        const char* designName = benchmark.c_str();
+        int res = defwInit(fout, version1, version2, caseSensitive, dividerChar,
+                           busBitChars, designName, NULL, NULL, NULL, -1);
+        checkStatus(res, "init");
+        res = defwVersion(version1, version2);
+        checkStatus(res, "version");
+        res = defwDividerChar(dividerChar);
+        checkStatus(res, "dividerChar");
+        res = defwBusBitChars(busBitChars);
+        checkStatus(res, "busBitChars");
+        res = defwDesignName(designName);
+        checkStatus(res, "designName");
+        res = defwStartComponents(TplDB::db().modules.size());
+        checkStatus(res, "start components");
+        for (TplModules::iterator iter = TplDB::db().modules.begin();
+                iter != TplDB::db().modules.end(); iter++) {
+            res = defwComponent(iter->id.c_str(), "module", 0, NULL, NULL, NULL,
+                    NULL, NULL, 0, NULL, NULL, NULL, NULL, "PLACED",
+                    int(iter->x), int(iter->y), 0, -1.0, NULL, 0, 0, 0, 0);
+            checkStatus(res, "component");
+        }
+        res = defwEndComponents();
+        checkStatus(res, "end components");
+        res = defwEnd();
+        checkStatus(res, "end");
+        fclose(fout);
+    }
+
+    void TplStandardAlgorithm::make_detail_placement(string benchmark) {
+		const double density = 0.7;
+		const double misplacement = 150.0;
+        string tech_file = benchmark + ".aux.lef";
+		string cell_file = benchmark + ".aux.lef";
+		string floorplan_file = benchmark + ".aux.def";
+		string placed_file = benchmark + "_gp.def";
+		rippledp_read((char*)tech_file.c_str(), (char*)cell_file.c_str(),
+					  (char*)floorplan_file.c_str(), (char*)placed_file.c_str());
+		rippledp(density, misplacement);
     }
 
 }//end namespace tpl

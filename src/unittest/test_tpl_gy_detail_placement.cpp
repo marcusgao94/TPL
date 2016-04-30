@@ -8,7 +8,7 @@
 #include "catch.hpp"
 
 #include "tpl_db.h"
-#include "tpl_standard_detail_placement.h"
+#include "tpl_gy_detail_placement.h"
 
 using namespace std;
 using namespace tpl;
@@ -20,7 +20,7 @@ SCENARIO("bigblue1", "[bigblue1]") {
 
         TplDB::db().load_circuit(path);
 
-        TplStandardDetailPlacement detailPlacement;
+        TplGyDetailPlacement detailPlacement;
         vector<vector<TplModule*>> rows;
         WHEN("We do legalization") {
             rows = detailPlacement.legalization();

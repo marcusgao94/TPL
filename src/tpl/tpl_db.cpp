@@ -130,22 +130,22 @@ namespace tpl {
         }
     }
 
-    void TplModules::add_cells(unordered_map<Id, vector<TplModule>> map) {
+    void TplModules::shred_macros(unordered_map<Id, vector<TplModule>> map) {
+		vector<TplModule>::iterator macroBegin = _modules.begin() + _num_free,
+				macroEnd = _modules.end();
+		// copy all macros
+		_macros.clear();
+		_macros.insert(_macros.end(), macroBegin, macroEnd);
+		// delete all macros
+		_modules.erase(macroBegin, macroEnd);
+
 		typedef unordered_map<Id, vector<TplModule>>::iterator MapIterator;
 		for (MapIterator iter = map.begin(); iter != map.end(); iter++) {
 			Id moduleId = iter->first;
 			vector<TplModule> newCells = iter->second;
 
-			// delete origin macro
-			for (vector<TplModule>::iterator it = _modules.begin();
-					it != _modules.end(); it++) {
-				if (it->id == moduleId) {
-					_modules.erase(it);
-					break;
-				}
-			}
+			// delete origin macro form _id_index_map
 			_id_index_map.erase(moduleId);
-
 			// add new cells
 			_modules.insert(_modules.end(), newCells.begin(), newCells.end());
 			// set up id relationship in _id_index_map
@@ -154,8 +154,53 @@ namespace tpl {
 				_id_index_map.insert(make_pair(_modules[i].id, i));
 			}
 		}
+		_num_modules = _modules.size();
 		_shredded_cells = map;
     }
+
+	void TplModules::aggregate_cells() {
+		// for each macro, calculate mean and variance of shredded cells
+		for (vector<TplModule>::iterator iter = _macros.begin();
+				iter != _macros.end(); iter++) {
+			vector<TplModule> cells = _shredded_cells[iter->id];
+			int n = cells.size();
+			double x_mean = 0.0, y_mean = 0.0, x_var = 0.0, y_var = 0.0;
+			// calculate mean and variance
+			for (vector<TplModule>::iterator it = cells.begin();
+					it != cells.end(); it++) {
+				x_mean += it->x;
+				y_mean += it->y;
+				x_var += it->x * it->x;
+				y_var += it->y * it->y;
+			}
+			x_mean /= n;
+			y_mean /= n;
+			x_var = (x_var / n) - (x_mean * x_mean);
+			y_var = (y_var / n) - (y_mean * y_mean);
+			iter->x = x_mean;
+			iter->y = y_mean;
+			// make max(width, height) correspond to max(x_var, y_var)
+			if ((x_var > y_var && iter->width < iter->height) ||
+					(x_var < y_var && iter->width > iter->height)) {
+				swap(iter->width, iter->height);
+			}
+		}
+		// delete cells from _modules
+		vector<TplModule>::iterator macroBegin = _modules.begin() + _num_free;
+		_modules.erase(macroBegin, _modules.end());
+		// find begin position of shredded cells in _id_index_map
+		// and delete all cells from that position to end
+		map<Id, size_t>::iterator iter = _id_index_map.begin();
+		for (int i = 0; i < _num_free; i++) iter++;
+		_id_index_map.erase(iter, _id_index_map.end());
+		// add macros back to _modules
+		_modules.insert(_modules.end(), _macros.begin(), _macros.end());
+		_num_modules = _modules.size();
+		// add macros back to _id_index_map
+		for (int i = _num_free; i < _num_modules; i++) {
+			_id_index_map[_modules[i].id] = i;
+		}
+	}
 
 
     TplNets::TplNets(const BookshelfNets &bnets)

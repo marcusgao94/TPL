@@ -42,6 +42,9 @@ namespace tpl {
         //! Interface for global placement.
         virtual void make_global_placement() = 0;
 
+        //! Interface for detail placement.
+        virtual void make_detail_placement(std::string benchmark) = 0;
+
         const std::shared_ptr<TplAbstractNetModel> &net_model() const
         {
             return _net_model;

@@ -16,7 +16,4 @@ add_library(net_force_model_obj OBJECT tpl_standard_net_force_model.cpp)
  add_library(thermal_model_obj OBJECT tpl_standard_thermal_model.cpp)
 
 #6.TplStandardDetailPlacement
-add_library(detail_placement_obj OBJECT tpl_standard_detail_placement.cpp)
-
-#7.TplStandardMacroPlacement
-add_library(macro_placement_obj OBJECT tpl_standard_macro_placement.cpp)
+add_library(detail_placement_obj OBJECT tpl_gy_detail_placement.cpp)

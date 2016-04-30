@@ -156,7 +156,9 @@ namespace tpl {
         /*!
          * \param map map of original macro id and new celsl
          */
-        void add_cells(std::unordered_map<Id, std::vector<TplModule>> map);
+        void shred_macros(std::unordered_map<Id, std::vector<TplModule>> map);
+        //! aggregate cells into macros
+        void aggregate_cells();
         ///////////////////////// Modifiers   //////////////////////////////////////////
 
         ///////////////////////// Id based Member Access ///////////////////////////////
@@ -200,6 +202,7 @@ namespace tpl {
         std::vector<TplModule> _modules;                //!< vector of TplModule.
         std::map<std::string, size_t> _id_index_map;    //!< A ID index map for all the modules
 
+        std::vector<TplModule> _macros;
         std::unordered_map<Id, std::vector<TplModule>> _shredded_cells;
     };
 

@@ -4,8 +4,8 @@
  * \brief Standard implementation for Detail Placement.
  */
 
-#ifndef TPL_STANDARD_DETAIL_PLACEMENT_H
-#define TPL_STANDARD_DETAIL_PLACEMENT_H
+#ifndef TPL_GY_DETAIL_PLACEMENT_H
+#define TPL_GY_DETAIL_PLACEMENT_H
 
 #include "tpl_abstract_detail_placement.h"
 #include "tpl_db.h"
@@ -16,13 +16,13 @@
 
 namespace tpl {
 
-    class TplStandardDetailPlacement : public TplAbstractDetailPlacement {
+    class TplGyDetailPlacement {
     public:
         //! Default constructor.
-        TplStandardDetailPlacement() : TplAbstractDetailPlacement() {}
+        TplGyDetailPlacement() {}
 
         //! Virtual destructor.
-        virtual ~TplStandardDetailPlacement() {}
+        virtual ~TplGyDetailPlacement() {}
 
         //! standard implementation of legalization in detail placement
         virtual std::vector<std::vector<TplModule*> > legalization();
@@ -33,17 +33,7 @@ namespace tpl {
 		 */
         virtual void detailPlacement(std::vector<std::vector<TplModule*> > rows);
 
-		//! standard implementation of saving global placement to def format
-		/*!
-		 * \param benchmark benchmark name
-		 */
-		virtual void saveDEF(std::string benchmark);
 
-		//! implementation of detail placement using reppledp toolkit
-		/*!
-		 * \param filename name of the global placement result file
-		 */
-		virtual void detailPlacement(std::string filename);
 
 	protected:
 		int _rowHeight;
