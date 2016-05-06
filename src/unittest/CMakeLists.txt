@@ -34,6 +34,8 @@ add_executable(test_tpl_net_force_model
 target_link_libraries(test_tpl_net_force_model bookshelf ${Boost_LIBRARIES})
 
 #5.TplStandardThermalModel
+add_library(pthread STATIC IMPORTED)
+SET_TARGET_PROPERTIES(pthread PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/tools/libpthread.a)
 set(TPL_STANDARD_THERMAL_MODEL_SRC
 		$<TARGET_OBJECTS:db_obj>
 		$<TARGET_OBJECTS:config_obj>
@@ -43,7 +45,7 @@ add_executable(test_tpl_thermal_model
 		${TPL_STANDARD_THERMAL_MODEL_SRC}
 		test_tpl_standard_thermal_model.cpp
 		)
-target_link_libraries(test_tpl_thermal_model bookshelf ${Boost_LIBRARIES})
+target_link_libraries(test_tpl_thermal_model bookshelf ${Boost_LIBRARIES} ${STXXL_LIBRARIES} pthread)
 
 #6.TplGyDetailPlacement
 set(TPL_GY_DETAIL_PLACEMENT_SRC
