@@ -29,9 +29,6 @@ namespace tpl {
         std::shared_ptr<TplAbstractThermalModel> _tmodel;
     };
 
-    TplAbstractThermalForceModel::~TplAbstractThermalForceModel()
-    {
-    }
 }
 
 #endif //TPL_ABSTRACT_THERMAL_FORCE_MODEL_H

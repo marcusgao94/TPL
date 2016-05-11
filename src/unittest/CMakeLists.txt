@@ -63,6 +63,23 @@ target_link_libraries(test_tpl_detail_placement bookshelf ${Boost_LIBRARIES}
 		${PROJECT_SOURCE_DIR}/tools/rippledp/liblef.a
 		)
 
+#7.TplStandardAlgorithm
+set(TPL_STANDARD_ALGORITHM_SRC
+		$<TARGET_OBJECTS:db_obj>
+		$<TARGET_OBJECTS:config_obj>
+		$<TARGET_OBJECTS:standard_algorithm_obj>
+		)
+add_executable(test_tpl_standard_algorithm
+		${TPL_STANDARD_ALGORITHM_SRC}
+		test_tpl_standard_algorithm.cpp
+		)
+target_link_libraries(test_tpl_standard_algorithm bookshelf ${Boost_LIBRARIES}
+        ${PROJECT_SOURCE_DIR}/tools/rippledp/rippledp.a
+        ${PROJECT_SOURCE_DIR}/tools/rippledp/libdef.a
+        ${PROJECT_SOURCE_DIR}/tools/rippledp/liblef.a
+        )
+
+
 #Checks
 add_executable(check_free_nodes_order $<TARGET_OBJECTS:db_obj> check_free_nodes_order.cpp)
 target_link_libraries(check_free_nodes_order bookshelf ${Boost_LIBRARIES})

@@ -27,8 +27,8 @@ namespace tpl {
     class TplAbstractAlgorithm {
     public:
         //! Default constructor.
-        TplAbstractAlgorithm() : net_model(nullptr), net_force_model(nullptr),
-                thermal_model(nullptr), thermal_force_model(nullptr) {}
+        TplAbstractAlgorithm() : _net_model(nullptr), _net_force_model(nullptr),
+                _thermal_model(nullptr), _thermal_force_model(nullptr) {}
 
         //! Pure virtual destructor.
         virtual ~TplAbstractAlgorithm() = 0;
@@ -91,10 +91,6 @@ namespace tpl {
         std::shared_ptr<TplAbstractThermalModel>      _thermal_model;       //!< Pointer to a TplThermalModel.
         std::shared_ptr<TplAbstractThermalForceModel> _thermal_force_model; //!< Pointer to a TplMoveForceModel.
     };
-
-    TplAbstractAlgorithm::~TplAbstractAlgorithm()
-    {
-    }
 
 }
 

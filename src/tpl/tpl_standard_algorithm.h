@@ -8,6 +8,12 @@
 #define TPL_STANDARD_ALGORITHM_H
 
 #include "tpl_abstract_algorithm.h"
+#include "tpl_standard_thermal_model.h"
+#include "tpl_standard_thermal_force_model.h"
+#include "tpl_standard_net_model.h"
+#include "tpl_standard_net_force_model.h"
+#include "def/defwWriter.hpp"
+#include "rippledp.h"
 
 #include "utils.h"
 

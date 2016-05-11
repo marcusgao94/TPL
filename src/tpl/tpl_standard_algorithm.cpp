@@ -6,6 +6,12 @@
 #include "tpl_standard_thermal_model.h"
 #include "tpl_standard_thermal_force_model.h"
 
+#define checkStatus(status, message) \
+if (status) { \
+    cout << "error in " << message << endl; \
+    return; \
+}
+
 namespace tpl {
     using namespace std;
 
@@ -14,7 +20,7 @@ namespace tpl {
         _net_model           = shared_ptr<TplAbstractNetModel>(         new TplStandardNetModel);
         _net_force_model     = shared_ptr<TplAbstractNetForceModel>(    new TplStandardNetForceModel);
         _thermal_model       = shared_ptr<TplAbstractThermalModel>(     new TplStandardThermalModel);
-        _thermal_force_model = shared_ptr<TplAbstractThermalForceModel>(new TplStandardThermalForceModel(_thermal_model));
+        //_thermal_force_model = shared_ptr<TplAbstractThermalForceModel>(new TplStandardThermalForceModel(_thermal_model));
     }
 
     void TplStandardAlgorithm::shred() {

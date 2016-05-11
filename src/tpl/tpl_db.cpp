@@ -185,6 +185,7 @@ namespace tpl {
 				swap(iter->width, iter->height);
 			}
 		}
+
 		// delete cells from _modules
 		vector<TplModule>::iterator macroBegin = _modules.begin() + _num_free;
 		_modules.erase(macroBegin, _modules.end());
@@ -193,9 +194,12 @@ namespace tpl {
 		map<Id, size_t>::iterator iter = _id_index_map.begin();
 		for (int i = 0; i < _num_free; i++) iter++;
 		_id_index_map.erase(iter, _id_index_map.end());
+
 		// add macros back to _modules
 		_modules.insert(_modules.end(), _macros.begin(), _macros.end());
+        _macros.clear();
 		_num_modules = _modules.size();
+
 		// add macros back to _id_index_map
 		for (int i = _num_free; i < _num_modules; i++) {
 			_id_index_map[_modules[i].id] = i;

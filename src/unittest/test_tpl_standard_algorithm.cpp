@@ -25,8 +25,17 @@ SCENARIO("adaptec1", "[adaptec1]") {
         TplDB::db().load_circuit(path);
 
 
-        unique_ptr<TplAbstractAlgorithm> alg(new TplStandardAlgorithm);
+        unique_ptr<TplStandardAlgorithm> alg(new TplStandardAlgorithm);
 
+        WHEN("we shred macros") {
+            int sizebefore = TplDB::db().modules.size();
+            alg->shred();
+            int sizeafter = TplDB::db().modules.size();
+            THEN("shred size is not equal") {
+                REQUIRE(sizebefore != sizeafter);
+            }
+        }
+        /*
         WHEN("we compute the first net's weight") {
             NetWeight x_net_weight, y_net_weight;
             alg->net_force_model().compute_net_weight(x_net_weight, y_net_weight);
@@ -46,6 +55,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
                 REQUIRE( y_target.size() != 0);
             }
         }
+         */
 
         WHEN("we make the initial placement") {
             alg->make_initial_placement();
