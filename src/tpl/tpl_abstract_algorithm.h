@@ -31,7 +31,7 @@ namespace tpl {
                 _thermal_model(nullptr), _thermal_force_model(nullptr) {}
 
         //! Pure virtual destructor.
-        virtual ~TplAbstractAlgorithm() = 0;
+        virtual ~TplAbstractAlgorithm() {}
 
         //! Interface for initializing the force models.
         virtual void initialize_models() = 0;
