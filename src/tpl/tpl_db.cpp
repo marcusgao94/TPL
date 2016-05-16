@@ -130,6 +130,22 @@ namespace tpl {
         }
     }
 
+    void TplModules::add_shredded_cells(TplModule cell) {
+        _id_index_map[cell.id] = _modules.size();
+        _modules.push_back(cell);
+    }
+
+    void TplModules::delete_macros() {
+        // delete macros from _id_index_map
+        for (TplModules::iterator iter = _modules.begin() + _num_free;
+                iter != _modules.end(); iter++) {
+            _id_index_map.erase(iter->id);
+        }
+        // delete macros from _modules
+        _modules.erase(_modules.begin() + _num_free, _modules.end());
+    }
+
+    // changing !!!
     void TplModules::shred_macros(unordered_map<Id, vector<TplModule>> map) {
 		vector<TplModule>::iterator macroBegin = _modules.begin() + _num_free,
 				macroEnd = _modules.end();

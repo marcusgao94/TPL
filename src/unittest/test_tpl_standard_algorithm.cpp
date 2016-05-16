@@ -10,6 +10,8 @@
 #include "tpl_db.h"
 #include "tpl_standard_algorithm.h"
 
+#include <iostream>
+
 using namespace std;
 using namespace tpl;
 
@@ -20,17 +22,22 @@ SCENARIO("adaptec1", "[adaptec1]") {
         char *benchmark;
         benchmark = std::getenv("BENCHMARK");
         std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/bigblue1");
+        std::strcat(path, "/ispd2005/adaptec1");
+
+        cout << "path = " << path << endl;
 
         TplDB::db().load_circuit(path);
 
 
-        unique_ptr<TplStandardAlgorithm> alg(new TplStandardAlgorithm);
+        unique_ptr<TplStandardAlgorithm> alg(new TplStandardAlgorithm());
+        unique_ptr<TplStandardNetModel> snm(new TplStandardNetModel());
+
 
         WHEN("we shred macros") {
             int sizebefore = TplDB::db().modules.size();
-            alg->shred();
+             alg->shred();
             int sizeafter = TplDB::db().modules.size();
+            cout << "size before" << sizebefore << "\n" << "size after" << sizeafter << endl;
             THEN("shred size is not equal") {
                 REQUIRE(sizebefore != sizeafter);
             }
@@ -38,7 +45,8 @@ SCENARIO("adaptec1", "[adaptec1]") {
         /*
         WHEN("we compute the first net's weight") {
             NetWeight x_net_weight, y_net_weight;
-            alg->net_force_model().compute_net_weight(x_net_weight, y_net_weight);
+            SpMat Cx, Cy;
+            snm->compute_net_weight(x_net_weight, y_net_weight);
 
             THEN("the net weight is not empty") {
                 REQUIRE( x_net_weight.size() != 0);
@@ -55,7 +63,6 @@ SCENARIO("adaptec1", "[adaptec1]") {
                 REQUIRE( y_target.size() != 0);
             }
         }
-         */
 
         WHEN("we make the initial placement") {
             alg->make_initial_placement();
@@ -64,6 +71,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
                 TplDB::db().generate_placement_snapshot();
             }
         }
+         */
 
     }
 
