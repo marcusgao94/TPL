@@ -26,8 +26,9 @@ namespace tpl {
 		for (TplModules::iterator iter =
                 TplDB::db().modules.begin() + TplDB::db().modules.num_free();
 			 	iter != TplDB::db().modules.end(); iter++) {
-			int rowNum = (iter->width - 1) / colWidth + 1;
-			int colNum = (iter->height - 1) / rowHeight + 1;
+			int rowNum = (iter->height - 1) / rowHeight + 1;
+			// int colNum = (iter->height - 1) / rowHeight + 1;
+            int colNum = 1;
 			for (int m = 0; m < rowNum; m++) {
 				for (int n = 0; n < colNum; n++) {
                     // create new small cells
@@ -39,15 +40,16 @@ namespace tpl {
                     bool fixed = false;
                     double density = 1.0;
                     TplModule cell(id, x, y, width, height, fixed, density);
+                    map[iter->id].push_back(cell);
                     TplDB::db().modules.add_shredded_cells(cell);
 
-                    /*
                     // add new cells to new nets
                     TplPin pin;
                     pin.id = id;
                     pin.io = IOType::Input;
                     pin.dx = 0;
                     pin.dy = 0;
+                    /*
                     // new net with left cell
                     if (n != 0) {
                         TplModule frontCell = cells[cells.size() - 2];
@@ -57,35 +59,34 @@ namespace tpl {
                         frontPin.dx = 0;
                         frontPin.dy = 0;
                         TplNet net;
-                        net.id = iter->id + "_row_" + to_string(m * rowNum + n);
+                        net.id = iter->id + "_col_" + to_string(m * rowNum + n);
                         net.degree = 2;
                         net.pins.push_back(frontPin);
                         net.pins.push_back(pin);
                         shreddedNets.push_back(net);
                     }
+                     */
                     // new net with under cell
                     if (m != 0) {
-                        TplModule underCell = cells[cells.size() - rowNum];
+                        TplModule underCell = cells[cells.size() - 1 - colNum];
                         TplPin underPin;
                         underPin.id = underCell.id;
                         underPin.io = IOType::Input;
                         underPin.dx = 0;
                         underPin.dy = 0;
                         TplNet net;
-                        net.id = iter->id + "_col_" + to_string(m * rowNum + n);
+                        net.id = iter->id + "_row_" + to_string(m * colNum + n);
                         net.degree = 2;
                         net.pins.push_back(underPin);
                         net.pins.push_back(pin);
                         shreddedNets.push_back(net);
                     }
-                     */
 				}
 			}
 		}
         // delete all macros from TplModules
         TplDB::db().modules.delete_macros();
 
-		/*
         TplDB::db().nets.backup_net();
         // modify original nets
         for (list<TplNet>::iterator iter = TplDB::db().nets.net_begin();
@@ -115,10 +116,9 @@ namespace tpl {
                 it = iter->pins.erase(it);
             }
         }
-        */
 
         // add new nets
-        // TplDB::db().nets.add_net(shreddedNets);
+         TplDB::db().nets.add_net(shreddedNets);
     }
 
     void TplStandardAlgorithm::aggregate() {
