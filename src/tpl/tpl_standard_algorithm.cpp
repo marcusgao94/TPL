@@ -87,50 +87,48 @@ namespace tpl {
             macro_cells[macro_iter->id] = cells;
 		}
 
+        // back up original nets
         TplDB::db().nets.backup_net();
+
         // modify original nets
-
-        cout << "net size = " << TplDB::db().nets.num_nets() << endl;
-
         for (list<TplNet>::iterator net_iter = TplDB::db().nets.net_begin();
                  net_iter != TplDB::db().nets.net_end(); net_iter++) {
+            vector<TplPin> pins_to_add;
+
             // iterate over original pins, exclude pins of new added cells
             const int len = net_iter->pins.size();
-
             TplNets::pin_iterator pin_iter = net_iter->pins.begin();
-            for (int i = 0; i < len; i++) {
+            for (int i = 0; i < len && pin_iter != net_iter->pins.end(); i++) {
                 TplModule module = TplDB::db().modules.module(pin_iter->id);
                 if (!module.fixed) {
                     pin_iter++;
                     continue;
                 }
+
                 // if this net contains a macro,
                 // then add new shredded cells to this net
-                vector<TplPin> pins = net_iter->pins;
-                for (TplModules::iterator cell = macro_cells[pin_iter->id].begin();
-                        cell != macro_cells[pin_iter->id].end(); cell++) {
+                vector<TplModule> cells = macro_cells[module.id];
+                for (TplModules::iterator cell_iter = cells.begin();
+                        cell_iter != cells.end(); cell_iter++) {
                     TplPin pin;
-                    pin.id = cell->id;
+                    pin.id = cell_iter->id;
                     pin.io = IOType::Input;
                     pin.dx = 0;
                     pin.dy = 0;
-                    pins.push_back(pin);
+                    pins_to_add.push_back(pin);
                 }
-                net_iter->pins = pins;
-                cout << "pins size = " << pins.size() << endl;
 
                 // delete original macro from this net and move iterator to next
                 pin_iter = net_iter->pins.erase(pin_iter);
             }
+            net_iter->pins.insert(net_iter->pins.end(), pins_to_add.begin(), pins_to_add.end());
         }
-
 
         // delete macros and add shredded cells
         TplDB::db().modules.add_shredded_cells(macro_cells);
 
-        // add new nets
+        // add new nets between shredded cells
         TplDB::db().nets.add_net(shreddedNets);
-
     }
 
     void TplStandardAlgorithm::aggregate() {
