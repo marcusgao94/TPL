@@ -23,10 +23,9 @@ SCENARIO("adaptec1", "[adaptec1]") {
         benchmark = std::getenv("BENCHMARK");
         std::strcpy(path, benchmark);
         std::strcat(path, "/ispd2005/adaptec1");
-
         cout << "path = " << path << endl;
-
         TplDB::db().load_circuit(path);
+        cout << "load circuit finished" << endl;
 
 
         unique_ptr<TplStandardAlgorithm> alg(new TplStandardAlgorithm());
@@ -35,9 +34,11 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
         WHEN("we shred macros") {
             int sizebefore = TplDB::db().modules.size();
-             alg->shred();
+            cout << "size before " << sizebefore << endl;
+            alg->shred();
+
             int sizeafter = TplDB::db().modules.size();
-            cout << "size before" << sizebefore << "\n" << "size after" << sizeafter << endl;
+            cout << "size after " << sizeafter << endl;
             THEN("shred size is not equal") {
                 REQUIRE(sizebefore != sizeafter);
             }

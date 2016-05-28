@@ -156,19 +156,7 @@ namespace tpl {
         /*!
          * \param map map of original macro id and new celsl
          */
-        void add_shredded_cells(TplModule cell);
-
-        //! delete a macro from modules
-        /*!
-         * \param id Id of the macro
-         */
-        void delete_macros();
-
-
-
-        // need to delete
-        void shred_macros(std::unordered_map<Id, std::vector<TplModule>> map);
-
+        void add_shredded_cells(std::map<Id, std::vector<TplModule> > macro_cells);
 
 
         //! aggregate cells into macros

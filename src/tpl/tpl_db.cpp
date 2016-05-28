@@ -130,48 +130,31 @@ namespace tpl {
         }
     }
 
-    void TplModules::add_shredded_cells(TplModule cell) {
-        _id_index_map[cell.id] = _modules.size();
-        _modules.push_back(cell);
-    }
+    void TplModules::add_shredded_cells(map<Id, vector<TplModule> > macro_cells) {
+        TplModules::iterator iterBegin = _modules.begin() + _num_free;
+        TplModules::iterator iterEnd = _modules.begin() + _num_modules;
 
-    void TplModules::delete_macros() {
-        // delete macros from _id_index_map
-        for (TplModules::iterator iter = _modules.begin() + _num_free;
-                iter != _modules.end(); iter++) {
-            _id_index_map.erase(iter->id);
+        // back up macros
+        _macros.clear();
+        _macros.insert(_macros.end(), iterBegin, iterEnd);
+
+        // delete macros
+        _modules.erase(iterBegin, iterEnd);
+
+        // delete from id_index_map and add new cells
+        for (map<Id, vector<TplModule>>::iterator iter = macro_cells.begin();
+                iter != macro_cells.end(); iter++) {
+            _id_index_map.erase(iter->first);
+            vector<TplModule> cells = iter->second;
+            for (vector<TplModule>::iterator it = cells.begin();
+                    it != cells.end(); it++) {
+                _modules.push_back(*it);
+                _id_index_map[it->id] = _modules.size() - 1;
+            }
         }
-        // delete macros from _modules
-        _modules.erase(_modules.begin() + _num_free, _modules.end());
-    }
 
-    // changing !!!
-    void TplModules::shred_macros(unordered_map<Id, vector<TplModule>> map) {
-		vector<TplModule>::iterator macroBegin = _modules.begin() + _num_free,
-				macroEnd = _modules.end();
-		// copy all macros
-		_macros.clear();
-		_macros.insert(_macros.end(), macroBegin, macroEnd);
-		// delete all macros
-		_modules.erase(macroBegin, macroEnd);
-
-		typedef unordered_map<Id, vector<TplModule>>::iterator MapIterator;
-		for (MapIterator iter = map.begin(); iter != map.end(); iter++) {
-			Id moduleId = iter->first;
-			vector<TplModule> newCells = iter->second;
-
-			// delete origin macro form _id_index_map
-			_id_index_map.erase(moduleId);
-			// add new cells
-			_modules.insert(_modules.end(), newCells.begin(), newCells.end());
-			// set up id relationship in _id_index_map
-			for (int i = _modules.size() - newCells.size();
-					i != _modules.size(); i++) {
-				_id_index_map.insert(make_pair(_modules[i].id, i));
-			}
-		}
-		_num_modules = _modules.size();
-		_shredded_cells = map;
+        // update modules number
+        _num_modules = _modules.size();
     }
 
 	void TplModules::aggregate_cells() {
@@ -270,6 +253,7 @@ namespace tpl {
 	}
 
 	void TplNets::backup_net() {
+        _netlist_backup.clear();
 		_netlist_backup = _netlist;
 	}
 
