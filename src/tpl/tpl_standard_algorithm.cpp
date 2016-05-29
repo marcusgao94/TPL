@@ -93,20 +93,18 @@ namespace tpl {
         // modify original nets
         for (list<TplNet>::iterator net_iter = TplDB::db().nets.net_begin();
                  net_iter != TplDB::db().nets.net_end(); net_iter++) {
-            vector<TplPin> pins_to_add;
 
             // iterate over original pins, exclude pins of new added cells
             const int len = net_iter->pins.size();
-            TplNets::pin_iterator pin_iter = net_iter->pins.begin();
-            for (int i = 0; i < len && pin_iter != net_iter->pins.end(); i++) {
-                TplModule module = TplDB::db().modules.module(pin_iter->id);
+            // net_iter->pins[p] is pin on a macro, and i is used to control loop times
+            for (int i = 0, p = 0; i < len; i++) {
+                TplModule module = TplDB::db().modules.module(net_iter->pins[p].id);
                 if (!module.fixed) {
-                    pin_iter++;
+                    p++;
                     continue;
                 }
 
-                // if this net contains a macro,
-                // then add new shredded cells to this net
+                // if this net contains a macro, then add new shredded cells to this net
                 vector<TplModule> cells = macro_cells[module.id];
                 for (TplModules::iterator cell_iter = cells.begin();
                         cell_iter != cells.end(); cell_iter++) {
@@ -115,13 +113,12 @@ namespace tpl {
                     pin.io = IOType::Input;
                     pin.dx = 0;
                     pin.dy = 0;
-                    pins_to_add.push_back(pin);
+                    net_iter->pins.push_back(pin);
                 }
 
-                // delete original macro from this net and move iterator to next
-                pin_iter = net_iter->pins.erase(pin_iter);
+                // delete original macro from this net, since next element become i, need to i--
+                net_iter->pins.erase(net_iter->pins.begin() + p);
             }
-            net_iter->pins.insert(net_iter->pins.end(), pins_to_add.begin(), pins_to_add.end());
         }
 
         // delete macros and add shredded cells

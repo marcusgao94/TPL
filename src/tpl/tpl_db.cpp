@@ -247,7 +247,7 @@ namespace tpl {
     }
 
 	void TplNets::add_net(list<TplNet> newNets) {
-		cout << "size = " << _netlist.size() << endl;
+		cout << "net list size = " << _netlist.size() << endl;
         cout << "_num_nets = " << _num_nets << endl;
 
 

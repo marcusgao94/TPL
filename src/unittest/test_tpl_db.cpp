@@ -12,6 +12,7 @@
 using namespace std;
 using namespace tpl;
 
+/*
 SCENARIO("bigblue1", "[bigblue1]") {
 
     GIVEN("A circuit bigblue1") {
@@ -87,6 +88,7 @@ SCENARIO("bigblue4", "[bigblue4]") {
         }
     }
 }//end bigblue4
+ */
 
 SCENARIO("adaptec1", "[adaptec1]") {
 
@@ -102,11 +104,14 @@ SCENARIO("adaptec1", "[adaptec1]") {
                 REQUIRE(TplDB::db().modules.chip_width() == 11589);
                 REQUIRE(TplDB::db().modules.chip_height() == 11589);
                 REQUIRE(TplDB::db().modules.num_free() == 210904);
+                list<TplNet> newnets;
+                TplDB::db().nets.add_net(newnets);
             }
         }
     }
 }//end adaptec1
 
+/*
 SCENARIO("adaptec2", "[adaptec2]") {
 
     GIVEN("A circuit adaptec2") {
@@ -163,4 +168,5 @@ SCENARIO("adaptec4", "[adaptec4]") {
         }
     }
 }//end adaptec4
+ */
 
