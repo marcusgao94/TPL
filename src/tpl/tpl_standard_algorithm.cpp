@@ -34,7 +34,7 @@ namespace tpl {
 			for (int m = 0; m < rowNum; m++) {
 				for (int n = 0; n < colNum; n++) {
                     // create new small cells
-					Id id = macro_iter->id + "_" + to_string(m * rowNum + n);
+					Id id = macro_iter->id + "_" + to_string(m * colNum + n);
 					Coordinate x = macro_iter->x + n * colWidth;
                     Coordinate y = macro_iter->y + m * rowHeight;
                     //Length width = colWidth;

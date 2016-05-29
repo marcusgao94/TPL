@@ -10,6 +10,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 
 #include "bookshelf_net_parser.hpp"
 
@@ -23,7 +24,7 @@ SCENARIO("Test .net files", "[case 1]") {
         char *benchmark;
         benchmark= std::getenv("BENCHMARK");
         std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/bigblue1/bigblue1.nets");
+        std::strcat(path, "/ispd2005/adaptec1/adaptec1.nets");
         ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
 
@@ -42,7 +43,21 @@ SCENARIO("Test .net files", "[case 1]") {
         WHEN("we parse the input") {
             bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), nets);
 
+
+            ofstream fout("/home/gaoy/TPL/src/tem");
+
+            for (list<BookshelfNet>::iterator iter = nets.data.begin();
+                    iter != nets.data.end(); ++iter) {
+                fout << "id = " << iter->id << endl;
+                fout << "degree = " << iter->degree << endl;
+                fout << endl << endl;
+            }
+            fout.close();
+
+
             THEN("we get a bunch of Bookshelf nets") {
+                cout << "data.size = " << nets.data.size() << endl;
+                cout << "num_nets = " << nets.num_nets << endl;
                 REQUIRE(ret == true);
             }
         }

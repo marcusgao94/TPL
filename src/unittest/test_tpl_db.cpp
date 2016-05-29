@@ -104,8 +104,6 @@ SCENARIO("adaptec1", "[adaptec1]") {
                 REQUIRE(TplDB::db().modules.chip_width() == 11589);
                 REQUIRE(TplDB::db().modules.chip_height() == 11589);
                 REQUIRE(TplDB::db().modules.num_free() == 210904);
-                list<TplNet> newnets;
-                TplDB::db().nets.add_net(newnets);
             }
         }
     }

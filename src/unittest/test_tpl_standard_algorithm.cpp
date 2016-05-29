@@ -33,16 +33,24 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
 
         WHEN("we shred macros") {
-            int sizebefore = TplDB::db().modules.size();
-            cout << "size before " << sizebefore << endl;
+            int s1 = TplDB::db().modules.size();
+
             alg->shred();
 
-            int sizeafter = TplDB::db().modules.size();
-            cout << "size after " << sizeafter << endl;
-            THEN("shred size is not equal") {
-                REQUIRE(sizebefore != sizeafter);
-            }
+            int s2 = TplDB::db().modules.size();
+
+            // REQUIRE(sizebefore < sizeafter);
+
+            int s3 = TplDB::db().modules.size();
+
+            alg->aggregate();
+
+            int s4 = TplDB::db().modules.size();
+
+            REQUIRE(s1 == s4);
+            REQUIRE(s2 == s3);
         }
+
         /*
         WHEN("we compute the first net's weight") {
             NetWeight x_net_weight, y_net_weight;
