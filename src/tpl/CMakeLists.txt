@@ -20,3 +20,6 @@ add_library(detail_placement_obj OBJECT tpl_gy_detail_placement.cpp)
 
 #7.TplStandardAlgorithm
 add_library(standard_algorithm_obj OBJECT tpl_standard_algorithm.cpp)
+
+#8.TplStandardThermalForceModel
+add_library(thermal_force_model_obj OBJECT tpl_standard_thermal_force_model.cpp)

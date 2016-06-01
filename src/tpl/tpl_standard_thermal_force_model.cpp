@@ -9,8 +9,10 @@ namespace tpl {
 
     const int TplStandardThermalForceModel::TIMES = 10000;
 
+
     void TplStandardThermalForceModel::compute_heat_flux_vector(const std::vector<std::vector<double>> &tss, VectorXd &HFx, VectorXd &HFy) const
     {
+        /*
         //preconditions
         shared_ptr<TplStandardThermalModel> ptm = dynamic_pointer_cast<TplStandardThermalModel, TplAbstractThermalModel>(_tmodel);
         assert(ptm != nullptr);
@@ -73,6 +75,106 @@ namespace tpl {
             HFx(i) = xhf;
             HFy(i) = yhf;
         }
+         */
     }
+
+    bool TplStandardThermalForceModel::shouldStop() {
+        return terminate.shouldStop();
+
+    }
+
+    bool Terminate::shouldStop() {
+        unsigned long A = 0;
+        segments.clear();
+        nodes.clear();
+        pos.clear();
+        // calculate total area and initialize segments and nodes
+        for (TplModules::iterator module_iter = TplDB::db().modules.begin();
+             module_iter != TplDB::db().modules.end(); module_iter++) {
+            A += module_iter->width * module_iter->height;
+
+            // push first y
+            Segment s(module_iter->x, module_iter->x + module_iter->width, module_iter->y, 1);
+            segments.push_back(s);
+            // push second y
+            s.y += module_iter->height;
+            s.flag = -1;
+            segments.push_back(s);
+
+            // map x to pos[index]
+            pos.push_back(module_iter->x);
+            pos.push_back(module_iter->x + module_iter->width);
+        }
+
+        // sort pos
+        // delete same x, map x to pos[0] to pos[m-1]
+        int m = 0;
+        for (int i = 1; i < pos.size(); i++) {
+            if (pos[i] != pos[i - 1]) {
+                pos[m++] = pos[i];
+            }
+        }
+        sort(pos.begin(), pos.begin() + m);
+
+        // sort segments
+        sort(segments.begin(), segments.begin() + m);
+
+        // leaf number = m => nodes number = m + m/2 + ... + 1 = 2m - 1
+        nodes.resize(2 * m - 1);
+        // build segment tree
+        build(0, m - 1, 0);
+
+        unsigned long res = 0;
+        for (int i = 0; i < m; i++) {
+            int low = binarySearch(0, m - 1, segments[i].x1);
+            int high = binarySearch(0, m - 1, segments[i].x2);
+        }
+
+
+        return true;
+    }
+
+    void Terminate::pushup(int low, int high, int idx) {
+        if (nodes[idx].cover != 0) {
+            nodes[idx].len = pos[nodes[idx].high] - pos[nodes[idx].low];
+        }
+    }
+
+    void Terminate::update(int low, int high, int flag, int idx) {
+        // if nodes[idx] is exactly the segment [low, high]
+        if (nodes[idx].low == low && nodes[idx].high == high) {
+            nodes[idx].cover += flag;
+            // pushup
+        }
+    }
+
+
+    int Terminate::binarySearch(int low, int high, double target) {
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (pos[mid] == target) return mid;
+            if (pos[mid] < target)
+                low = mid + 1;
+            else
+                high = mid - 1;
+        }
+        return -1;
+    }
+
+    void Terminate::build(int low, int high, int idx) {
+        nodes[idx].low = low;
+        nodes[idx].high = high;
+        nodes[idx].cover = 0;
+        nodes[idx].len = 0;
+        if (low == high) return ;
+        int mid = (low + high) / 2;
+        // left child = 2 * idx + 1
+        build(low, mid, 2 * idx + 1);
+        // right child = 2 * idx + 2
+        build(mid + 1, high, 2 * idx + 2);
+    }
+
+
+
 
 }//namespace tpl
