@@ -12,8 +12,8 @@
 #include "tpl_standard_thermal_force_model.h"
 #include "tpl_standard_net_model.h"
 #include "tpl_standard_net_force_model.h"
-#include "def/defwWriter.hpp"
-#include "rippledp.h"
+#include "../tools/def/defwWriter.hpp"
+#include "../tools/rippledp/rippledp.h"
 
 #include "utils.h"
 
