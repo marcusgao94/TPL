@@ -21,7 +21,7 @@ namespace thueda {
      * \typedef unsigned int Length
      * \brief Length type
      */
-    typedef unsigned int Length;
+    typedef int Length;
 
     /*!
      * \typedef unsigned int Coordinate 

@@ -29,14 +29,16 @@ namespace tpl {
      */
     struct TplModule {
         Id         id; //!< A module's id
-        Coordinate  x; //!< A module's x coordinate
-        Coordinate  y; //!< A module's y coordinate
+        Coordinate  x; //!< A module's x coordinate, lower left corner.
+        Coordinate  y; //!< A module's y coordinate, lower left corner.
         Length  width; //!< A module's width
         Length height; //!< A module's height
         bool    fixed; //!< A module's fixed flag
         double power_density; //!< A module's power density
 
+        //! Default constructor.
         TplModule() = default;
+        //! TplModule constructor.
         explicit TplModule(Id id, Coordinate x, Coordinate y, Length width, Length height,
                            bool fixed, double power_density);
     };
@@ -57,7 +59,6 @@ namespace tpl {
         ///////////////////////// Constructors /////////////////////////////////////////
         //! Constructor using bookshelf data structures.
         explicit TplModules(const BookshelfNodes &bnodes, const BookshelfPls &bpls);
-
         //! Default constructor.
         TplModules() = default;
         //! Default destructor.
@@ -176,12 +177,12 @@ namespace tpl {
 
         ///////////////////////// Chip Size ////////////////////////////////////////////
         //! Query interface for chip width.
-        double chip_width()  const
+        Length chip_width()  const
         {
             return _chip_width;
         }
         //! Query interface for chip height.
-        double chip_height() const
+        Length chip_height() const
         {
             return _chip_height;
         }
@@ -198,8 +199,8 @@ namespace tpl {
         unsigned int _num_modules; //!< Number of modules.
         unsigned int _num_free;    //!< Number of free modules.
 
-        double _chip_width;  //!< Chip width.
-        double _chip_height; //!< Chip height.
+        Length _chip_width;  //!< Chip width.
+        Length _chip_height; //!< Chip height.
 
         std::vector<TplModule> _modules;                //!< vector of TplModule.
         std::map<std::string, size_t> _id_index_map;    //!< A ID index map for all the modules
@@ -233,9 +234,6 @@ namespace tpl {
         ///////////////////////// Constructors /////////////////////////////////////////
         //! Constructor using bookshelf data structures, copy version.
         explicit TplNets(const BookshelfNets &bnets);
-        //! Constructor using bookshelf data structures, move version.
-        explicit TplNets(BookshelfNets &&bnets);
-
         //! Default constructor.
         TplNets()  = default;
         //! Default destructor.
