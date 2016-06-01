@@ -134,9 +134,15 @@ namespace tpl {
         return true;
     }
 
-    void Terminate::pushup(int low, int high, int idx) {
+    void Terminate::pushup(int idx) {
         if (nodes[idx].cover != 0) {
             nodes[idx].len = pos[nodes[idx].high] - pos[nodes[idx].low];
+        }
+        else if (nodes[idx].low == nodes[idx].high) {
+            nodes[idx].len = 0;
+        }
+        else {
+            nodes[idx].len = pos[nodes[2 * idx + 1].high] - pos[nodes[2 * idx + 2].low];
         }
     }
 
@@ -144,7 +150,20 @@ namespace tpl {
         // if nodes[idx] is exactly the segment [low, high]
         if (nodes[idx].low == low && nodes[idx].high == high) {
             nodes[idx].cover += flag;
-            // pushup
+            pushup(idx);
+            return ;
+        }
+        // with problems
+        int mid = (nodes[idx].low + nodes[idx].high) / 2;
+        if (high <= mid) {
+            update(low, high, flag, 2 * idx + 1);
+        }
+        else if (low > mid) {
+            update(low, high, flag, 2 * idx + 2);
+        }
+        else {
+            update(low, high, flag, 2 * idx + 1);
+            update(low, high, flag, 2 * idx + 2);
         }
     }
 

@@ -46,7 +46,7 @@ namespace tpl {
             }
         };
 
-        void pushup(int low, int high, int idx);
+        void pushup(int idx);
         void update(int l, int h, int flag, int idx);
         int binarySearch(int low, int high, double target);
         void build(int low, int high, int idx);
