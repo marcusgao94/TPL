@@ -24,7 +24,7 @@ SCENARIO("Test .net files", "[case 1]") {
         char *benchmark;
         benchmark= std::getenv("BENCHMARK");
         std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/adaptec1/adaptec1.nets");
+        std::strcat(path, "/ispd2005/bigblue1/bigblue1.nets");
         ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
 
@@ -59,6 +59,7 @@ SCENARIO("Test .net files", "[case 1]") {
                 cout << "data.size = " << nets.data.size() << endl;
                 cout << "num_nets = " << nets.num_nets << endl;
                 REQUIRE(ret == true);
+                REQUIRE(nets.data.size() == nets.num_nets);
             }
         }
 
