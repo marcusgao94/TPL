@@ -16,30 +16,23 @@
 using namespace std;
 using namespace thueda;
 
-SCENARIO("Test .nodes files", "[case 1]") {
+SCENARIO("adaptec1", "[adaptec1]") {
 
     GIVEN("A .nodes file and a BookshelfNodeParser") {
-        char path[200];
-        char *benchmark;
-        benchmark = std::getenv("BENCHMARK");
-        std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/bigblue1/bigblue1.nodes");
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec1/adaptec1.nodes";
+
         ifstream in(path, ios_base::in);
         in.unsetf(ios::skipws);
-
-        string storage;
-        copy(istream_iterator<char>(in),
-             istream_iterator<char>(),
-             back_inserter(storage));
-
-        string::const_iterator iter = storage.begin();
-        string::const_iterator end  = storage.end();
-
-        BookshelfNodeParser< string::const_iterator > p;
-        BookshelfNodes n;
+        boost::spirit::istream_iterator iter(in), end;
+        BookshelfNodes nodes;
 
         WHEN("we parse the input") {
-            bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), n);
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
 
             THEN("we get a bunch of Bookshelf nodes") {
                 REQUIRE(ret == true);
@@ -49,5 +42,209 @@ SCENARIO("Test .nodes files", "[case 1]") {
         cout << endl;
     }//end GIVEN
 
-}//SCENARIO
+}//end adaptec1
 
+SCENARIO("adaptec2", "[adaptec2]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec2/adaptec2.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end adaptec2
+
+
+SCENARIO("adaptec3", "[adaptec3]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec3/adaptec3.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end adaptec3
+
+SCENARIO("adaptec4", "[adaptec4]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec4/adaptec4.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end adaptec4
+
+SCENARIO("bigblue1", "[bigblue1]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue1/bigblue1.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue1
+
+SCENARIO("bigblue2", "[bigblue2]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue2/bigblue2.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue2
+
+
+SCENARIO("bigblue3", "[bigblue3]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue3/bigblue3.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue3
+
+SCENARIO("bigblue4", "[bigblue4]") {
+
+    GIVEN("A .nodes file and a BookshelfNodeParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue4/bigblue4.nodes";
+
+        ifstream in(path, ios_base::in);
+        in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator iter(in), end;
+
+        BookshelfNodes nodes;
+
+        WHEN("we parse the input") {
+            bool ret = parse_bookshelf_node(iter, end, nodes);
+
+            cout << "data.size " << nodes.data.size() << endl;
+            cout << "num_nodes " << nodes.num_nodes << endl;
+            cout << "num_terminals " << nodes.num_terminals << endl;
+
+            THEN("we get a bunch of Bookshelf nodes") {
+                REQUIRE(ret == true);
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue4

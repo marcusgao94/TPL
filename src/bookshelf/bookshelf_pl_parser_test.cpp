@@ -12,43 +12,288 @@
 #include <cstring>
 
 #include "bookshelf_pl_parser.hpp"
+#include "bookshelf_node_parser.hpp"
 
 using namespace std;
 using namespace thueda;
 
-SCENARIO("Test .pl files", "[case 1]") {
+SCENARIO("adaptec1", "[adaptec1]") {
 
     GIVEN("A .pl file and a BookshelfPlParser") {
-        char path[200];
-        char *benchmark;
-        benchmark = std::getenv("BENCHMARK");
-        std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/bigblue1/bigblue1.pl");
-        ifstream in(path, ios_base::in);
-        in.unsetf(ios::skipws);
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec1/adaptec1";
 
-        string storage;
-        copy(istream_iterator<char>(in),
-             istream_iterator<char>(),
-             back_inserter(storage));
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
 
-        string::const_iterator iter = storage.begin();
-        string::const_iterator end  = storage.end();
-
-        BookshelfPlParser< string::const_iterator > p;
-
-        BookshelfPls n;
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
 
         WHEN("we parse the input") {
-            bool ret = qi::phrase_parse(iter, end, p, qi::ascii::space_type(), n);
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
 
             THEN("we get a bunch of Bookshelf pls") {
-                REQUIRE(ret == true);
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
             }
         }
 
         cout << endl;
     }//end GIVEN
 
-}//end SCENARIO
+}//end adaptec1
+
+SCENARIO("adaptec2", "[adaptec2]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec2/adaptec2";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end adaptec2
+
+SCENARIO("adaptec3", "[adaptec3]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec3/adaptec3";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end adaptec3
+
+SCENARIO("adaptec4", "[adaptec4]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec4/adaptec4";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end adaptec4
+
+SCENARIO("bigblue1", "[bigblue1]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue1/bigblue1";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue1
+
+SCENARIO("bigblue2", "[bigblue2]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue2/bigblue2";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue2
+
+SCENARIO("bigblue3", "[bigblue3]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue3/bigblue3";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue3
+
+SCENARIO("bigblue4", "[bigblue4]") {
+
+    GIVEN("A .pl file and a BookshelfPlParser") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/bigblue4/bigblue4";
+
+        ifstream nodes_in(path+".nodes", ios_base::in);
+        nodes_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator nodes_iter(nodes_in), nodes_end;
+        BookshelfNodes nodes;
+
+        ifstream pl_in(path+".pl", ios_base::in);
+        pl_in.unsetf(ios::skipws);
+        boost::spirit::istream_iterator pl_iter(pl_in), pl_end;
+        BookshelfPls pls;
+
+        WHEN("we parse the input") {
+            bool nodes_ret = parse_bookshelf_node(nodes_iter, nodes_end, nodes);
+            bool pl_ret = parse_bookshelf_pl(pl_iter, pl_end, pls);
+
+            cout << "data.size " << pls.data.size() << endl;
+            cout << "nodes num " << nodes.num_nodes << endl;
+
+            THEN("we get a bunch of Bookshelf pls") {
+                REQUIRE(nodes_ret == true);
+                REQUIRE(pl_ret == true);
+                REQUIRE(pls.data.size() == nodes.data.size());
+            }
+        }
+
+        cout << endl;
+    }//end GIVEN
+
+}//end bigblue4
 

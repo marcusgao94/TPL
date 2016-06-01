@@ -8,7 +8,6 @@
 #define BOOKSHELF_NET_H
 
 #include <vector>
-#include <list>
 #include <iostream>
 
 #include "utils.h"
@@ -63,7 +62,10 @@ namespace thueda {
     struct BookshelfNets {
         unsigned int num_nets;              //!< Number of nets in .nets files
         unsigned int num_pins;              //!< Number of pins in .nets files
-        std::list<BookshelfNet> data;     //!< Vector storing all the nets in .nets files
+        std::vector<BookshelfNet> data;     //!< Vector storing all the nets in .nets files
+
+        //! Default constructor for BookshelfNets
+        BookshelfNets();
     };
 
 }//end namespace thueda
