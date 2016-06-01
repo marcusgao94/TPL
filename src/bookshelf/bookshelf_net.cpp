@@ -23,6 +23,9 @@ namespace thueda {
             case IOType::Output:
                 out << " O : ";
                 break;
+            case IOType::Bidirection:
+                out << " B : ";
+                break;
         }
         out << setw(12) << pin.dx
             << setw(12) << pin.dy;
@@ -44,6 +47,11 @@ namespace thueda {
         }
 
         return out;
+    }
+
+    BookshelfNets::BookshelfNets()
+    {
+        data.reserve(10000);
     }
 
 }//end namespace thueda
