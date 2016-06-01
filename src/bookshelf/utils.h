@@ -21,7 +21,7 @@ namespace thueda {
      * \typedef unsigned int Length
      * \brief Length type
      */
-    typedef unsigned int Length;
+    typedef int Length;
 
     /*!
      * \typedef unsigned int Coordinate 
@@ -45,7 +45,7 @@ namespace thueda {
      * \enum IOType {Output, Input};
      * \brief Pin's IO type
      */
-    enum class IOType {Output, Input};
+    enum class IOType {Output, Input, Bidirection};
 
 }
 

@@ -11,6 +11,83 @@
 
 using namespace std;
 using namespace tpl;
+SCENARIO("adaptec1", "[adaptec1]") {
+
+    GIVEN("A circuit adaptec1") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec1";
+
+        WHEN("We load the circuit") {
+            bool load_status = TplDB::db().load_circuit(path);
+
+            THEN("We get its size and cell number") {
+                REQUIRE(load_status == true);
+                REQUIRE(TplDB::db().modules.chip_width() == 11589);
+                REQUIRE(TplDB::db().modules.chip_height() == 11589);
+                REQUIRE(TplDB::db().modules.num_free() == 210904);
+            }
+        }
+    }
+}//end adaptec1
+
+/*
+SCENARIO("adaptec2", "[adaptec2]") {
+
+    GIVEN("A circuit adaptec2") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec2";
+
+        WHEN("We load the circuit") {
+            bool load_status = TplDB::db().load_circuit(path);
+
+            THEN("We get its size and cell number") {
+                REQUIRE(load_status == true);
+                REQUIRE(TplDB::db().modules.chip_width() == 15244);
+                REQUIRE(TplDB::db().modules.chip_height() == 15244);
+                REQUIRE(TplDB::db().modules.num_free() == 254457);
+            }
+        }
+    }
+}//end adaptec2
+
+SCENARIO("adaptec3", "[adaptec3]") {
+
+    GIVEN("A circuit adaptec3") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec3";
+
+        WHEN("We load the circuit") {
+            bool load_status = TplDB::db().load_circuit(path);
+
+            THEN("We get its size and cell number") {
+                REQUIRE(load_status == true);
+                REQUIRE(TplDB::db().modules.chip_width() == 23190);
+                REQUIRE(TplDB::db().modules.chip_height() == 23386);
+                REQUIRE(TplDB::db().modules.num_free() == 450927);
+            }
+        }
+    }
+}//end adaptec3
+
+SCENARIO("adaptec4", "[adaptec4]") {
+
+    GIVEN("Test case adaptec4") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec4";
+
+        WHEN("We load the circuit") {
+            bool load_status = TplDB::db().load_circuit(path);
+
+            THEN("We get its size and cell number") {
+                REQUIRE(load_status == true);
+                REQUIRE(TplDB::db().modules.chip_width() == 23226);
+                REQUIRE(TplDB::db().modules.chip_height() == 23386);
+                REQUIRE(TplDB::db().modules.num_free() == 494716);
+            }
+        }
+    }
+}//end adaptec4
+ */
 
 /*
 SCENARIO("bigblue1", "[bigblue1]") {
@@ -90,81 +167,4 @@ SCENARIO("bigblue4", "[bigblue4]") {
 }//end bigblue4
  */
 
-SCENARIO("adaptec1", "[adaptec1]") {
-
-    GIVEN("A circuit adaptec1") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec1";
-
-        WHEN("We load the circuit") {
-            bool load_status = TplDB::db().load_circuit(path);
-
-            THEN("We get its size and cell number") {
-                REQUIRE(load_status == true);
-                REQUIRE(TplDB::db().modules.chip_width() == 11589);
-                REQUIRE(TplDB::db().modules.chip_height() == 11589);
-                REQUIRE(TplDB::db().modules.num_free() == 210904);
-            }
-        }
-    }
-}//end adaptec1
-
-/*
-SCENARIO("adaptec2", "[adaptec2]") {
-
-    GIVEN("A circuit adaptec2") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec2";
-
-        WHEN("We load the circuit") {
-            bool load_status = TplDB::db().load_circuit(path);
-
-            THEN("We get its size and cell number") {
-                REQUIRE(load_status == true);
-                REQUIRE(TplDB::db().modules.chip_width() == 15244);
-                REQUIRE(TplDB::db().modules.chip_height() == 15244);
-                REQUIRE(TplDB::db().modules.num_free() == 254457);
-            }
-        }
-    }
-}//end adaptec2
-
-SCENARIO("adaptec3", "[adaptec3]") {
-
-    GIVEN("A circuit adaptec3") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec3";
-
-        WHEN("We load the circuit") {
-            bool load_status = TplDB::db().load_circuit(path);
-
-            THEN("We get its size and cell number") {
-                REQUIRE(load_status == true);
-                REQUIRE(TplDB::db().modules.chip_width() == 23190);
-                REQUIRE(TplDB::db().modules.chip_height() == 23386);
-                REQUIRE(TplDB::db().modules.num_free() == 450927);
-            }
-        }
-    }
-}//end adaptec3
-
-SCENARIO("adaptec4", "[adaptec4]") {
-
-    GIVEN("Test case adaptec4") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec4";
-
-        WHEN("We load the circuit") {
-            bool load_status = TplDB::db().load_circuit(path);
-
-            THEN("We get its size and cell number") {
-                REQUIRE(load_status == true);
-                REQUIRE(TplDB::db().modules.chip_width() == 23226);
-                REQUIRE(TplDB::db().modules.chip_height() == 23386);
-                REQUIRE(TplDB::db().modules.num_free() == 494716);
-            }
-        }
-    }
-}//end adaptec4
- */
 

@@ -1,7 +1,7 @@
 include_directories(${PROJECT_SOURCE_DIR}/tpl)
 include_directories(${PROJECT_SOURCE_DIR}/tools/rippledp)
-include_directories(${PROJECT_SOURCE_DIR}/tools/def)
 include_directories(${PROJECT_SOURCE_DIR}/tools/lef)
+include_directories(${PROJECT_SOURCE_DIR}/tools/def)
 
 #1.TplDB
 add_executable(test_tpl_db $<TARGET_OBJECTS:db_obj> test_tpl_db.cpp)

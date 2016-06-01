@@ -64,6 +64,7 @@ namespace thueda {
             using qi::double_;
             using qi::lit;
             using qi::lexeme;
+            using qi::eoi;
 
             header_rule  = lit("UCLA") >> lit("pl") >> lit("1.0");
 
@@ -74,9 +75,10 @@ namespace thueda {
             pls_rule    %= *pl_rule;
 
             start       %=
-                    header_rule        >>
-                    *comment_rule      >>
-                    pls_rule;
+                    header_rule   >>
+                    *comment_rule >>
+                    pls_rule      >>
+                    eoi;
         }
 
         static PlMoveTypeSymbolTable  pl_move_type_symbol;                        //!< Pl file symbol table

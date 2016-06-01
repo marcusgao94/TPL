@@ -68,6 +68,7 @@ namespace thueda {
             using qi::uint_;
             using qi::lit;
             using qi::lexeme;
+            using qi::eoi;
 
             header_rule  = lit("UCLA") >> lit("nodes") >> lit("1.0");
 
@@ -85,7 +86,8 @@ namespace thueda {
                     *comment_rule      >>
                     num_nodes_rule     >>
                     num_terminals_rule >>
-                    nodes_rule;
+                    nodes_rule         >>
+                    eoi;
         }
 
         static NodeMoveTypeSymbolTable  node_move_type_symbol;                        //!< Node file symbol table

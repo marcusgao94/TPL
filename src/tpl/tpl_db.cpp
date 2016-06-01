@@ -31,6 +31,7 @@ namespace tpl {
     {
         assert(bnodes.data.size() == bpls.data.size());
 
+        double width(0), height(0);
         for(size_t i=0; i<bnodes.data.size(); ++i) {
             const BookshelfNode &bnode = bnodes.data[i];
             const BookshelfPl   &bpl   = bpls.data[i];
@@ -39,10 +40,13 @@ namespace tpl {
             _id_index_map.insert( make_pair(bnode.id, i) );
 
             double right_border = bpl.x + bnode.width;
-            if(right_border>_chip_width) _chip_width  = right_border;
+            if(right_border>width) width  = right_border;
             double top_border = bpl.y + bnode.height;
-            if(top_border>_chip_height)  _chip_height = top_border;
+            if(top_border>height)  height = top_border;
         }
+
+        _chip_width  = static_cast<Length>(width);
+        _chip_height = static_cast<Length>(height);
     }
 
     TplModules::TplModules(BOOST_RV_REF(TplModules) temp) :
@@ -210,14 +214,6 @@ namespace tpl {
         _num_pins = bnets.num_pins;
 
         copy(bnets.data.begin(), bnets.data.end(), back_inserter(_netlist));
-    }
-
-    TplNets::TplNets(BookshelfNets &&bnets)
-    {
-        _num_nets = bnets.num_nets;
-        _num_pins = bnets.num_pins;
-
-        _netlist = std::move(bnets.data);
     }
 
     TplNets::TplNets(BOOST_RV_REF(TplNets) temp) :

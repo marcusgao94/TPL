@@ -36,7 +36,7 @@ BOOST_FUSION_ADAPT_STRUCT(
         thueda::BookshelfNets,
         (unsigned int,                  num_nets)
         (unsigned int,                  num_pins)
-        (std::list<thueda::BookshelfNet>, data)
+        (std::vector<thueda::BookshelfNet>, data)
 )
 
 namespace thueda {
@@ -50,6 +50,7 @@ namespace thueda {
         PinIOTypeSymbolTable() {
             add("I", IOType::Input );
             add("O", IOType::Output);
+            add("B", IOType::Bidirection);
         }
     };
 
@@ -79,6 +80,7 @@ namespace thueda {
             using qi::lit;
             using qi::lexeme;
             using qi::eol;
+            using qi::eoi;
 
             header_rule    = lit("UCLA") >> lit("nets") >> lit("1.0");
 
@@ -97,7 +99,8 @@ namespace thueda {
                     *comment_rule >>
                     num_nets_rule >>
                     num_pins_rule >>
-                    nets_rule;
+                    nets_rule     >>
+                    eoi;
         }
 
         static PinIOTypeSymbolTable pin_io_type_symbol;                             //!< Net file symbol table
