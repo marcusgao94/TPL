@@ -18,15 +18,13 @@ namespace tpl {
     class TplAbstractThermalForceModel {
     public:
         //! Default constructor.
-        explicit  TplAbstractThermalForceModel(std::shared_ptr<TplAbstractThermalModel> tmodel) : _tmodel(tmodel) {}
+        TplAbstractThermalForceModel() = default;
 
         //! Virtual destructor.
-        virtual ~TplAbstractThermalForceModel() = 0;
+        virtual ~TplAbstractThermalForceModel() {};
 
-        virtual void compute_heat_flux_vector(const std::vector<std::vector<double>> &tss, VectorXd &HFx, VectorXd &HFy) const = 0;
-
-    protected:
-        std::shared_ptr<TplAbstractThermalModel> _tmodel;
+        //! Interface for model initialization.
+        virtual bool initialize_model() = 0;
     };
 
 }
