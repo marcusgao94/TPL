@@ -1,5 +1,6 @@
 {
-  "init_grid_size": 1,
+  "bin_width": 1,
+  "bin_height": 1,
   "r1" : 1.5,
   "r2" : 5.0,
   "mu" : 10
