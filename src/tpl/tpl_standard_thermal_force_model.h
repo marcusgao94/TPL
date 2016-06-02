@@ -10,6 +10,7 @@
 #include "tpl_abstract_thermal_force_model.h"
 #include "tpl_db.h"
 #include <vector>
+#include <set>
 
 #include <memory>
 
@@ -30,7 +31,11 @@ namespace tpl {
             };
 
             bool operator < (const Segment &s) const {
-                return this->y < s.y;
+                return (y < s.y);
+            }
+
+            bool operator == (const Segment &s) const {
+                return (x1 == s.x1 && x2 == s.x2 && y == s.y && flag == s.flag);
             }
         };
 
@@ -39,6 +44,10 @@ namespace tpl {
             int low, high;
             int cover;
             double len;
+
+            Node() {
+                low = high = cover = len = 0;
+            }
 
             Node(int a, int b, int c, double d) {
                 low = a;

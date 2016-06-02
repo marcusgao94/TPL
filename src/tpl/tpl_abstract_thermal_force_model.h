@@ -21,11 +21,7 @@ namespace tpl {
         TplAbstractThermalForceModel() = default;
 
         //! Virtual destructor.
-<<<<<<< HEAD
         virtual ~TplAbstractThermalForceModel() {}
-=======
-        virtual ~TplAbstractThermalForceModel() {};
->>>>>>> b466aba5aae08fb253f4ff4a460bf80d34a2d59b
 
         //! Interface for model initialization.
         virtual bool initialize_model() = 0;

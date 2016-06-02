@@ -1,3 +1,4 @@
+#include <fstream>
 #include "tpl_standard_thermal_force_model.h"
 
 #include "tpl_db.h"
@@ -230,6 +231,8 @@ namespace tpl {
     }
 
     bool Terminate::shouldStop() {
+        using namespace std;
+
         const double STOP = 0.2;
 
         unsigned long A = 0; // total area of all modules
@@ -239,35 +242,33 @@ namespace tpl {
         pos.clear();
 
         // calculate total area and initialize segments and nodes
-        for (TplModules::iterator module_iter = TplDB::db().modules.begin();
-             module_iter != TplDB::db().modules.end(); module_iter++) {
-            A += module_iter->width * module_iter->height;
+        for (int i = 0; i < TplDB::db().modules.size(); i++) {
+            TplModule module = TplDB::db().modules[i];
+            A += module.width * module.height;
 
             // push bottom y of a module
-            Segment s(module_iter->x, module_iter->x + module_iter->width, module_iter->y, 1);
+            Segment s(module.x, module.x + module.width, module.y, 1);
             segments.push_back(s);
             // push top y of a module
-            s.y += module_iter->height;
+            s.y += module.height;
             s.flag = -1;
             segments.push_back(s);
 
             // map x to pos[index]
-            pos.push_back(module_iter->x);
-            pos.push_back(module_iter->x + module_iter->width);
+            pos.push_back(module.x);
+            pos.push_back(module.x + module.width);
         }
-
-        // sort pos
-        // delete same x, map x to pos[0] to pos[m-1]
-        int m = 0;
-        for (int i = 1; i < pos.size(); i++) {
-            if (pos[i] != pos[i - 1]) {
-                pos[m++] = pos[i];
-            }
-        }
-        sort(pos.begin(), pos.begin() + m);
 
         // sort segments
-        sort(segments.begin(), segments.begin() + m);
+        sort(segments.begin(), segments.end());
+        // delete completely overlapping modules
+        segments.erase(unique(segments.begin(), segments.end()), segments.end());
+
+        // sort pos
+        sort(pos.begin(), pos.end());
+        // delete same x, map x to pos[0] to pos[m-1]
+        pos.erase(unique(pos.begin(), pos.end()), pos.end());
+        int m = pos.size();
 
         // leaf number = m => nodes number = m + m/2 + ... + 1 = 2m - 1
         nodes.resize(2 * m - 1);
@@ -276,15 +277,24 @@ namespace tpl {
 
         // modules area union
         unsigned long res = 0;
-        for (int i = 0; i < m - 1; i++) {
+        for (int i = 0; i < segments.size() - 1; i++) {
             int low = binarySearch(0, m - 1, segments[i].x1);
             int high = binarySearch(0, m - 1, segments[i].x2);
+            if (low == -1 || high == -1) {
+                cout << "error i = " << i << endl;
+                break;
+            }
             update(low, high, segments[i].flag, 0);
-            res += nodes[0].len * (segments[i + 1].y - segments[i].y);
+            if (segments[i].y != segments[i+1].y) {
+                res += nodes[0].len * (segments[i+1].y - segments[i].y);
+            }
         }
 
+        cout << "union area = " << res << endl;
+        cout << "total area = " << A << endl;
+
         double u = 1 - double(res) / A;
-        return (u < 0.2);
+        return (u < STOP);
     }
 
     // update segment length in an interval
@@ -321,13 +331,16 @@ namespace tpl {
             update(low, mid, flag, 2 * tidx + 1);
             update(mid + 1, high, flag, 2 * tidx + 2);
         }
+        pushup(tidx);
     }
 
 
     int Terminate::binarySearch(int low, int high, double target) {
+        const double DELTA = 0.00001;
+
         while (low <= high) {
             int mid = (low + high) / 2;
-            if (pos[mid] == target) return mid;
+            if (abs(pos[mid] - target) < DELTA) return mid;
             if (pos[mid] < target)
                 low = mid + 1;
             else

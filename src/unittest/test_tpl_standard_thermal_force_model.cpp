@@ -30,14 +30,7 @@ SCENARIO("bigblue1", "[bigblue1]") {
         yhf.setZero();
 
         WHEN("We compute the chip's thermal distribution") {
-
-            tfmodel.compute_heat_flux_vector(xhf, yhf);
-
-            THEN("We get the current thermal distribution") {
-
-            }
+            // tfmodel.compute_heat_flux_vector(xhf, yhf);
         }
     }
 }//end SCENARIO
-
-
