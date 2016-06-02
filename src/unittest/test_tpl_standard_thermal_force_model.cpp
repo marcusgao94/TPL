@@ -14,11 +14,11 @@
 using namespace std;
 using namespace tpl;
 
-SCENARIO("bigblue1", "[bigblue1]") {
+SCENARIO("adaptec1", "[adaptec1]") {
 
-    GIVEN("A circuit bigblue1") {
+    GIVEN("A circuit adaptec1") {
         string path(getenv("BENCHMARK"));
-        path += "/ispd2005/bigblue1";
+        path += "/ispd2005/adaptec1";
 
         TplDB::db().load_circuit(path);
 
@@ -30,7 +30,7 @@ SCENARIO("bigblue1", "[bigblue1]") {
         yhf.setZero();
 
         WHEN("We compute the chip's thermal distribution") {
-            // tfmodel.compute_heat_flux_vector(xhf, yhf);
+             tfmodel.compute_heat_flux_vector(xhf, yhf);
         }
     }
 }//end SCENARIO
