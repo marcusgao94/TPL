@@ -32,6 +32,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
         unique_ptr<TplStandardNetModel> snm(new TplStandardNetModel());
 
 
+        /*
         WHEN("we shred macros") {
             int s1 = TplDB::db().modules.size();
 
@@ -49,6 +50,13 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
             REQUIRE(s1 == s4);
             REQUIRE(s2 == s3);
+        }
+         */
+        WHEN("we save def") {
+            string bm(path);
+            bm += "/adaptec1";
+            alg->saveDEF(bm);
+            alg->make_detail_placement(bm);
         }
 
         /*

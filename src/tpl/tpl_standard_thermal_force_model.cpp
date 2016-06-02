@@ -12,6 +12,7 @@ namespace tpl {
     double TplStandardThermalForceModel::R2 = 0;
     int    TplStandardThermalForceModel::MU = 0;
 
+
     TplStandardThermalForceModel::TplStandardThermalForceModel() : TplAbstractThermalForceModel(), _bs(64*1024*1024)
     {
         _gw_num = floor( TplDB::db().modules.chip_width()  / BIN_WIDTH );
@@ -92,6 +93,8 @@ namespace tpl {
             HFy(i) = yhf;
         }
     }
+
+
 
     void TplStandardThermalForceModel::generate_power_density() const
     {
@@ -220,5 +223,132 @@ namespace tpl {
             }
         }
     }
+
+
+    bool TplStandardThermalForceModel::shouldStop() {
+        return terminate.shouldStop();
+    }
+
+    bool Terminate::shouldStop() {
+        const double STOP = 0.2;
+
+        unsigned long A = 0; // total area of all modules
+
+        segments.clear();
+        nodes.clear();
+        pos.clear();
+
+        // calculate total area and initialize segments and nodes
+        for (TplModules::iterator module_iter = TplDB::db().modules.begin();
+             module_iter != TplDB::db().modules.end(); module_iter++) {
+            A += module_iter->width * module_iter->height;
+
+            // push bottom y of a module
+            Segment s(module_iter->x, module_iter->x + module_iter->width, module_iter->y, 1);
+            segments.push_back(s);
+            // push top y of a module
+            s.y += module_iter->height;
+            s.flag = -1;
+            segments.push_back(s);
+
+            // map x to pos[index]
+            pos.push_back(module_iter->x);
+            pos.push_back(module_iter->x + module_iter->width);
+        }
+
+        // sort pos
+        // delete same x, map x to pos[0] to pos[m-1]
+        int m = 0;
+        for (int i = 1; i < pos.size(); i++) {
+            if (pos[i] != pos[i - 1]) {
+                pos[m++] = pos[i];
+            }
+        }
+        sort(pos.begin(), pos.begin() + m);
+
+        // sort segments
+        sort(segments.begin(), segments.begin() + m);
+
+        // leaf number = m => nodes number = m + m/2 + ... + 1 = 2m - 1
+        nodes.resize(2 * m - 1);
+        // build segment tree
+        build(0, m - 1, 0);
+
+        // modules area union
+        unsigned long res = 0;
+        for (int i = 0; i < m - 1; i++) {
+            int low = binarySearch(0, m - 1, segments[i].x1);
+            int high = binarySearch(0, m - 1, segments[i].x2);
+            update(low, high, segments[i].flag, 0);
+            res += nodes[0].len * (segments[i + 1].y - segments[i].y);
+        }
+
+        double u = 1 - double(res) / A;
+        return (u < 0.2);
+    }
+
+    // update segment length in an interval
+    void Terminate::pushup(int tidx) {
+        if (nodes[tidx].cover != 0) {
+            nodes[tidx].len = pos[nodes[tidx].high] - pos[nodes[tidx].low];
+        }
+        else if (nodes[tidx].low == nodes[tidx].high) {
+            nodes[tidx].len = 0;
+        }
+        else {
+            nodes[tidx].len = pos[nodes[2 * tidx + 1].len] + pos[nodes[2 * tidx + 2].len];
+        }
+    }
+
+    // update segment cover count
+    void Terminate::update(int low, int high, int flag, int tidx) {
+        // if nodes[idx] is exactly the segment [low, high]
+        if (nodes[tidx].low == low && nodes[tidx].high == high) {
+            nodes[tidx].cover += flag;
+            pushup(tidx);
+            return ;
+        }
+        int mid = (nodes[tidx].low + nodes[tidx].high) / 2;
+        // equal or not should be identity with build()
+        // when build() the mid is belong to left child
+        if (high <= mid) {
+            update(low, high, flag, 2 * tidx + 1);
+        }
+        else if (low > mid) {
+            update(low, high, flag, 2 * tidx + 2);
+        }
+        else {
+            update(low, mid, flag, 2 * tidx + 1);
+            update(mid + 1, high, flag, 2 * tidx + 2);
+        }
+    }
+
+
+    int Terminate::binarySearch(int low, int high, double target) {
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (pos[mid] == target) return mid;
+            if (pos[mid] < target)
+                low = mid + 1;
+            else
+                high = mid - 1;
+        }
+        return -1;
+    }
+
+    void Terminate::build(int low, int high, int tidx) {
+        nodes[tidx].low = low;
+        nodes[tidx].high = high;
+        nodes[tidx].cover = 0;
+        nodes[tidx].len = 0;
+        if (low == high) return ;
+        // mid belong to left child, right child starts from mid + 1
+        // left child = 2 * idx + 1, right child = 2 * idx + 2
+        int mid = (low + high) / 2;
+        build(low, mid, 2 * tidx + 1);
+        build(mid + 1, high, 2 * tidx + 2);
+    }
+
+
 
 }//namespace tpl

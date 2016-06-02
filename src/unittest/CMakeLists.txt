@@ -82,6 +82,22 @@ target_link_libraries(test_tpl_standard_algorithm
 #		pthread
         )
 
+#8. TplStandardThermalForceAlgorithm
+set(TPL_STANDARD_THERMAL_FORCE_SRC
+		$<TARGET_OBJECTS:db_obj>
+		$<TARGET_OBJECTS:thermal_force_model_obj>
+		)
+add_executable(test_tpl_standard_thermal_force_model
+		${TPL_STANDARD_THERMAL_FORCE_SRC}
+		test_tpl_standard_thermal_force_model.cpp
+		)
+target_link_libraries(test_tpl_standard_thermal_force_model
+		bookshelf
+		${Boost_LIBRARIES} ${STXXL_LIBRARIES}
+		pthread
+		)
+
+
 
 #Checks
 add_executable(check_free_nodes_order $<TARGET_OBJECTS:db_obj> check_free_nodes_order.cpp)

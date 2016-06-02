@@ -188,13 +188,14 @@ namespace tpl {
     void TplStandardAlgorithm::saveDEF(string benchmark) {
         string name = benchmark + "_gp.def";
         FILE* fout = fopen(name.c_str(), "w");
-        int version1 = 5, version2 = 7;
+        int version1 = 5, version2 = 8;
         const char* caseSensitive = "";
         const char* dividerChar = ":";
         const char* busBitChars = "[]";
         const char* designName = benchmark.c_str();
         int res = defwInit(fout, version1, version2, caseSensitive, dividerChar,
                            busBitChars, designName, NULL, NULL, NULL, -1);
+        /*
         checkStatus(res, "init");
         res = defwVersion(version1, version2);
         checkStatus(res, "version");
@@ -204,6 +205,7 @@ namespace tpl {
         checkStatus(res, "busBitChars");
         res = defwDesignName(designName);
         checkStatus(res, "designName");
+         */
         res = defwStartComponents(TplDB::db().modules.size());
         checkStatus(res, "start components");
         for (TplModules::iterator iter = TplDB::db().modules.begin();
@@ -225,7 +227,8 @@ namespace tpl {
         const double misplacement = 150.0;
         string tech_file = benchmark + ".aux.lef";
         string cell_file = benchmark + ".aux.lef";
-        string floorplan_file = benchmark + ".aux.def";
+        // string floorplan_file = benchmark + ".aux.def";
+        string floorplan_file = benchmark + "_gp.def";
         string placed_file = benchmark + "_gp.def";
         rippledp_read((char*)tech_file.c_str(), (char*)cell_file.c_str(),
                       (char*)floorplan_file.c_str(), (char*)placed_file.c_str());
