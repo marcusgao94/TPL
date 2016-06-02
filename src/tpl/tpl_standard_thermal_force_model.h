@@ -8,10 +8,14 @@
 #define TPL_STANDARD_THERMAL_FORCE_MODEL_H
 
 #include "tpl_abstract_thermal_force_model.h"
-#include "tpl_db.h"
-#include <vector>
 
+#include "utils.h"
+#include "tpl_db.h"
+
+#include <vector>
 #include <memory>
+
+#include <stxxl/bits/containers/matrix.h>
 
 namespace tpl {
 
