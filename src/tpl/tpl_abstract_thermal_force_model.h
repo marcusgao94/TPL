@@ -7,11 +7,6 @@
 #ifndef TPL_ABSTRACT_THERMAL_FORCE_MODEL_H
 #define TPL_ABSTRACT_THERMAL_FORCE_MODEL_H
 
-#include <memory>
-
-#include "utils.h"
-#include "tpl_abstract_thermal_model.h"
-
 namespace tpl {
 
     //! Interface definition for tpl move force model.
