@@ -116,7 +116,7 @@ namespace tpl {
 
                 for(unsigned int i=idx_left; i<=idx_right; ++i) {
                     for(unsigned int j=idx_bottom; j<=idx_top; ++j) {
-                        power_density(i,j) += it->power_density;
+                        *power_density(i,j) += it->power_density;
                     }
                 }
             }
@@ -147,7 +147,7 @@ namespace tpl {
         }
 
         TMat &power_density = *_power_density;
-        return _power_density(x_idx,y_idx);
+        return *power_density(x_idx, y_idx);
     }
 
     double TplStandardThermalForceModel::green_function(int i, int j, int i0, int j0) const
@@ -161,56 +161,62 @@ namespace tpl {
         else                     return 0.6/sqrt(distance);
     }
 
-    void TplStandardThermalForceModel::generate_thermal_profile() const
-    {
+    void TplStandardThermalForceModel::generate_thermal_profile() const {
+        TMat &thermal_signature = *_thermal_signature;
 
-        _thermal_signature.set_zero();
+        thermal_signature.set_zero();
 
-        int dx = static_cast<int>( ceil(R2 / BIN_WIDTH ) );
-        int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT) );
+        int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
+        int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
 
         // compute chip grid temperatures using green function method
         double ts = 0;
         //1. compute thermal signature in the chip.
-        for (int i=0; i<=_gw_num; ++i) {
-            for (int j=0; j<=_gh_num; ++j) {
+        for (int i = 0; i <= _gw_num; ++i) {
+            for (int j = 0; j <= _gh_num; ++j) {
                 ts = 0;
-                for (int i0=i-dx; i0<=i+dx; ++i0) {
-                    for (int j0=j-dy; j0<=j+dy; ++j0) {
+                for (int i0 = i - dx; i0 <= i + dx; ++i0) {
+                    for (int j0 = j - dy; j0 <= j + dy; ++j0) {
                         ts += green_function(i, j, i0, j0) * power_density(i0, j0);
                     }
                 }
-                _thermal_signature(i+1, j+1) = ts;
+                *thermal_signature(i + 1, j + 1) = ts;
             }
         }
 
         //2. compute thermal signature around the chip.
         //bottom and top side
-        for (int i=0; i<=_gw_num; ++i) {
-            _thermal_signature(i, 0) = _thermal_signature(i, 2);
-            _thermal_signature(i, _gh_num+2) = _thermal_signature(i, _gh_num);
+        for (int i = 0; i <= _gw_num; ++i) {
+            *thermal_signature(i, 0) = *thermal_signature(i, 2);
+            *thermal_signature(i, _gh_num + 2) = *thermal_signature(i, _gh_num);
         }
 
         //left and right side
-        for (int j=0; j<=_gh_num; ++j) {
-            _thermal_signature(0, j) = _thermal_signature(2, j);
-            _thermal_signature(_gw_num+2, j) = _thermal_signature(_gw_num, j);
+        for (int j = 0; j <= _gh_num; ++j) {
+            *thermal_signature(0, j) = *thermal_signature(2, j);
+            *thermal_signature(_gw_num + 2, j) = *thermal_signature(_gw_num, j);
         }
 
         //four corners
-        _thermal_signature(0, 0) = _thermal_signature(2, 2);//ll
-        _thermal_signature(_gw_num+2, 0) = _thermal_signature(_gw_num, 2); //lr
-        _thermal_signature(_gw_num+2, _gh_num+2) = _thermal_signature(_gw_num, _gh_num);//tr
-        _thermal_signature(0, _gh_num) = _thermal_signature(2, _gh_num-2);//tl
+        *thermal_signature(0, 0) = *thermal_signature(2, 2);//ll
+        *thermal_signature(_gw_num + 2, 0) = *thermal_signature(_gw_num, 2); //lr
+        *thermal_signature(_gw_num + 2, _gh_num + 2) = *thermal_signature(_gw_num, _gh_num);//tr
+        *thermal_signature(0, _gh_num) = *thermal_signature(2, _gh_num - 2);//tl
     }
 
-    void TplStandardThermalForceModel::generate_heat_flux_grid()
+
+    void TplStandardThermalForceModel::generate_heat_flux_grid() const
     {
+        //aliases
+        TMat & xhf_grid = *_xhf_grid;
+        TMat & yhf_grid = *_yhf_grid;
+        TMat & thermal_signature = *_thermal_signature;
+
         //compute x and y direction head flux using finite difference method
         for (int i=0; i<=_gw_num; ++i) {
             for (int j=0; j<=_gh_num; ++j) {
-                _xhf_grid(i, j) = (_thermal_signature(i+2, j+1) - _thermal_signature(i, j+1)) / 2;
-                _yhf_grid(i, j) = (_thermal_signature(i+1, j+2) - _thermal_signature(i+1, j)) / 2;
+                *xhf_grid(i, j) = (*thermal_signature(i+2, j+1) - *thermal_signature(i, j+1)) / 2;
+                *yhf_grid(i, j) = (*thermal_signature(i+1, j+2) - *thermal_signature(i+1, j)) / 2;
             }
         }
     }

@@ -11,6 +11,7 @@
 #include "tpl_db.h"
 #include "tpl_standard_thermal_force_model.h"
 
+using namespace std;
 using namespace tpl;
 
 SCENARIO("bigblue1", "[bigblue1]") {

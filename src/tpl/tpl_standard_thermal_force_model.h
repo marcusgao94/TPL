@@ -32,7 +32,6 @@ namespace tpl {
         //! Standard implementation for compute_head_flux_vector.
         void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux) const;
 
-
     protected:
         //! Generate the power density.
         void generate_power_density() const;
