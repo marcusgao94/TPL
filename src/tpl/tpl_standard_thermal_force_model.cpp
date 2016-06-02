@@ -84,19 +84,23 @@ namespace tpl {
     }
 
     bool Terminate::shouldStop() {
-        unsigned long A = 0;
+        const double STOP = 0.2;
+
+        unsigned long A = 0; // total area of all modules
+
         segments.clear();
         nodes.clear();
         pos.clear();
+
         // calculate total area and initialize segments and nodes
         for (TplModules::iterator module_iter = TplDB::db().modules.begin();
              module_iter != TplDB::db().modules.end(); module_iter++) {
             A += module_iter->width * module_iter->height;
 
-            // push first y
+            // push bottom y of a module
             Segment s(module_iter->x, module_iter->x + module_iter->width, module_iter->y, 1);
             segments.push_back(s);
-            // push second y
+            // push top y of a module
             s.y += module_iter->height;
             s.flag = -1;
             segments.push_back(s);
@@ -124,46 +128,52 @@ namespace tpl {
         // build segment tree
         build(0, m - 1, 0);
 
+        // modules area union
         unsigned long res = 0;
-        for (int i = 0; i < m; i++) {
+        for (int i = 0; i < m - 1; i++) {
             int low = binarySearch(0, m - 1, segments[i].x1);
             int high = binarySearch(0, m - 1, segments[i].x2);
+            update(low, high, segments[i].flag, 0);
+            res += nodes[0].len * (segments[i + 1].y - segments[i].y);
         }
 
-
-        return true;
+        double u = 1 - double(res) / A;
+        return u < 0.2;
     }
 
-    void Terminate::pushup(int idx) {
-        if (nodes[idx].cover != 0) {
-            nodes[idx].len = pos[nodes[idx].high] - pos[nodes[idx].low];
+    // update segment length in an interval
+    void Terminate::pushup(int tidx) {
+        if (nodes[tidx].cover != 0) {
+            nodes[tidx].len = pos[nodes[tidx].high] - pos[nodes[tidx].low];
         }
-        else if (nodes[idx].low == nodes[idx].high) {
-            nodes[idx].len = 0;
+        else if (nodes[tidx].low == nodes[tidx].high) {
+            nodes[tidx].len = 0;
         }
         else {
-            nodes[idx].len = pos[nodes[2 * idx + 1].high] - pos[nodes[2 * idx + 2].low];
+            nodes[tidx].len = pos[nodes[2 * tidx + 1].len] + pos[nodes[2 * tidx + 2].len];
         }
     }
 
-    void Terminate::update(int low, int high, int flag, int idx) {
+    // update segment cover count
+    void Terminate::update(int low, int high, int flag, int tidx) {
         // if nodes[idx] is exactly the segment [low, high]
-        if (nodes[idx].low == low && nodes[idx].high == high) {
-            nodes[idx].cover += flag;
-            pushup(idx);
+        if (nodes[tidx].low == low && nodes[tidx].high == high) {
+            nodes[tidx].cover += flag;
+            pushup(tidx);
             return ;
         }
-        // with problems
-        int mid = (nodes[idx].low + nodes[idx].high) / 2;
+        int mid = (nodes[tidx].low + nodes[tidx].high) / 2;
+        // equal or not should be identity with build()
+        // when build() the mid is belong to left child
         if (high <= mid) {
-            update(low, high, flag, 2 * idx + 1);
+            update(low, high, flag, 2 * tidx + 1);
         }
         else if (low > mid) {
-            update(low, high, flag, 2 * idx + 2);
+            update(low, high, flag, 2 * tidx + 2);
         }
         else {
-            update(low, high, flag, 2 * idx + 1);
-            update(low, high, flag, 2 * idx + 2);
+            update(low, mid, flag, 2 * tidx + 1);
+            update(mid + 1, high, flag, 2 * tidx + 2);
         }
     }
 
@@ -180,17 +190,17 @@ namespace tpl {
         return -1;
     }
 
-    void Terminate::build(int low, int high, int idx) {
-        nodes[idx].low = low;
-        nodes[idx].high = high;
-        nodes[idx].cover = 0;
-        nodes[idx].len = 0;
+    void Terminate::build(int low, int high, int tidx) {
+        nodes[tidx].low = low;
+        nodes[tidx].high = high;
+        nodes[tidx].cover = 0;
+        nodes[tidx].len = 0;
         if (low == high) return ;
+        // mid belong to left child, right child starts from mid + 1
+        // left child = 2 * idx + 1, right child = 2 * idx + 2
         int mid = (low + high) / 2;
-        // left child = 2 * idx + 1
-        build(low, mid, 2 * idx + 1);
-        // right child = 2 * idx + 2
-        build(mid + 1, high, 2 * idx + 2);
+        build(low, mid, 2 * tidx + 1);
+        build(mid + 1, high, 2 * tidx + 2);
     }
 
 
