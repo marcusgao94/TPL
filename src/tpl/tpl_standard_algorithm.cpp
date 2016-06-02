@@ -235,5 +235,139 @@ namespace tpl {
         rippledp(density, misplacement);
     }
 
+
+    bool Terminate::shouldStop() {
+        using namespace std;
+
+        const double STOP = 0.2;
+
+        unsigned long A = 0; // total area of all modules
+
+        segments.clear();
+        nodes.clear();
+        pos.clear();
+
+        // calculate total area and initialize segments and nodes
+        for (int i = 0; i < TplDB::db().modules.size(); i++) {
+            TplModule module = TplDB::db().modules[i];
+            A += module.width * module.height;
+
+            // push bottom y of a module
+            Segment s(module.x, module.x + module.width, module.y, 1);
+            segments.push_back(s);
+            // push top y of a module
+            s.y += module.height;
+            s.flag = -1;
+            segments.push_back(s);
+
+            // map x to pos[index]
+            pos.push_back(module.x);
+            pos.push_back(module.x + module.width);
+        }
+
+        // sort segments
+        sort(segments.begin(), segments.end());
+        // delete completely overlapping modules
+        segments.erase(unique(segments.begin(), segments.end()), segments.end());
+
+        // sort pos
+        sort(pos.begin(), pos.end());
+        // delete same x, map x to pos[0] to pos[m-1]
+        pos.erase(unique(pos.begin(), pos.end()), pos.end());
+        int m = pos.size();
+
+        // leaf number = m => nodes number = m + m/2 + ... + 1 = 2m - 1
+        nodes.resize(2 * m - 1);
+        // build segment tree
+        build(0, m - 1, 0);
+
+        // modules area union
+        unsigned long res = 0;
+        for (int i = 0; i < segments.size() - 1; i++) {
+            int low = binarySearch(0, m - 1, segments[i].x1);
+            int high = binarySearch(0, m - 1, segments[i].x2);
+            if (low == -1 || high == -1) {
+                cout << "error i = " << i << endl;
+                break;
+            }
+            update(low, high, segments[i].flag, 0);
+            if (segments[i].y != segments[i+1].y) {
+                res += nodes[0].len * (segments[i+1].y - segments[i].y);
+            }
+        }
+
+        cout << "union area = " << res << endl;
+        cout << "total area = " << A << endl;
+
+        double u = 1 - double(res) / A;
+        cout << "u = " << u << endl;
+        return (u < STOP);
+    }
+
+    // update segment length in an interval
+    void Terminate::pushup(int tidx) {
+        if (nodes[tidx].cover != 0) {
+            nodes[tidx].len = pos[nodes[tidx].high] - pos[nodes[tidx].low];
+        }
+        else if (nodes[tidx].low == nodes[tidx].high) {
+            nodes[tidx].len = 0;
+        }
+        else {
+            nodes[tidx].len = pos[nodes[2 * tidx + 1].len] + pos[nodes[2 * tidx + 2].len];
+        }
+    }
+
+    // update segment cover count
+    void Terminate::update(int low, int high, int flag, int tidx) {
+        // if nodes[idx] is exactly the segment [low, high]
+        if (nodes[tidx].low == low && nodes[tidx].high == high) {
+            nodes[tidx].cover += flag;
+            pushup(tidx);
+            return ;
+        }
+        int mid = (nodes[tidx].low + nodes[tidx].high) / 2;
+        // equal or not should be identity with build()
+        // when build() the mid is belong to left child
+        if (high <= mid) {
+            update(low, high, flag, 2 * tidx + 1);
+        }
+        else if (low > mid) {
+            update(low, high, flag, 2 * tidx + 2);
+        }
+        else {
+            update(low, mid, flag, 2 * tidx + 1);
+            update(mid + 1, high, flag, 2 * tidx + 2);
+        }
+        pushup(tidx);
+    }
+
+
+    int Terminate::binarySearch(int low, int high, double target) {
+        const double DELTA = 0.00001;
+
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (abs(pos[mid] - target) < DELTA) return mid;
+            if (pos[mid] < target)
+                low = mid + 1;
+            else
+                high = mid - 1;
+        }
+        return -1;
+    }
+
+    void Terminate::build(int low, int high, int tidx) {
+        nodes[tidx].low = low;
+        nodes[tidx].high = high;
+        nodes[tidx].cover = 0;
+        nodes[tidx].len = 0;
+        if (low == high) return ;
+        // mid belong to left child, right child starts from mid + 1
+        // left child = 2 * idx + 1, right child = 2 * idx + 2
+        int mid = (low + high) / 2;
+        build(low, mid, 2 * tidx + 1);
+        build(mid + 1, high, 2 * tidx + 2);
+    }
+
 }//end namespace tpl
 

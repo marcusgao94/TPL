@@ -31,6 +31,10 @@ SCENARIO("adaptec1", "[adaptec1]") {
         unique_ptr<TplStandardAlgorithm> alg(new TplStandardAlgorithm());
         unique_ptr<TplStandardNetModel> snm(new TplStandardNetModel());
 
+        WHEN("we should stop") {
+            bool b = alg->terminate.shouldStop();
+            REQUIRE(b == true);
+        }
 
         /*
         WHEN("we shred macros") {
@@ -51,14 +55,6 @@ SCENARIO("adaptec1", "[adaptec1]") {
             REQUIRE(s1 == s4);
             REQUIRE(s2 == s3);
         }
-         */
-        WHEN("we save def") {
-            string bm(path);
-            bm += "/adaptec1";
-            alg->saveDEF(bm);
-            alg->make_detail_placement(bm);
-        }
-
         /*
         WHEN("we compute the first net's weight") {
             NetWeight x_net_weight, y_net_weight;

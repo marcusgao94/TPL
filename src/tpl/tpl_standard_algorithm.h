@@ -19,6 +19,61 @@
 
 namespace tpl {
 
+    // standard implementation of global placement stop condition
+    class Terminate {
+    public:
+        class Segment {
+        public:
+            double x1, x2, y;
+            int flag;
+
+            Segment(double a, double b, double c, int f){
+                x1 = a;
+                x2 = b;
+                y = c;
+                flag = f;
+            };
+
+            bool operator < (const Segment &s) const {
+                return y < s.y;
+            }
+
+            bool operator == (const Segment &s) const {
+                return (x1 == s.x1 && x2 == s.x2 && y == s.y && flag == s.flag);
+            }
+        };
+
+        class Node {
+        public:
+            int low, high;
+            int cover;
+            double len;
+
+            Node() {
+                low = high = cover = len = 0;
+            }
+
+            Node(int a, int b, int c, double d) {
+                low = a;
+                high = b;
+                cover = c;
+                len = d;
+            }
+        };
+
+        void pushup(int idx);
+        void update(int l, int h, int flag, int idx);
+        int binarySearch(int low, int high, double target);
+        void build(int low, int high, int idx);
+        bool shouldStop();
+
+
+    private:
+        std::vector<Segment> segments;
+        std::vector<Node> nodes;
+        std::vector<double> pos;
+    };
+
     //! Standard implementation for tpl algorithm.
     class TplStandardAlgorithm : public TplAbstractAlgorithm {
     public:
@@ -55,6 +110,8 @@ namespace tpl {
 		 */
         virtual void make_detail_placement(std::string benchmark);
 
+        Terminate terminate;
+
     protected:
         void initialize_move_force_matrix();
         void update_move_force_matrix();
@@ -64,6 +121,8 @@ namespace tpl {
         VectorXd HFx, HFy;
         SpMat Cx0, Cy0;
     };
+
+
 
 }//end namespace tpl
 

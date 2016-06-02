@@ -19,51 +19,7 @@
 
 namespace tpl {
 
-    class Terminate {
-    public:
-        class Segment {
-        public:
-            double x1, x2, y;
-            int flag;
 
-            Segment(double a, double b, double c, int f){
-                x1 = a;
-                x2 = b;
-                y = c;
-                flag = f;
-            };
-
-            bool operator < (const Segment &s) const {
-                return this->y < s.y;
-            }
-        };
-
-        class Node {
-        public:
-            int low, high;
-            int cover;
-            double len;
-
-            Node(int a, int b, int c, double d) {
-                low = a;
-                high = b;
-                cover = c;
-                len = d;
-            }
-        };
-
-        void pushup(int idx);
-        void update(int l, int h, int flag, int idx);
-        int binarySearch(int low, int high, double target);
-        void build(int low, int high, int idx);
-        bool shouldStop();
-
-
-    private:
-        std::vector<Segment> segments;
-        std::vector<Node> nodes;
-        std::vector<double> pos;
-    };
 
     /*!
      * \typedef stxxl::matrix<double, 64> TMat;
@@ -84,14 +40,8 @@ namespace tpl {
         //! Standard implementation for compute_head_flux_vector.
         void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux) const;
 
-        //! Stop condition for global placement
-        virtual bool shouldStop();
-
     private:
         static const int TIMES;
-
-        // member used by shouldStop()
-        Terminate terminate;
 
     protected:
         //! Generate the power density.
