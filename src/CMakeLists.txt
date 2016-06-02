@@ -9,11 +9,6 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message("OS is Linux!!!")
 endif()
 
-#build flags setting
-set(CMAKE_CXX_FLAGS         "$ENV{CXXFLAGS} -Wall -std=c++11")
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS} -O0 -g -ggdb")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
-
 #output directory setting
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH    ${PROJECT_BINARY_DIR}/lib)
@@ -33,12 +28,19 @@ endif(Boost_FOUND)
 #stxxl setting
 find_package(STXXL REQUIRED)
 if(STXXL_FOUND)
+    message(STATUS "STXXL_CXX_FLAGS: ${STXXL_CXX_FLAGS}")
+    message(STATUS "STXXL_INCLUDE_DIRS: ${STXXL_INCLUDE_DIRS}")
     message(STATUS "STXXL LIB : ${STXXL_LIBRARIES}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
     include_directories(SYSTEM ${STXXL_INCLUDE_DIRS})
 else(STXXL_FOUND)
     message("stxxl not found!")
 endif(STXXL_FOUND)
 
+#build flags setting
+set(CMAKE_CXX_FLAGS         "$ENV{CXXFLAGS} -Wall -std=c++11")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS} -O0 -g -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 
 #subdirs
 add_subdirectory(bookshelf)

@@ -13,7 +13,6 @@ namespace tpl {
     {
         _net_model           = shared_ptr<TplAbstractNetModel>(         new TplStandardNetModel);
         _net_force_model     = shared_ptr<TplAbstractNetForceModel>(    new TplStandardNetForceModel);
-//        _thermal_model       = shared_ptr<TplAbstractThermalModel>(     new TplStandardThermalModel());
         _thermal_force_model = shared_ptr<TplAbstractThermalForceModel>(new TplStandardThermalForceModel);
     }
 
