@@ -26,7 +26,6 @@ namespace tpl {
         //! Interface for computing heat flux vector in both x and y direction.
         virtual void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux) = 0;
     };
-
 }
 
 #endif //TPL_ABSTRACT_THERMAL_FORCE_MODEL_H
