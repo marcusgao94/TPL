@@ -8,6 +8,9 @@
 #define TPL_STANDARD_ALGORITHM_H
 
 #include "tpl_abstract_algorithm.h"
+
+#include <memory>
+
 #include "tpl_standard_net_model.h"
 #include "tpl_standard_net_force_model.h"
 #include "tpl_standard_thermal_force_model.h"
@@ -78,7 +81,7 @@ namespace tpl {
     class TplStandardAlgorithm : public TplAbstractAlgorithm {
     public:
         //! Constructor.
-        TplStandardAlgorithm() = default;
+        TplStandardAlgorithm();
 
         //! Virtual destructor.
         virtual ~TplStandardAlgorithm() {}
@@ -115,6 +118,10 @@ namespace tpl {
     protected:
         void initialize_move_force_matrix();
         void update_move_force_matrix();
+
+        std::shared_ptr<TplAbstractNetModel>          _net_model;           //!< Pointer to a TplNetModel.
+        std::shared_ptr<TplAbstractNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.
+        std::shared_ptr<TplAbstractThermalForceModel> _thermal_force_model; //!< Pointer to a TplThermalForceModel.
 
         NetWeight NWx, NWy;
         SpMat Cx,  Cy;

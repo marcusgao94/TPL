@@ -9,11 +9,27 @@ if (status) { \
 namespace tpl {
     using namespace std;
 
+    TplStandardAlgorithm::TplStandardAlgorithm()
+    {
+       initialize_models();
+
+        const unsigned &msize = TplDB::db().modules.num_free();
+
+        Cx  = SpMat(msize, msize);
+        Cy  = SpMat(msize, msize);
+
+        Cx0 = SpMat(msize, msize);
+        Cy0 = SpMat(msize, msize);
+
+        HFx.resize(msize);
+        HFy.resize(msize);
+    }
+
     void TplStandardAlgorithm::initialize_models()
     {
-        _net_model           = shared_ptr<TplAbstractNetModel>(         new TplStandardNetModel);
-        _net_force_model     = shared_ptr<TplAbstractNetForceModel>(    new TplStandardNetForceModel);
-        _thermal_force_model = shared_ptr<TplAbstractThermalForceModel>(new TplStandardThermalForceModel);
+        _net_model           = make_shared<TplStandardNetModel>();
+        _net_force_model     = make_shared<TplStandardNetForceModel>();
+        _thermal_force_model = make_shared<TplStandardThermalForceModel>();
     }
 
     void TplStandardAlgorithm::shred() {
@@ -153,6 +169,34 @@ namespace tpl {
 
     void TplStandardAlgorithm::make_global_placement()
     {
+        const unsigned &msize = TplDB::db().modules.num_free();
+
+        initialize_move_force_matrix();//compute Cx0 and Cy0
+        VectorXd dx(msize), dy(msize);
+        VectorXd rhsx(msize), rhsy(msize);
+
+        while (!terminate.shouldStop()) {
+            _net_model->compute_net_weight(NWx, NWy);
+            _net_force_model->compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);//compute Cx and Cy
+            _thermal_force_model->compute_heat_flux_vector(HFx, HFy);//Compute HFx and HFy
+
+            LLTSolver llt;
+
+            rhsx = Cx0*HFx*-1;
+            rhsy = Cy0*HFy*-1;
+            VectorXd delta_x = llt.compute(Cx+Cx0).solve(rhsx);
+            VectorXd delta_y = llt.compute(Cy+Cy0).solve(rhsy);
+
+
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //the following code breaks the incapsulation, but more quickly, please note!!!
+            for (unsigned i=0; i<msize; ++i) {
+                TplDB::db().modules[i].x += delta_x(i);
+                TplDB::db().modules[i].y += delta_y(i);
+            }
+
+            update_move_force_matrix();//udpate Cx0 and Cy0
+        }
 
     }
 

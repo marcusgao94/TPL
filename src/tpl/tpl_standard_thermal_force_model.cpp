@@ -85,7 +85,7 @@ namespace tpl {
         }
     }
 
-    void TplStandardThermalForceModel::compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy) const
+    void TplStandardThermalForceModel::compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy)
     {
         cout << "begin compute heat flux vector" << endl;
         std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -164,7 +164,7 @@ namespace tpl {
 
 
 
-    void TplStandardThermalForceModel::generate_power_density() const
+    void TplStandardThermalForceModel::generate_power_density()
     {
         TMat &power_density = *_power_density;
         try {
@@ -196,7 +196,7 @@ namespace tpl {
         }
     }
 
-    double TplStandardThermalForceModel::power_density(int i, int j) const
+    double TplStandardThermalForceModel::power_density(int i, int j)
     {
         assert(-_gw_num-1 <= i && i <= 2*_gw_num+1);
         assert(-_gh_num-1 <= j && j <= 2*_gh_num+1);
@@ -221,7 +221,7 @@ namespace tpl {
         return *power_density(x_idx, y_idx);
     }
 
-    double TplStandardThermalForceModel::green_function(int i, int j, int i0, int j0) const
+    double TplStandardThermalForceModel::green_function(int i, int j, int i0, int j0)
     {
         if(i==i0 && j==j0) return 0;
 
@@ -232,7 +232,7 @@ namespace tpl {
         else                     return 0.6/sqrt(distance);
     }
 
-    void TplStandardThermalForceModel::generate_thermal_profile() const {
+    void TplStandardThermalForceModel::generate_thermal_profile() {
         TMat &thermal_signature = *_thermal_signature;
 
         thermal_signature.set_zero();
@@ -290,7 +290,7 @@ namespace tpl {
     }
 
 
-    void TplStandardThermalForceModel::generate_heat_flux_grid() const
+    void TplStandardThermalForceModel::generate_heat_flux_grid()
     {
         //aliases
         TMat & xhf_grid = *_xhf_grid;

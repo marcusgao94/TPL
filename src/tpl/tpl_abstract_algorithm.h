@@ -7,8 +7,6 @@
 #ifndef TPL_ABSTRACT_ALGORITHM_H
 #define TPL_ABSTRACT_ALGORITHM_H
 
-#include <memory>
-
 #include "tpl_abstract_net_model.h"
 #include "tpl_abstract_net_force_model.h"
 #include "tpl_abstract_thermal_force_model.h"
@@ -25,10 +23,7 @@ namespace tpl {
     //! Interface definition for tpl algorithm.
     class TplAbstractAlgorithm {
     public:
-        //! Default constructor.
-        TplAbstractAlgorithm() : _net_model(nullptr), _net_force_model(nullptr), _thermal_force_model(nullptr) {}
-
-        //! Pure virtual destructor.
+        //! Virtual destructor.
         virtual ~TplAbstractAlgorithm() {}
 
         //! Interface for initializing the force models.
@@ -42,42 +37,6 @@ namespace tpl {
 
         //! Interface for detail placement.
         virtual void make_detail_placement(std::string benchmark) = 0;
-
-        const std::shared_ptr<TplAbstractNetModel> &net_model() const
-        {
-            return _net_model;
-        }
-
-        std::shared_ptr<TplAbstractNetModel> &net_model()
-        {
-            return _net_model;
-        }
-
-        const std::shared_ptr<TplAbstractNetForceModel> &net_force_model() const
-        {
-            return _net_force_model;
-        }
-
-        std::shared_ptr<TplAbstractNetForceModel> &net_force_model()
-        {
-            return _net_force_model;
-        }
-
-        const std::shared_ptr<TplAbstractThermalForceModel> &thermal_force_model() const
-        {
-            return _thermal_force_model;
-        }
-
-        std::shared_ptr<TplAbstractThermalForceModel> &thermal_force_model()
-        {
-            return _thermal_force_model;
-        }
-
-    protected:
-        std::shared_ptr<TplAbstractNetModel>          _net_model;           //!< Pointer to a TplNetModel.
-        std::shared_ptr<TplAbstractNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.
-//        std::shared_ptr<TplAbstractThermalModel>      _thermal_model;       //!< Pointer to a TplThermalModel.
-        std::shared_ptr<TplAbstractThermalForceModel> _thermal_force_model; //!< Pointer to a TplMoveForceModel.
     };
 
 }

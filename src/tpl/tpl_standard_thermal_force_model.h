@@ -40,21 +40,21 @@ namespace tpl {
         bool initialize_model();
 
         //! Standard implementation for compute_head_flux_vector.
-        void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux) const;
+        void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux);
 
 //    private:
 //        static const int TIMES;
 
-//    protected:
+    protected:
         //! Generate the power density.
-        void generate_power_density() const;
+        void generate_power_density();
 
         //! Fetch power density for grid (i,j).
         /*!
          * \param i x index for power density.
          * \param j y index for power density.
          */
-        double power_density(int i, int j) const;
+        double power_density(int i, int j);
 
         //! Compute green function for head conduction equation.
         /*!
@@ -63,13 +63,13 @@ namespace tpl {
          * \param i0  x index for green function's second point.
          * \param j0  y index for green function's second point.
          */
-        double green_function(int i, int j, int i0, int j0) const;
+        double green_function(int i, int j, int i0, int j0);
 
         //! Generate the thermal profile of the chip.
-        void generate_thermal_profile() const;
+        void generate_thermal_profile();
 
         //! Generate heat flux grid for both x and y direction.
-        void generate_heat_flux_grid() const;
+        void generate_heat_flux_grid();
 
         int _gw_num;     //!< Number of bin in x direction.
         int _gh_num;     //!< Number of bin in y direction.
