@@ -12,6 +12,8 @@
 #include "utils.h"
 #include "tpl_db.h"
 
+#include <map>
+#include <utility>
 #include <vector>
 #include <memory>
 
@@ -40,10 +42,10 @@ namespace tpl {
         //! Standard implementation for compute_head_flux_vector.
         void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux) const;
 
-    private:
-        static const int TIMES;
+//    private:
+//        static const int TIMES;
 
-    protected:
+//    protected:
         //! Generate the power density.
         void generate_power_density() const;
 
@@ -77,6 +79,8 @@ namespace tpl {
         std::shared_ptr<TMat> _thermal_signature; //!< Thermal profile for the chip.
         std::shared_ptr<TMat> _xhf_grid; //!< Heat flux grid in x direction.
         std::shared_ptr<TMat> _yhf_grid; //!< Heat flux grid in y direction.
+
+        std::shared_ptr< std::vector< std::vector<double> > > _green_function;
 
         static double BIN_WIDTH;  //!< A grid bin's width.
         static double BIN_HEIGHT; //!< A grid bin's height.
