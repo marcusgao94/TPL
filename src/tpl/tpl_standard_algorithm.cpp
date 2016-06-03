@@ -226,7 +226,7 @@ namespace tpl {
 
     void TplStandardAlgorithm::update_move_force_matrix()
     {
-
+        const double UT = 1;
     }
 
     void TplStandardAlgorithm::saveDEF(string benchmark) {
