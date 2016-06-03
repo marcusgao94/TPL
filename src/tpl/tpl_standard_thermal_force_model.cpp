@@ -27,21 +27,20 @@ namespace tpl {
     {
         initialize_model();
 
+
         _gw_num = floor( TplDB::db().modules.chip_width()  / BIN_WIDTH );
         _gh_num = floor( TplDB::db().modules.chip_height() / BIN_HEIGHT );
+
+        BIN_WIDTH  = TplDB::db().modules.chip_width()  * 1.0 / _gw_num;
+        BIN_HEIGHT = TplDB::db().modules.chip_height() * 1.0 / _gh_num;
 
         _power_density     = make_shared<TMat>(_bs, _gw_num+1, _gh_num+1);
         _thermal_signature = make_shared<TMat>(_bs, _gw_num+3, _gh_num+3);
         _xhf_grid          = make_shared<TMat>(_bs, _gw_num+1, _gh_num+1);
         _yhf_grid          = make_shared<TMat>(_bs, _gw_num+1, _gh_num+1);
 
-
-//        cout << "R1 " << R1 << " " << "R2 " << R2 << endl;
-
         int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
         int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
-
-//        cout << "dx " << dx << " " << "dy " << dy << endl;
 
         _green_function    = make_shared< vector< vector<double> > >(dx, vector<double>(dy, 0));
 
@@ -65,15 +64,6 @@ namespace tpl {
                 _green_function->at(i).at(j) = green_func_val;
             }
         }
-
-        /*
-        for (int i=dx-1; i>=0; --i) {
-            for (int j=0; j<dy; ++j) {
-                cout << std::setw(10) << std::setprecision(8)  << _green_function->at(i).at(j) << " ";
-            }
-            cout << endl;
-        }
-         */
     }
 
     bool TplStandardThermalForceModel::initialize_model()
@@ -105,43 +95,43 @@ namespace tpl {
         assert(HFx.rows() == TplDB::db().modules.num_free());
         assert(HFy.rows() == TplDB::db().modules.num_free());
 
-        cout << "begin generate power density " << endl;
-        start = std::chrono::system_clock::now();
+//        cout << "begin generate power density " << endl;
+//        start = std::chrono::system_clock::now();
 
         generate_power_density();
 
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end-start;
-        cout << "generate power density " << elapsed_seconds.count() << " seconds" << endl;
+//        end = std::chrono::system_clock::now();
+//        elapsed_seconds = end-start;
+//        cout << "generate power density " << elapsed_seconds.count() << " seconds" << endl;
 
-        cout << "begin generate thermal profile" << endl;
-        start = std::chrono::system_clock::now();
+//        cout << "begin generate thermal profile" << endl;
+//        start = std::chrono::system_clock::now();
 
         generate_thermal_profile();
 
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end-start;
-        cout << "generate thermal profile " << elapsed_seconds.count() << " seconds" << endl;
+//        end = std::chrono::system_clock::now();
+//        elapsed_seconds = end-start;
+//        cout << "generate thermal profile " << elapsed_seconds.count() << " seconds" << endl;
 
 
-        cout << "begin generate heat flux grid" << endl;
-        start = std::chrono::system_clock::now();
+//        cout << "begin generate heat flux grid" << endl;
+//        start = std::chrono::system_clock::now();
 
         generate_heat_flux_grid();
 
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end-start;
-        cout << "generate flux grid " << elapsed_seconds.count() << " seconds" << endl;
+//        end = std::chrono::system_clock::now();
+//        elapsed_seconds = end-start;
+//        cout << "generate flux grid " << elapsed_seconds.count() << " seconds" << endl;
 
-        HFx = VectorXd::Zero(TplDB::db().modules.num_free());
-        HFy = VectorXd::Zero(TplDB::db().modules.num_free());
+//        HFx = VectorXd::Zero(TplDB::db().modules.num_free());
+//        HFy = VectorXd::Zero(TplDB::db().modules.num_free());
 
         //compute module heat flux using bilinear interpolation method
         double x=0, y=0;//for module's coordinates
         int idx_x=0, idx_y=0;//for (x,y)'s containing grid point index
         double x1=0, x2=0, y1=0, y2=0;//for (x,y)'s containing grid coordinates
         double xhf=0, yhf=0;//for x and y heat flux value
-        for(size_t i=0; i!=TplDB::db().modules.size(); ++i) {
+        for(size_t i=0; i!=TplDB::db().modules.num_free(); ++i) {
             x = TplDB::db().modules[i].x + TplDB::db().modules[i].width/2.0;  //module center x
             y = TplDB::db().modules[i].y + TplDB::db().modules[i].height/2.0; //module center y
 
@@ -170,8 +160,6 @@ namespace tpl {
             HFx(i) = xhf;
             HFy(i) = yhf;
         }
-
-        cout << "end compute heat flux vector" << endl;
     }
 
 
@@ -249,10 +237,11 @@ namespace tpl {
 
         thermal_signature.set_zero();
 
-        int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
-        int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
-//        const int & green_func_window_width  = _green_function->size();
-//        const int & green_func_window_height = _green_function->at(0).size();
+//        int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
+//        int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
+
+        const int & green_func_window_width  = _green_function->size();
+        const int & green_func_window_height = _green_function->at(0).size();
 
         // compute chip grid temperatures using green function method
         double ts = 0;
@@ -260,19 +249,20 @@ namespace tpl {
         for (int i = 0; i <= _gw_num; ++i) {
             for (int j = 0; j <= _gh_num; ++j) {
                 ts = 0;
+
+                /*
                 for (int i0 = i - dx; i0 <= i + dx; ++i0) {
                     for (int j0 = j - dy; j0 <= j + dy; ++j0) {
                         ts += green_function(i, j, i0, j0) * power_density(i0, j0);
                     }
                 }
+                 */
 
-                /*
                 for (int dx = -green_func_window_width+1; dx<green_func_window_width; ++dx) {
                     for (int dy = -green_func_window_height+1; dy<green_func_window_height; ++dy) {
                         ts += _green_function->at(abs(dx)).at(abs(dy)) * power_density(i+dx, j+dy);
                     }
                 }
-                 */
 
 //                cout << "thermal for " << i << " " << j << endl;
                 *thermal_signature(i + 1, j + 1) = ts;

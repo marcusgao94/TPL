@@ -1,7 +1,7 @@
 {
-  "bin_width": 1,
-  "bin_height": 1,
-  "r1" : 1.5,
-  "r2" : 5.0,
+  "bin_width": 8,
+  "bin_height": 8,
+  "r1" : 12,
+  "r2" : 40,
   "mu" : 10
 }
