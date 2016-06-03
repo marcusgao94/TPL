@@ -7,6 +7,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
+
 #include "tpl_db.h"
 #include "tpl_standard_algorithm.h"
 
@@ -18,22 +19,18 @@ using namespace tpl;
 SCENARIO("adaptec1", "[adaptec1]") {
 
     GIVEN("A circuit adaptec1") {
-        char path[200];
-        char *benchmark;
-        benchmark = std::getenv("BENCHMARK");
-        std::strcpy(path, benchmark);
-        std::strcat(path, "/ispd2005/adaptec1");
-        cout << "path = " << path << endl;
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec1";
+
         TplDB::db().load_circuit(path);
-        cout << "load circuit finished" << endl;
 
 
-        unique_ptr<TplStandardAlgorithm> alg(new TplStandardAlgorithm());
-        unique_ptr<TplStandardNetModel> snm(new TplStandardNetModel());
+        TplStandardAlgorithm alg;
+
 
         WHEN("we should stop") {
-            bool b = alg->terminate.shouldStop();
-            REQUIRE(b == true);
+            alg.make_initial_placement();
+            alg.make_global_placement();
         }
 
         /*
@@ -55,7 +52,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
             REQUIRE(s1 == s4);
             REQUIRE(s2 == s3);
         }
-        /*
+
         WHEN("we compute the first net's weight") {
             NetWeight x_net_weight, y_net_weight;
             SpMat Cx, Cy;

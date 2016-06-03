@@ -16,13 +16,6 @@ namespace tpl {
     using std::make_pair;
     using std::vector;
 
-    double TplStandardThermalForceModel::BIN_WIDTH  = 1;
-    double TplStandardThermalForceModel::BIN_HEIGHT = 1;
-    double TplStandardThermalForceModel::R1 = 0;
-    double TplStandardThermalForceModel::R2 = 0;
-    int    TplStandardThermalForceModel::MU = 0;
-
-
     TplStandardThermalForceModel::TplStandardThermalForceModel() : TplAbstractThermalForceModel(), _bs(64*1024*1024)
     {
         initialize_model();
@@ -77,7 +70,7 @@ namespace tpl {
             BIN_HEIGHT = tree.get<double>("bin_height");
             R1         = tree.get<double>("r1");
             R2         = tree.get<double>("r2");
-            MU         = tree.get<int>("mu");
+            MU         = tree.get<double>("mu");
 
             return true;
         } catch(...) {

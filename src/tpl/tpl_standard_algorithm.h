@@ -117,11 +117,11 @@ namespace tpl {
 
     protected:
         void initialize_move_force_matrix();
-        void update_move_force_matrix();
+        void update_move_force_matrix(const VectorXd &delta_x, const VectorXd &delta_y, double mu);
 
-        std::shared_ptr<TplAbstractNetModel>          _net_model;           //!< Pointer to a TplNetModel.
-        std::shared_ptr<TplAbstractNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.
-        std::shared_ptr<TplAbstractThermalForceModel> _thermal_force_model; //!< Pointer to a TplThermalForceModel.
+        std::shared_ptr<TplStandardNetModel>          _net_model;           //!< Pointer to a TplNetModel.
+        std::shared_ptr<TplStandardNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.
+        std::shared_ptr<TplStandardThermalForceModel> _thermal_force_model; //!< Pointer to a TplThermalForceModel.
 
         NetWeight NWx, NWy;
         SpMat Cx,  Cy;
