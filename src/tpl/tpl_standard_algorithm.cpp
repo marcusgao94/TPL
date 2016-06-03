@@ -25,6 +25,35 @@ namespace tpl {
         HFy.resize(msize);
     }
 
+    void TplStandardAlgorithm::control(std::string path, bool mmp) {
+        double t0 = double(clock());
+        TplDB::db().load_circuit(path);
+        double t1 = double(clock());
+        printf("load circuit finish, took %.3lf seconds\n", (t1 - t0) / CLOCKS_PER_SEC);
+        if (mmp) {
+            shred();
+            double t2 = double(clock());
+            printf("shred finish, took %.3lf seconds\n", (t2 - t1) / CLOCKS_PER_SEC);
+        }
+        double t3 = double(clock());
+        make_initial_placement();
+        double t4 = double(clock());
+        printf("initial placement finish, took %.3lf seconds\n", (t4 - t3) / CLOCKS_PER_SEC);
+        if (mmp) {
+            aggregate();
+            double t5 = double(clock());
+            printf("aggregate finish, took %.3lf seconds\n", (t5 - t4) / CLOCKS_PER_SEC);
+        }
+        /*
+        double t6 = double(clock());
+        make_global_placement();
+        double t7 = double(clock());
+        printf("global placement finish, took %.3lf seconds\n", (t7 - t6) / CLOCKS_PER_SEC);
+        // make_detail_placement();
+         */
+
+    }
+
     void TplStandardAlgorithm::initialize_models()
     {
         _net_model           = make_shared<TplStandardNetModel>();
@@ -195,7 +224,7 @@ namespace tpl {
                 TplDB::db().modules[i].y += delta_y(i);
             }
 
-            update_move_force_matrix();//udpate Cx0 and Cy0
+            update_move_force_matrix(delta_x, delta_y, _thermal_force_model->get_mu());//udpate Cx0 and Cy0
         }
 
     }
@@ -224,9 +253,20 @@ namespace tpl {
         Cy0.setFromTriplets(coefficients.begin(), coefficients.end());
     }
 
-    void TplStandardAlgorithm::update_move_force_matrix()
+    void TplStandardAlgorithm::update_move_force_matrix(const VectorXd &delta_x, const VectorXd &delta_y, double mu)
     {
-        const double UT = 1;
+        const unsigned &msize = TplDB::db().modules.num_free();
+
+        double avg_mu = 0;
+        for (unsigned int i=0; i<msize; ++i) {
+            avg_mu = sqrt( pow(delta_x(i), 2) + pow(delta_y(i), 2) );
+        }
+        avg_mu /= msize;
+
+        double k = 1 + tanh(log(mu/avg_mu));
+
+        Cx0 *= k;
+        Cy0 *= k;
     }
 
     void TplStandardAlgorithm::saveDEF(string benchmark) {
@@ -292,7 +332,7 @@ namespace tpl {
         pos.clear();
 
         // calculate total area and initialize segments and nodes
-        for (int i = 0; i < TplDB::db().modules.size(); i++) {
+        for (unsigned i = 0; i < TplDB::db().modules.size(); i++) {
             TplModule module = TplDB::db().modules[i];
             A += module.width * module.height;
 
@@ -327,7 +367,7 @@ namespace tpl {
 
         // modules area union
         unsigned long res = 0;
-        for (int i = 0; i < segments.size() - 1; i++) {
+        for (size_t i = 0; i < segments.size() - 1; i++) {
             int low = binarySearch(0, m - 1, segments[i].x1);
             int high = binarySearch(0, m - 1, segments[i].x2);
             if (low == -1 || high == -1) {

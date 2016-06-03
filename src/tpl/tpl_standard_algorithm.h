@@ -7,9 +7,12 @@
 #ifndef TPL_STANDARD_ALGORITHM_H
 #define TPL_STANDARD_ALGORITHM_H
 
-#include "tpl_abstract_algorithm.h"
-
+#include <ctime>
 #include <memory>
+#include <cstdlib>
+#include <cstdio>
+
+#include "tpl_abstract_algorithm.h"
 
 #include "tpl_standard_net_model.h"
 #include "tpl_standard_net_force_model.h"
@@ -113,23 +116,29 @@ namespace tpl {
 		 */
         virtual void make_detail_placement(std::string benchmark);
 
+
+        //! main control function of a complete placement flow of a single benchmark
+        /*!
+         * \param path path of benchmark
+         * \param mmp flag of whether enable macro placement
+         */
+        virtual void control(std::string path, bool mmp);
+
         Terminate terminate;
 
     protected:
         void initialize_move_force_matrix();
-        void update_move_force_matrix();
+        void update_move_force_matrix(const VectorXd &delta_x, const VectorXd &delta_y, double mu);
 
-        std::shared_ptr<TplAbstractNetModel>          _net_model;           //!< Pointer to a TplNetModel.
-        std::shared_ptr<TplAbstractNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.
-        std::shared_ptr<TplAbstractThermalForceModel> _thermal_force_model; //!< Pointer to a TplThermalForceModel.
+        std::shared_ptr<TplStandardNetModel>          _net_model;           //!< Pointer to a TplNetModel.
+        std::shared_ptr<TplStandardNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.
+        std::shared_ptr<TplStandardThermalForceModel> _thermal_force_model; //!< Pointer to a TplThermalForceModel.
 
         NetWeight NWx, NWy;
         SpMat Cx,  Cy;
         VectorXd HFx, HFy;
         SpMat Cx0, Cy0;
     };
-
-
 
 }//end namespace tpl
 

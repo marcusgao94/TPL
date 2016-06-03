@@ -37,13 +37,17 @@ namespace tpl {
         //! Constructor.
         TplStandardThermalForceModel();
 
+        //Destructor.
+        virtual ~TplStandardThermalForceModel() {}
+
         bool initialize_model();
 
         //! Standard implementation for compute_head_flux_vector.
         void compute_heat_flux_vector(VectorXd &x_heat_flux, VectorXd &y_heat_flux);
 
-//    private:
-//        static const int TIMES;
+        double get_mu() const {
+            return MU;
+        }
 
     protected:
         //! Generate the power density.
@@ -82,13 +86,12 @@ namespace tpl {
 
         std::shared_ptr< std::vector< std::vector<double> > > _green_function;
 
-        static double BIN_WIDTH;  //!< A grid bin's width.
-        static double BIN_HEIGHT; //!< A grid bin's height.
-        static double R1;
-        static double R2;
-        static int MU;
+        double BIN_WIDTH;  //!< Algorithm parameter : a grid bin's width.
+        double BIN_HEIGHT; //!< Algorithm parameter : a grid bin's height.
+        double R1; //!< Algorithm parameter : green function R1.
+        double R2; //!< Algorithm parameter : green function R2.
+        double MU; //!< Algorithm parameter : qanlity control parameter.
     };
-
 }
 
 #endif //TPL_STANDARD_THERMAL_FORCE_MODEL_H

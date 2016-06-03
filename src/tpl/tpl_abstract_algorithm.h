@@ -14,15 +14,12 @@
 
 namespace tpl {
 
-    class TplAbstractNetModel;
-    class TplAbstractNetForceModel;
-    class TplAbstractThermalModel;
-    class TplAbstractThermalForceModel;
-    class TplAbstractDetailPlacement;
-
     //! Interface definition for tpl algorithm.
     class TplAbstractAlgorithm {
     public:
+        //! Default constructor.
+        TplAbstractAlgorithm() = default;
+
         //! Virtual destructor.
         virtual ~TplAbstractAlgorithm() {}
 
