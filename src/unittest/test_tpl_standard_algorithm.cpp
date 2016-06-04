@@ -22,6 +22,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
         string path(getenv("BENCHMARK"));
         path += "/ispd2005/adaptec1";
 
+        cout << "path = " << path << endl;
         TplDB::db().load_circuit(path);
 
 

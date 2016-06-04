@@ -1,4 +1,11 @@
 #include "tpl_standard_algorithm.h"
+#include <ctime>
+#include <cstdlib>
+#include <cstdio>
+#include <fstream>
+#include <unistd.h>
+
+#include <boost/filesystem.hpp>
 
 #define checkStatus(status, message) \
 if (status) { \
@@ -44,14 +51,13 @@ namespace tpl {
             double t5 = double(clock());
             printf("aggregate finish, took %.3lf seconds\n", (t5 - t4) / CLOCKS_PER_SEC);
         }
-        /*
         double t6 = double(clock());
-        make_global_placement();
+        //make_global_placement();
         double t7 = double(clock());
         printf("global placement finish, took %.3lf seconds\n", (t7 - t6) / CLOCKS_PER_SEC);
-        // make_detail_placement();
-         */
-
+        // make_detail_placement(path);
+        double t8 = double(clock());
+        printf("detail placement finish, took %.3lf seconds\n", (t8 - t7) / CLOCKS_PER_SEC);
     }
 
     void TplStandardAlgorithm::initialize_models()
@@ -186,13 +192,17 @@ namespace tpl {
 
         for(size_t i=0; i<5; ++i) {
             _net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
+            cout << "ccc\n";
+            /*
             TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
+            cout << "ddd\n";
 
             x_target.clear();
             x_target.reserve(TplDB::db().modules.num_free());
 
             y_target.clear();
             y_target.reserve(TplDB::db().modules.num_free());
+             */
         }
     }
 
@@ -269,54 +279,27 @@ namespace tpl {
         Cy0 *= k;
     }
 
-    void TplStandardAlgorithm::saveDEF(string benchmark) {
-        string name = benchmark + "_gp.def";
-        FILE* fout = fopen(name.c_str(), "w");
-        int version1 = 5, version2 = 8;
-        const char* caseSensitive = "";
-        const char* dividerChar = ":";
-        const char* busBitChars = "[]";
-        const char* designName = benchmark.c_str();
-        int res = defwInit(fout, version1, version2, caseSensitive, dividerChar,
-                           busBitChars, designName, NULL, NULL, NULL, -1);
-        /*
-        checkStatus(res, "init");
-        res = defwVersion(version1, version2);
-        checkStatus(res, "version");
-        res = defwDividerChar(dividerChar);
-        checkStatus(res, "dividerChar");
-        res = defwBusBitChars(busBitChars);
-        checkStatus(res, "busBitChars");
-        res = defwDesignName(designName);
-        checkStatus(res, "designName");
-         */
-        res = defwStartComponents(TplDB::db().modules.size());
-        checkStatus(res, "start components");
-        for (TplModules::iterator iter = TplDB::db().modules.begin();
-                iter != TplDB::db().modules.end(); iter++) {
-            res = defwComponent(iter->id.c_str(), "module", 0, NULL, NULL, NULL,
-                    NULL, NULL, 0, NULL, NULL, NULL, NULL, "PLACED",
-                    int(iter->x), int(iter->y), 0, -1.0, NULL, 0, 0, 0, 0);
-            checkStatus(res, "component");
+    void TplStandardAlgorithm::make_detail_placement(string path) {
+        // save global placement to .pl file
+        string fn = path + "/gp.pl";
+        ofstream fout(fn);
+        fout << "TPL GP 1.0\n";
+        for (TplModules::iterator mit = TplDB::db().modules.begin();
+                mit != TplDB::db().modules.end(); mit++) {
+            fout << mit->id << "\t" << mit->x << "\t" << mit->y << endl;
         }
-        res = defwEndComponents();
-        checkStatus(res, "end components");
-        res = defwEnd();
-        checkStatus(res, "end");
-        fclose(fout);
-    }
+        fout.close();
 
-    void TplStandardAlgorithm::make_detail_placement(string benchmark) {
-        const double density = 0.7;
-        const double misplacement = 150.0;
-        string tech_file = benchmark + ".aux.lef";
-        string cell_file = benchmark + ".aux.lef";
-        // string floorplan_file = benchmark + ".aux.def";
-        string floorplan_file = benchmark + "_gp.def";
-        string placed_file = benchmark + "_gp.def";
-        rippledp_read((char*)tech_file.c_str(), (char*)cell_file.c_str(),
-                      (char*)floorplan_file.c_str(), (char*)placed_file.c_str());
-        rippledp(density, misplacement);
+        // run ntuplace3 to do legalization and detail placement
+        boost::filesystem::path dir(path);
+        string file = path + "/" + dir.filename().string();
+        string cmd = getenv("BENCHMARK");
+        cmd += "/ispd2005/ntuplace3 -aux " + file + ".aux -loadpl " + fn + " -noglobal\n";
+        int ret = system(cmd.c_str());
+        cout << ret << endl;
+        if (ret != 0) {
+            cout << "error in ntuplace3" << endl;
+        }
     }
 
 
