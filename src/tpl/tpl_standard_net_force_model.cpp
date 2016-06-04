@@ -2,8 +2,6 @@
 
 #ifndef NDEBUG
 #include <iostream>
-using std::cout;
-using std::endl;
 #endif
 
 
@@ -14,6 +12,8 @@ namespace tpl {
     using std::map;
     using std::pair;
     using std::make_pair;
+    using std::cout;
+    using std::endl;
 
     void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &NWx, const NetWeight &NWy,
                                                             SpMat &Cx, SpMat &Cy, VectorXd &dx, VectorXd &dy)
@@ -69,6 +69,10 @@ namespace tpl {
                 continue;
             }
         }
+
+        // new added for non sparse matrix
+        unsigned int s = nw.size();
+        cout << "Cx.size = " << Cx.rows() << " * " << Cx.cols() << endl;
 
         for(map<pair<size_t, size_t>, double>::iterator it=nw.begin(); it!=nw.end(); ++it) {
             coefficients.push_back( SpElem(it->first.first, it->first.second, it->second) );
@@ -138,10 +142,17 @@ namespace tpl {
 
         compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);
 
-        LLTSolver llt;
+        cout << "Cx rows = " << Cx.rows() << " cols = " << Cx.cols() << endl;
+        cout << "dx rows = " << dx.rows() << " cols = " << dx.cols() << endl;
 
-        VectorXd x_eigen_target = llt.compute(Cx).solve(dx*-1);
-        VectorXd y_eigen_target = llt.compute(Cy).solve(dy*-1);
+        LLTSolver solver;
+
+        cout << "aaa\n";
+        VectorXd x_eigen_target = solver.compute(Cx).solve(dx*-1);
+        cout << "bbb\n";
+        VectorXd y_eigen_target = solver.compute(Cy).solve(dy*-1);
+        cout << "ccc\n";
+
 
         assert(static_cast<long>(x_target.size()) == x_eigen_target.size() );
         assert(static_cast<long>(y_target.size()) == y_eigen_target.size() );

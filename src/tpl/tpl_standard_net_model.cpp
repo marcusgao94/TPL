@@ -188,12 +188,12 @@ namespace tpl {
 			b = multiply;
 		}
 		int i = 0;
-		double DELTA = 1e-5;
-        for (TplNets::net_iterator iter = TplDB::db().nets.net_begin();
-				iter != TplDB::db().nets.net_end(); iter++, i++) {
-			if (i < TplDB::db().nets.num_origin_nets()) continue;
-			TplPin pin1 = iter->pins[0];
-			TplPin pin2 = iter->pins[1];
+		double DELTA = 0.00001;
+        TplNets::net_iterator net_iter = TplDB::db().nets.net_begin();
+        advance(net_iter, TplDB::db().nets.num_origin_nets());
+        for (; net_iter != TplDB::db().nets.net_end(); net_iter++) {
+			TplPin pin1 = net_iter->pins[0];
+			TplPin pin2 = net_iter->pins[1];
 			TplModule module1 = TplDB::db().modules.module(pin1.id);
 			TplModule module2 = TplDB::db().modules.module(pin2.id);
 			if ((module1.x - module2.x) > DELTA) {

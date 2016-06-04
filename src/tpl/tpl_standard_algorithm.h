@@ -13,13 +13,10 @@
 #include <algorithm>
 #include <memory>
 
+#include "tpl_abstract_algorithm.h"
 #include "tpl_standard_net_model.h"
 #include "tpl_standard_net_force_model.h"
 #include "tpl_standard_thermal_force_model.h"
-
-#include "../tools/def/defwWriter.hpp"
-#include "../tools/rippledp/rippledp.h"
-
 #include "utils.h"
 
 namespace tpl {
@@ -49,17 +46,18 @@ namespace tpl {
         //! standard implementation for interface make_global_placement.
         virtual void make_global_placement();
 
-        //! standard implementation of saving global placement to def format
-        /*!
-         * \param benchmark benchmark name
-         */
-        virtual void saveDEF(std::string benchmark);
-
         //! standard implementation of detail placement using reppledp toolkit
         /*!
          * \param filename name of the global placement result file
          */
         virtual void make_detail_placement(std::string benchmark);
+
+        //! main control function of a complete placement flow of a single benchmark
+        /*!
+         * \param path path of benchmark
+         * \param mmp flag of whether enable macro placement
+         */
+        virtual void control(std::string path, bool mmp);
 
     protected:
         void initialize_move_force_matrix();
@@ -162,7 +160,10 @@ namespace tpl {
         std::vector<Node> nodes;
         std::vector<double> pos;
     };
+<<<<<<< HEAD
      */
+
+
 
 }//end namespace tpl
 

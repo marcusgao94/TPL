@@ -1,7 +1,4 @@
 include_directories(${PROJECT_SOURCE_DIR}/tpl)
-include_directories(${PROJECT_SOURCE_DIR}/tools/rippledp)
-include_directories(${PROJECT_SOURCE_DIR}/tools/lef)
-include_directories(${PROJECT_SOURCE_DIR}/tools/def)
 
 #1.TplDB
 add_executable(test_tpl_db $<TARGET_OBJECTS:db_obj> test_tpl_db.cpp)
@@ -47,19 +44,16 @@ target_link_libraries(test_tpl_thermal_force_model
 		)
 
 #5.TplGyDetailPlacement
-set(TPL_GY_DETAIL_PLACEMENT_SRC
-		$<TARGET_OBJECTS:db_obj>
-		$<TARGET_OBJECTS:detail_placement_obj>
-		)
-add_executable(test_tpl_detail_placement
-		${TPL_GY_DETAIL_PLACEMENT_SRC}
-		test_tpl_gy_detail_placement.cpp
-		)
-target_link_libraries(test_tpl_detail_placement bookshelf ${Boost_LIBRARIES}
-		${PROJECT_SOURCE_DIR}/tools/rippledp/rippledp.a
-		${PROJECT_SOURCE_DIR}/tools/rippledp/libdef.a
-		${PROJECT_SOURCE_DIR}/tools/rippledp/liblef.a
-		)
+#set(TPL_GY_DETAIL_PLACEMENT_SRC
+#		$<TARGET_OBJECTS:db_obj>
+#		$<TARGET_OBJECTS:detail_placement_obj>
+#		)
+#add_executable(test_tpl_detail_placement
+#		${TPL_GY_DETAIL_PLACEMENT_SRC}
+#		test_tpl_gy_detail_placement.cpp
+#		)
+#target_link_libraries(test_tpl_detail_placement bookshelf ${Boost_LIBRARIES}
+#		)
 
 #6.TplStandardAlgorithm
 set(TPL_STANDARD_ALGORITHM_SRC
@@ -76,9 +70,6 @@ add_executable(test_tpl_standard_algorithm
 target_link_libraries(test_tpl_standard_algorithm
 		bookshelf
 		${Boost_LIBRARIES} ${STXXL_LIBRARIES}
-        ${PROJECT_SOURCE_DIR}/tools/rippledp/rippledp.a
-        ${PROJECT_SOURCE_DIR}/tools/rippledp/libdef.a
-        ${PROJECT_SOURCE_DIR}/tools/rippledp/liblef.a
 #		pthread
         )
 

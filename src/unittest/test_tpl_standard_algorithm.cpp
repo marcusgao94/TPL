@@ -22,6 +22,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
         string path(getenv("BENCHMARK"));
         path += "/ispd2005/adaptec1";
 
+        cout << "path = " << path << endl;
         TplDB::db().load_circuit(path);
 
 
@@ -29,8 +30,15 @@ SCENARIO("adaptec1", "[adaptec1]") {
 
 
         WHEN("we should stop") {
-            alg.make_initial_placement();
-            alg.make_global_placement();
+            alg.control(path, 0);
+            int a = 1;
+            THEN("sth") {
+                REQUIRE(a == 1);
+            };
+
+
+            // alg.make_initial_placement();
+            // alg.make_global_placement();
         }
 
         /*
