@@ -27,8 +27,6 @@ add_executable(test_tpl_net_force_model
 target_link_libraries(test_tpl_net_force_model bookshelf ${Boost_LIBRARIES})
 
 #4.TplStandardThermalForceModel
-#add_library(pthread STATIC IMPORTED)
-#SET_TARGET_PROPERTIES(pthread PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/tools/libpthread.a)
 set(TPL_STANDARD_THERMAL_FORCE_MODEL_SRC
 		$<TARGET_OBJECTS:db_obj>
 		$<TARGET_OBJECTS:thermal_force_model_obj>
@@ -39,23 +37,11 @@ add_executable(test_tpl_thermal_force_model
 		)
 target_link_libraries(test_tpl_thermal_force_model
 		bookshelf
-		${Boost_LIBRARIES} ${STXXL_LIBRARIES}
-#		pthread
+		${Boost_LIBRARIES}
+#		${STXXL_LIBRARIES}
 		)
 
-#5.TplGyDetailPlacement
-#set(TPL_GY_DETAIL_PLACEMENT_SRC
-#		$<TARGET_OBJECTS:db_obj>
-#		$<TARGET_OBJECTS:detail_placement_obj>
-#		)
-#add_executable(test_tpl_detail_placement
-#		${TPL_GY_DETAIL_PLACEMENT_SRC}
-#		test_tpl_gy_detail_placement.cpp
-#		)
-#target_link_libraries(test_tpl_detail_placement bookshelf ${Boost_LIBRARIES}
-#		)
-
-#6.TplStandardAlgorithm
+#5.TplStandardAlgorithm
 set(TPL_STANDARD_ALGORITHM_SRC
 		$<TARGET_OBJECTS:db_obj>
 		$<TARGET_OBJECTS:net_model_obj>
@@ -69,11 +55,12 @@ add_executable(test_tpl_standard_algorithm
 		)
 target_link_libraries(test_tpl_standard_algorithm
 		bookshelf
-		${Boost_LIBRARIES} ${STXXL_LIBRARIES}
+		${Boost_LIBRARIES}
+#		${STXXL_LIBRARIES}
 #		pthread
         )
 
-#8. TplStandardThermalForceAlgorithm
+#4.v2. TplStandardThermalForceAlgorithm
 set(TPL_STANDARD_THERMAL_FORCE_SRC
 		$<TARGET_OBJECTS:db_obj>
 		$<TARGET_OBJECTS:thermal_force_model_obj>
@@ -84,10 +71,10 @@ add_executable(test_tpl_standard_thermal_force_model
 		)
 target_link_libraries(test_tpl_standard_thermal_force_model
 		bookshelf
-		${Boost_LIBRARIES} ${STXXL_LIBRARIES}
+		${Boost_LIBRARIES}
+#		${STXXL_LIBRARIES}
 		pthread
 		)
-
 
 
 #Checks

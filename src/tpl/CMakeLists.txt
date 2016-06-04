@@ -12,8 +12,5 @@ add_library(net_force_model_obj OBJECT tpl_standard_net_force_model.cpp)
 #4.TplStandardThermalForceModel
 add_library(thermal_force_model_obj OBJECT tpl_standard_thermal_force_model.cpp)
 
-#5.TplStandardDetailPlacement
-#add_library(detail_placement_obj OBJECT tpl_gy_detail_placement.cpp)
-
-#6.TplStandardAlgorithm
+#5.TplStandardAlgorithm
 add_library(standard_algorithm_obj OBJECT tpl_standard_algorithm.cpp)

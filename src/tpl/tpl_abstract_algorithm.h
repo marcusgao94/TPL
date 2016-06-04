@@ -10,7 +10,7 @@
 #include "tpl_abstract_net_model.h"
 #include "tpl_abstract_net_force_model.h"
 #include "tpl_abstract_thermal_force_model.h"
-#include "tpl_abstract_detail_placement.h"
+//#include "tpl_abstract_detail_placement.h"
 
 namespace tpl {
 

@@ -22,7 +22,7 @@
 namespace tpl {
 
 
-
+#ifdef USE_STXXL
     /*!
      * \typedef stxxl::matrix<double, 64> TMat;
      * \brief SpMat type
@@ -30,6 +30,9 @@ namespace tpl {
     typedef stxxl::matrix<double, 64> TMat;
 
     typedef stxxl::block_scheduler<stxxl::matrix_swappable_block<double, 64> > block_schedular_type;
+#endif
+
+    using std::vector;
 
     //! Standard implementation for tpl move force model.
     class TplStandardThermalForceModel : public TplAbstractThermalForceModel {
@@ -38,7 +41,11 @@ namespace tpl {
         TplStandardThermalForceModel();
 
         //Destructor.
+#ifdef USE_STXXL
         virtual ~TplStandardThermalForceModel() {}
+#else
+        ~TplStandardThermalForceModel();
+#endif
 
         bool initialize_model();
 
@@ -67,7 +74,7 @@ namespace tpl {
          * \param i0  x index for green function's second point.
          * \param j0  y index for green function's second point.
          */
-        double green_function(int i, int j, int i0, int j0);
+        //double green_function(int i, int j, int i0, int j0);
 
         //! Generate the thermal profile of the chip.
         void generate_thermal_profile();
@@ -78,6 +85,7 @@ namespace tpl {
         int _gw_num;     //!< Number of bin in x direction.
         int _gh_num;     //!< Number of bin in y direction.
 
+#ifdef USE_STXXL
         block_schedular_type _bs;
         std::shared_ptr<TMat> _power_density; //!< Power density container.
         std::shared_ptr<TMat> _thermal_signature; //!< Thermal profile for the chip.
@@ -85,6 +93,13 @@ namespace tpl {
         std::shared_ptr<TMat> _yhf_grid; //!< Heat flux grid in y direction.
 
         std::shared_ptr< std::vector< std::vector<double> > > _green_function;
+#else
+        double **_power_density;
+        double **_thermal_signature;
+        double **_xhf_grid;
+        double **_yhf_grid;
+        double **_green_function;
+#endif
 
         double BIN_WIDTH;  //!< Algorithm parameter : a grid bin's width.
         double BIN_HEIGHT; //!< Algorithm parameter : a grid bin's height.
