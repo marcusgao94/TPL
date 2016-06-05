@@ -16,7 +16,11 @@ namespace tpl {
     using std::make_pair;
     using std::vector;
 
+#ifdef USE_STXXL
     TplStandardThermalForceModel::TplStandardThermalForceModel() : TplAbstractThermalForceModel(), _bs(64*1024*1024)
+#else
+    TplStandardThermalForceModel::TplStandardThermalForceModel()
+#endif
     {
         initialize_model();
 
@@ -27,15 +31,59 @@ namespace tpl {
         BIN_WIDTH  = TplDB::db().modules.chip_width()  * 1.0 / _gw_num;
         BIN_HEIGHT = TplDB::db().modules.chip_height() * 1.0 / _gh_num;
 
+#ifdef USE_STXXL
         _power_density     = make_shared<TMat>(_bs, _gw_num+1, _gh_num+1);
         _thermal_signature = make_shared<TMat>(_bs, _gw_num+3, _gh_num+3);
         _xhf_grid          = make_shared<TMat>(_bs, _gw_num+1, _gh_num+1);
         _yhf_grid          = make_shared<TMat>(_bs, _gw_num+1, _gh_num+1);
+#else
+        _power_density = (double**)malloc( sizeof(double*) * (_gw_num+1) );
+        assert(_power_density != nullptr);
+        for (int i=0; i<_gw_num+1; ++i) {
+            *(_power_density+i) = (double*)malloc( sizeof(double) * (_gh_num+1) );
+            assert(*(_power_density+i) != nullptr);
+            memset(*(_power_density+i), 0, sizeof(double) * (_gh_num+1) );
+        }
+
+        _thermal_signature = (double**)malloc( sizeof(double*) * (_gw_num+3) );
+        assert(_thermal_signature != nullptr);
+        for (int i=0; i<_gw_num+3; ++i) {
+            *(_thermal_signature+i) = (double*)malloc( sizeof(double) * (_gh_num+3) );
+            assert(*(_thermal_signature+i) != nullptr);
+            memset(*(_thermal_signature+i), 0, sizeof(double) * (_gh_num+3) );
+        }
+
+        _xhf_grid = (double**)malloc( sizeof(double*) * (_gw_num+1) );
+        assert(_xhf_grid != nullptr);
+        for (int i=0; i<_gw_num+1; ++i) {
+            *(_xhf_grid+i) = (double*)malloc( sizeof(double) * (_gh_num+1) );
+            assert(*(_xhf_grid+i) != nullptr);
+            memset(*(_xhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
+        }
+
+        _yhf_grid = (double**)malloc( sizeof(double*) * (_gw_num+1) );
+        assert(_yhf_grid != nullptr);
+        for (int i=0; i<_gw_num+1; ++i) {
+            *(_yhf_grid+i) = (double*)malloc( sizeof(double) * (_gh_num+1) );
+            assert(*(_yhf_grid+i) != nullptr);
+            memset(*(_yhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
+        }
+#endif
 
         int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
         int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
 
+#ifdef USE_STXXL
         _green_function    = make_shared< vector< vector<double> > >(dx, vector<double>(dy, 0));
+#else
+        _green_function = (double**)malloc( sizeof(double*) * dx);
+        assert(_green_function != nullptr);
+        for (int i=0; i<dx; ++i) {
+            *(_green_function+i) = (double*)malloc( sizeof(double) * dy);
+            assert(*(_green_function+i) != nullptr);
+            memset(*(_green_function+i), 0, sizeof(double) * dy );
+        }
+#endif
 
         double green_func_val = 0;
         double distance_squre = 0;
@@ -54,10 +102,47 @@ namespace tpl {
                     }
                 }
 
+#ifdef USE_STXXL
                 _green_function->at(i).at(j) = green_func_val;
+#else
+                _green_function[i][j] = green_func_val;
+#endif
             }
         }
     }
+
+#ifndef USE_STXXL
+    TplStandardThermalForceModel::~TplStandardThermalForceModel()
+    {
+        for (int i=0; i<_gw_num+1; ++i) {
+            free( *(_power_density+i) );
+        }
+        free(_power_density);
+
+        for (int i=0; i<_gw_num+3; ++i) {
+            free( *(_thermal_signature+i) );
+        }
+        free(_thermal_signature);
+
+        for (int i=0; i<_gw_num+1; ++i) {
+            free( *(_xhf_grid+i) );
+        }
+        free(_xhf_grid);
+
+        for (int i=0; i<_gw_num+1; ++i) {
+            free( *(_yhf_grid+i) );
+        }
+        free(_yhf_grid);
+
+        int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
+//        int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
+
+        for (int i=0; i<dx; ++i) {
+            free(*(_green_function+i));
+        }
+        free(_green_function);
+    }
+#endif
 
     bool TplStandardThermalForceModel::initialize_model()
     {
@@ -80,44 +165,19 @@ namespace tpl {
 
     void TplStandardThermalForceModel::compute_heat_flux_vector(VectorXd &HFx, VectorXd &HFy)
     {
-        cout << "begin compute heat flux vector" << endl;
-        std::chrono::time_point<std::chrono::system_clock> start, end;
-        std::chrono::duration<double> elapsed_seconds;
+//        cout << "begin compute heat flux vector" << endl;
+//        std::chrono::time_point<std::chrono::system_clock> start, end;
+//        std::chrono::duration<double> elapsed_seconds;
 
         //preconditions
         assert(HFx.rows() == TplDB::db().modules.num_free());
         assert(HFy.rows() == TplDB::db().modules.num_free());
 
-//        cout << "begin generate power density " << endl;
-//        start = std::chrono::system_clock::now();
-
         generate_power_density();
-
-//        end = std::chrono::system_clock::now();
-//        elapsed_seconds = end-start;
-//        cout << "generate power density " << elapsed_seconds.count() << " seconds" << endl;
-
-//        cout << "begin generate thermal profile" << endl;
-//        start = std::chrono::system_clock::now();
 
         generate_thermal_profile();
 
-//        end = std::chrono::system_clock::now();
-//        elapsed_seconds = end-start;
-//        cout << "generate thermal profile " << elapsed_seconds.count() << " seconds" << endl;
-
-
-//        cout << "begin generate heat flux grid" << endl;
-//        start = std::chrono::system_clock::now();
-
         generate_heat_flux_grid();
-
-//        end = std::chrono::system_clock::now();
-//        elapsed_seconds = end-start;
-//        cout << "generate flux grid " << elapsed_seconds.count() << " seconds" << endl;
-
-//        HFx = VectorXd::Zero(TplDB::db().modules.num_free());
-//        HFy = VectorXd::Zero(TplDB::db().modules.num_free());
 
         //compute module heat flux using bilinear interpolation method
         double x=0, y=0;//for module's coordinates
@@ -136,6 +196,7 @@ namespace tpl {
             y1 = idx_y * BIN_HEIGHT;
             y2 = y1 + BIN_HEIGHT;
 
+#ifdef USE_STXXL
             TMat & xhf_grid = *_xhf_grid;
             xhf = xhf_grid(idx_x,idx_y)   * (x2-x) * (y2-y) +
                 xhf_grid(idx_x+1,idx_y)   * (x-x1) * (y2-y) +
@@ -149,6 +210,19 @@ namespace tpl {
                 yhf_grid(idx_x,idx_y+1)   * (x2-x) * (y-y1) +
                 yhf_grid(idx_x+1,idx_y+1) * (x-x1) * (y-y1) ;
             yhf = yhf / (BIN_WIDTH * BIN_HEIGHT);
+#else
+            xhf = _xhf_grid[idx_x]   [idx_y]   * (x2-x) * (y2-y) +
+                  _xhf_grid[idx_x+1] [idx_y]   * (x-x1) * (y2-y) +
+                  _xhf_grid[idx_x]   [idx_y+1] * (x2-x) * (y-y1) +
+                  _xhf_grid[idx_x+1] [idx_y+1] * (x-x1) * (y-y1) ;
+            xhf = xhf / (BIN_WIDTH * BIN_HEIGHT);
+
+            yhf = _yhf_grid[idx_x]   [idx_y]   * (x2-x) * (y2-y) +
+                  _yhf_grid[idx_x+1] [idx_y]   * (x-x1) * (y2-y) +
+                  _yhf_grid[idx_x]   [idx_y+1] * (x2-x) * (y-y1) +
+                  _yhf_grid[idx_x+1] [idx_y+1] * (x-x1) * (y-y1) ;
+            yhf = yhf / (BIN_WIDTH * BIN_HEIGHT);
+#endif
 
             HFx(i) = xhf;
             HFy(i) = yhf;
@@ -159,10 +233,18 @@ namespace tpl {
 
     void TplStandardThermalForceModel::generate_power_density()
     {
+#ifdef USE_STXXL
         TMat &power_density = *_power_density;
+#endif
         try {
             // reset _power_density
+#ifdef USE_STXXL
             power_density.set_zero();
+#else
+            for (int i=0; i<_gw_num+1; ++i) {
+                memset(*(_power_density+i), 0, sizeof(double) * (_gh_num+1) );
+            }
+#endif
 
             double left, right, bottom, top;
             unsigned int idx_left, idx_right, idx_bottom, idx_top;
@@ -180,7 +262,11 @@ namespace tpl {
 
                 for(unsigned int i=idx_left; i<=idx_right; ++i) {
                     for(unsigned int j=idx_bottom; j<=idx_top; ++j) {
+#ifdef USE_STXXL
                         *power_density(i,j) += it->power_density;
+#else
+                        _power_density[i][j] += it->power_density;
+#endif
                     }
                 }
             }
@@ -210,10 +296,17 @@ namespace tpl {
             exit(-1);
         }
 
+#ifdef USE_STXXL
         TMat &power_density = *_power_density;
         return *power_density(x_idx, y_idx);
+#else
+        assert(0<= x_idx && x_idx < _gw_num+1);
+        assert(0<= y_idx && y_idx < _gh_num+1);
+        return _power_density[x_idx][y_idx];
+#endif
     }
 
+    /*
     double TplStandardThermalForceModel::green_function(int i, int j, int i0, int j0)
     {
         if(i==i0 && j==j0) return 0;
@@ -224,17 +317,24 @@ namespace tpl {
         else if(distance <= R1)  return 1/distance;
         else                     return 0.6/sqrt(distance);
     }
+     */
 
     void TplStandardThermalForceModel::generate_thermal_profile() {
+#ifdef USE_STXXL
         TMat &thermal_signature = *_thermal_signature;
 
         thermal_signature.set_zero();
 
-//        int dx = static_cast<int>( ceil(R2 / BIN_WIDTH));
-//        int dy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
-
         const int & green_func_window_width  = _green_function->size();
         const int & green_func_window_height = _green_function->at(0).size();
+#else
+        for (int i=0; i<_gw_num+3; ++i) {
+            memset(*(_thermal_signature+i), 0, sizeof(double) * (_gh_num+3) );
+        }
+
+        int green_func_window_width  = static_cast<int>( ceil(R2 / BIN_WIDTH));
+        int green_func_window_height = static_cast<int>( ceil(R2 / BIN_HEIGHT));
+#endif
 
         // compute chip grid temperatures using green function method
         double ts = 0;
@@ -243,58 +343,90 @@ namespace tpl {
             for (int j = 0; j <= _gh_num; ++j) {
                 ts = 0;
 
-                /*
-                for (int i0 = i - dx; i0 <= i + dx; ++i0) {
-                    for (int j0 = j - dy; j0 <= j + dy; ++j0) {
-                        ts += green_function(i, j, i0, j0) * power_density(i0, j0);
-                    }
-                }
-                 */
-
                 for (int dx = -green_func_window_width+1; dx<green_func_window_width; ++dx) {
                     for (int dy = -green_func_window_height+1; dy<green_func_window_height; ++dy) {
+#ifdef USE_STXXL
                         ts += _green_function->at(abs(dx)).at(abs(dy)) * power_density(i+dx, j+dy);
+#else
+                        ts += _green_function[abs(dx)][abs(dy)] * power_density(i+dx, j+dy);
+#endif
                     }
                 }
 
-//                cout << "thermal for " << i << " " << j << endl;
+#ifdef USE_STXXL
                 *thermal_signature(i + 1, j + 1) = ts;
+#else
+                _thermal_signature[i+1][j+1] = ts;
+#endif
             }
         }
 
         //2. compute thermal signature around the chip.
         //bottom and top side
         for (int i = 0; i <= _gw_num; ++i) {
+#ifdef USE_STXXL
             *thermal_signature(i, 0) = *thermal_signature(i, 2);
             *thermal_signature(i, _gh_num + 2) = *thermal_signature(i, _gh_num);
+#else
+            _thermal_signature[i][0] = _thermal_signature[i][2];
+            _thermal_signature[i][_gh_num + 2] = _thermal_signature[i][_gh_num];
+#endif
         }
 
         //left and right side
         for (int j = 0; j <= _gh_num; ++j) {
+#ifdef USE_STXXL
             *thermal_signature(0, j) = *thermal_signature(2, j);
             *thermal_signature(_gw_num + 2, j) = *thermal_signature(_gw_num, j);
+#else
+            _thermal_signature[0][j] = _thermal_signature[2][j];
+            _thermal_signature[_gw_num + 2][j] = _thermal_signature[_gw_num][j];
+#endif
         }
 
         //four corners
+#ifdef USE_STXXL
         *thermal_signature(0, 0) = *thermal_signature(2, 2);//ll
         *thermal_signature(_gw_num + 2, 0) = *thermal_signature(_gw_num, 2); //lr
         *thermal_signature(_gw_num + 2, _gh_num + 2) = *thermal_signature(_gw_num, _gh_num);//tr
         *thermal_signature(0, _gh_num) = *thermal_signature(2, _gh_num - 2);//tl
+#else
+        _thermal_signature[0][0] = _thermal_signature[2][2];//ll
+        _thermal_signature[_gw_num + 2][0] = _thermal_signature[_gw_num][2]; //lr
+        _thermal_signature[_gw_num + 2][_gh_num + 2] = _thermal_signature[_gw_num][_gh_num];//tr
+        _thermal_signature[0][_gh_num] = _thermal_signature[2][_gh_num - 2];//tl
+#endif
     }
 
 
     void TplStandardThermalForceModel::generate_heat_flux_grid()
     {
+#ifdef USE_STXXL
         //aliases
         TMat & xhf_grid = *_xhf_grid;
         TMat & yhf_grid = *_yhf_grid;
         TMat & thermal_signature = *_thermal_signature;
+        xhf_grid.set_zero();
+        yhf_grid.set_zero();
+#else
+        for (int i=0; i<_gw_num+1; ++i) {
+            memset(*(_xhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
+        }
 
+        for (int i=0; i<_gw_num+1; ++i) {
+            memset(*(_yhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
+        }
+#endif
         //compute x and y direction head flux using finite difference method
         for (int i=0; i<=_gw_num; ++i) {
             for (int j=0; j<=_gh_num; ++j) {
+#ifdef USE_STXXL
                 *xhf_grid(i, j) = (*thermal_signature(i+2, j+1) - *thermal_signature(i, j+1)) / 2;
                 *yhf_grid(i, j) = (*thermal_signature(i+1, j+2) - *thermal_signature(i+1, j)) / 2;
+#else
+                _xhf_grid[i][j] = (_thermal_signature[i+2][j+1] - _thermal_signature[i][j+1]) / 2;
+                _yhf_grid[i][j] = (_thermal_signature[i+1][j+2] - _thermal_signature[i+1][j]) / 2;
+#endif
             }
         }
     }

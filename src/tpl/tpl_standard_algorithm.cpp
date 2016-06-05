@@ -214,7 +214,7 @@ namespace tpl {
         VectorXd dx(msize), dy(msize);
         VectorXd rhsx(msize), rhsy(msize);
 
-        while (!terminate.shouldStop()) {
+        while (!should_stop_global_placement()) {
             _net_model->compute_net_weight(NWx, NWy);
             _net_force_model->compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);//compute Cx and Cy
             _thermal_force_model->compute_heat_flux_vector(HFx, HFy);//Compute HFx and HFy
@@ -302,7 +302,105 @@ namespace tpl {
         }
     }
 
+    bool TplStandardAlgorithm::should_stop_global_placement() const
+    {
+        SegmentTree segtree;
+        vector<SegmentEvent> events;
 
+        vector<double> xpos;
+        double x1, x2, y1, y2;
+
+        double total_area = 0;
+
+        for (TplModules::iterator it=TplDB::db().modules.begin(); it!=TplDB::db().modules.end(); ++it) {
+            x1 = it->x;
+            x2 = it->x + it->width;
+            y1 = it->y;
+            y2 = it->y + it->height;
+
+            events.emplace_back(x1, x2, y1, 1);
+            events.emplace_back(x1, x2, y2, -1);
+
+            xpos.push_back(x1);
+            xpos.push_back(x2);
+
+            total_area += it->width * it->height;
+        }
+
+        //set up tree and events
+        segtree.build(xpos);
+        sort(events.begin(), events.end());
+
+        //feed event to the segtree, and get the total unioned area
+        double unioned_area = 0;
+        for (size_t i = 0 ; i < events.size()-1 ; ++i) {
+            segtree.update(events[i]);
+            unioned_area += segtree.get_sum() * (events[i+1].y - events[i].y);
+        }
+
+        const double STOP = 0.2;
+
+        return ( (1- unioned_area/total_area) < STOP );
+    }
+
+    void SegmentTree::build (const vector<double> &xpos) {
+        pos = xpos;
+        sort(pos.begin() , pos.end());
+        pos.erase(unique(pos.begin(), pos.end()), pos.end());
+
+        sum.reserve((pos.size() << 2) + 10);
+        cov.reserve((pos.size() << 2) + 10);
+    }
+
+    void SegmentTree::update(const SegmentEvent &e) {
+
+        int l = search(e.x1);
+        int r = search(e.x2)-1;
+
+        if (l <= r) {
+            update(l, r, e.f, 1, 0, pos.size()-1);
+        }
+    }
+
+    void SegmentTree::update(int L,int R,int c, int rt, int l,int r) {
+        //l and r for the segtree, and L and R for the event.
+        if (L <= l && r <= R) {
+            cov[rt] += c;
+            push_up(rt , l , r);
+            return ;
+        }
+
+        int m = (l + r) >> 1;
+        if (L <= m)  {
+            update(L , R , c , rt<<1, l, m);
+        }
+        if (m < R) {
+            update(L , R , c , rt<<1|1, m+1, r);
+        }
+        push_up(rt , l , r);
+    }
+
+    int SegmentTree::search(double key) {
+        int l = 0 , r = pos.size()-1;
+        while (l <= r) {
+            int m = (l + r) >> 1;
+            if (pos[m] == key) return m;
+            if (pos[m] < key) l = m + 1;
+            else r = m - 1;
+        }
+        return -1;
+    }
+
+    void SegmentTree::push_up(int rt,int l,int r) {
+        if (cov[rt]) {
+            sum[rt] = pos[r+1] - pos[l];
+        } else if (l == r) {
+            sum[rt] = 0;
+        } else {
+            sum[rt] = sum[rt<<1] + sum[rt<<1|1];
+        }
+    }
+    /*
     bool Terminate::shouldStop() {
         using namespace std;
 
@@ -435,6 +533,7 @@ namespace tpl {
         build(low, mid, 2 * tidx + 1);
         build(mid + 1, high, 2 * tidx + 2);
     }
+     */
 
 }//end namespace tpl
 
