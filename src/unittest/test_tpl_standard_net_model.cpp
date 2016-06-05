@@ -12,6 +12,135 @@
 
 using namespace std;
 using namespace tpl;
+
+SCENARIO("adaptec1", "[adaptec1]") {
+
+    GIVEN("A circuit adaptec1") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec1";
+
+        double t0 = double(clock());
+        TplDB::db().load_circuit(path);
+        double t1 = double(clock());
+        printf("load circuit finish, took %.3lf seconds\n", (t1 - t0) / CLOCKS_PER_SEC);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+
+            double t2 = double(clock());
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+            double t3 = double(clock());
+            printf("compute net weight, took %.3lf seconds\n", (t3 - t2) / CLOCKS_PER_SEC);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+
+                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+
+                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+            }
+        }
+    }
+}//end SCENARIO
+
+/*
+SCENARIO("adaptec2", "[adaptec2]") {
+
+    GIVEN("A circuit adaptec2") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec2";
+
+        TplDB::db().load_circuit(path);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+
+                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+
+                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+            }
+        }
+    }
+}//end SCENARIO
+
+SCENARIO("adaptec3", "[adaptec3]") {
+
+    GIVEN("A circuit adaptec3") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec3";
+
+        TplDB::db().load_circuit(path);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+
+                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+
+                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+            }
+        }
+    }
+}//end SCENARIO
+
+SCENARIO("adaptec4", "[adaptec4]") {
+
+    GIVEN("A circuit adaptec4") {
+        string path(getenv("BENCHMARK"));
+        path += "/ispd2005/adaptec4";
+
+        TplDB::db().load_circuit(path);
+
+        TplStandardNetModel nmodel;
+
+        WHEN("we compute the first net's weight") {
+            NetWeight x_net_weight, y_net_weight;
+            nmodel.compute_net_weight(x_net_weight, y_net_weight);
+
+            THEN("the net weight is not empty") {
+                REQUIRE( x_net_weight.size() != 0);
+                REQUIRE( y_net_weight.size() != 0);
+
+                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+
+                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
+                    REQUIRE( it->second > 0 );
+                }
+            }
+        }
+    }
+}//end SCENARIO
+
 SCENARIO("bigblue1", "[bigblue1]") {
 
     GIVEN("A circuit bigblue1") {
@@ -131,123 +260,6 @@ SCENARIO("bigblue4", "[bigblue4]") {
         }
     }
 }//end SCENARIO
+ */
 
-SCENARIO("adaptec1", "[adaptec1]") {
 
-    GIVEN("A circuit adaptec1") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec1";
-
-        TplDB::db().load_circuit(path);
-
-        TplStandardNetModel nmodel;
-
-        WHEN("we compute the first net's weight") {
-            NetWeight x_net_weight, y_net_weight;
-            nmodel.compute_net_weight(x_net_weight, y_net_weight);
-
-            THEN("the net weight is not empty") {
-                REQUIRE( x_net_weight.size() != 0);
-                REQUIRE( y_net_weight.size() != 0);
-
-                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-
-                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-            }
-        }
-    }
-}//end SCENARIO
-
-SCENARIO("adaptec2", "[adaptec2]") {
-
-    GIVEN("A circuit adaptec2") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec2";
-
-        TplDB::db().load_circuit(path);
-
-        TplStandardNetModel nmodel;
-
-        WHEN("we compute the first net's weight") {
-            NetWeight x_net_weight, y_net_weight;
-            nmodel.compute_net_weight(x_net_weight, y_net_weight);
-
-            THEN("the net weight is not empty") {
-                REQUIRE( x_net_weight.size() != 0);
-                REQUIRE( y_net_weight.size() != 0);
-
-                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-
-                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-            }
-        }
-    }
-}//end SCENARIO
-
-SCENARIO("adaptec3", "[adaptec3]") {
-
-    GIVEN("A circuit adaptec3") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec3";
-
-        TplDB::db().load_circuit(path);
-
-        TplStandardNetModel nmodel;
-
-        WHEN("we compute the first net's weight") {
-            NetWeight x_net_weight, y_net_weight;
-            nmodel.compute_net_weight(x_net_weight, y_net_weight);
-
-            THEN("the net weight is not empty") {
-                REQUIRE( x_net_weight.size() != 0);
-                REQUIRE( y_net_weight.size() != 0);
-
-                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-
-                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-            }
-        }
-    }
-}//end SCENARIO
-
-SCENARIO("adaptec4", "[adaptec4]") {
-
-    GIVEN("A circuit adaptec4") {
-        string path(getenv("BENCHMARK"));
-        path += "/ispd2005/adaptec4";
-
-        TplDB::db().load_circuit(path);
-
-        TplStandardNetModel nmodel;
-
-        WHEN("we compute the first net's weight") {
-            NetWeight x_net_weight, y_net_weight;
-            nmodel.compute_net_weight(x_net_weight, y_net_weight);
-
-            THEN("the net weight is not empty") {
-                REQUIRE( x_net_weight.size() != 0);
-                REQUIRE( y_net_weight.size() != 0);
-
-                for(NetWeight::iterator it=x_net_weight.begin(); it!=x_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-
-                for(NetWeight::iterator it=y_net_weight.begin(); it!=y_net_weight.end(); ++it) {
-                    REQUIRE( it->second > 0 );
-                }
-            }
-        }
-    }
-}//end SCENARIO
