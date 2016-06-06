@@ -45,7 +45,7 @@ namespace tpl {
         //! standard implementation for interface make_global_placement.
         virtual void make_global_placement();
 
-        //! standard implementation of detail placement using reppledp toolkit
+        //! standard implementation of detail placement using NTUPlacer3
         /*!
          * \param filename name of the global placement result file
          */
@@ -108,66 +108,6 @@ namespace tpl {
         vector<double> pos;
 		vector<SegmentNode> nodes;
     };
-
-    // standard implementation of global placement stop condition
-    /*
-    class Terminate {
-    public:
-        class Segment {
-        public:
-            double x1, x2, y;
-            int flag;
-
-            Segment(double a, double b, double c, int f){
-                x1 = a;
-                x2 = b;
-                y = c;
-                flag = f;
-            };
-
-            bool operator < (const Segment &s) const {
-                return y < s.y;
-            }
-
-            bool operator == (const Segment &s) const {
-                return (x1 == s.x1 && x2 == s.x2 && y == s.y && flag == s.flag);
-            }
-        };
-
-        class Node {
-        public:
-            int low, high;
-            int cover;
-            double len;
-
-            Node() {
-                low = high = cover = len = 0;
-            }
-
-            Node(int a, int b, int c, double d) {
-                low = a;
-                high = b;
-                cover = c;
-                len = d;
-            }
-        };
-
-        void pushup(int idx);
-        void update(int l, int h, int flag, int idx);
-        int binarySearch(int low, int high, double target);
-        void build(int low, int high, int idx);
-        bool shouldStop();
-
-
-    private:
-        std::vector<Segment> segments;
-        std::vector<Node> nodes;
-        std::vector<double> pos;
-    };
-<<<<<<< HEAD
-     */
-
-
 
 }//end namespace tpl
 
