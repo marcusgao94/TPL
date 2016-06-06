@@ -188,17 +188,13 @@ namespace tpl {
 
         for(size_t i=0; i<5; ++i) {
             _net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
-            cout << "ccc\n";
-            /*
             TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
-            cout << "ddd\n";
 
             x_target.clear();
             x_target.reserve(TplDB::db().modules.num_free());
 
             y_target.clear();
             y_target.reserve(TplDB::db().modules.num_free());
-             */
         }
     }
 

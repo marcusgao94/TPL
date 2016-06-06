@@ -1,0 +1,183 @@
+
+<!-- saved from url=(0050)http://eda.ee.ntu.edu.tw/w04/download/ntuplace.php -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=Big5"><style type="text/css">
+<!--
+body {
+	background-color: #FFFFCC;
+}
+.style1 {
+	font-size: 30px;
+	font-family: "Times New Roman", Times, serif;
+	font-weight: bold;
+}
+.style2 {font-family: Arial, Helvetica, sans-serif}
+.style3 {font-family: "Times New Roman", Times, serif}
+.style4 {
+	font-family: "Times New Roman", Times, serif;
+	color: #FF0000;
+	font-style: italic;
+}
+.style5 {font-size: 18px}
+.style6 {
+	font-family: "Times New Roman", Times, serif;
+	font-weight: bold;
+	font-style: italic;
+}
+.style7 {font-family: "Times New Roman", Times, serif; font-weight: bold; font-style: italic; font-size: 18px; }
+.style11 {font-family: "Times New Roman", Times, serif; font-style: italic; }
+-->
+</style>
+</head><body><h3 class="style3"><span class="style2"><span class="style3"> <a href="http://www.gigascale.org/">GSRC</a>  <a href="http://vlsicad.eecs.umich.edu/BK/Slots/">Bookshelf</a></span></span></h3>
+<p class="style1 style3">NTUplace: A VLSI Placement Tool</p>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tbody><tr>
+    <td width="3%" class="style3"><span class="style3"><span class="style2"><img src="./ntuplace.php_files/bookshelf-text.gif" width="60" height="45"></span></span></td>
+    <td width="97%" class="style3"><p class="style3"><span class="style5"><a href="http://eda.ee.ntu.edu.tw/~donnie/">Tung-Chieh Chen</a>, Zhe-Wei Jiang, Tien-Chang Hsu, Hsin-Chen Chen, Yi-Lin Chuang, Meng-Kai Hsu, Sheng Chou, Tzu-Hen Lin, <a href="http://cc.ee.ntu.edu.tw/~ywchang/">Yao-Wen Chang</a></span></p>
+    <p class="style4"> 
+      <!-- #BeginDate format:Am1 -->Last Update: March 27, 2012<!-- #EndDate -->
+    </p>    </td>
+  </tr>
+</tbody></table>
+<p class="style3 style3">If you have any question, please contact Chau-Chin Huang &lt;wlkb83 {at} eda.ee.ntu.edu.tw&gt; </p>
+<p class="style6 style3">&nbsp;</p>
+<p class="style7 style3">1. Introduction</p>
+<blockquote class="style3">
+  <p class="style3">NTUplace is a VLSI placement tool for large-scale mixed-size designs. <br>
+  It was developed at the <a href="http://giee.ntu.edu.tw/">Graduate Institute of Electronics Engineering</a>, <a href="http://www.ntu.edu.tw/">National Taiwan University</a>, Taipei, Taiwan. </p>
+</blockquote>
+<hr>
+<p class="style7 style3">2. Program (Linux) </p>
+<ul class="style3">
+  <li>NTUplace2 (click <a href="http://eda.ee.ntu.edu.tw/w04/download/Research/ntuplace2.tar" target="_blank">here</a> to download) (source code) (Last Update: March 27, 2012)</li>
+</ul>
+<blockquote class="style3">
+  <blockquote>
+    <p class="style3">	Please make sure that following packages have been installed in your machine:</p>
+	<p class="style3">	　1. Boost library (http://www.boost.org/users/download/)<br>
+	　2. gd library (http://www.libgd.org/Downloads)<br>
+	　3. automake1.4<br>
+	　4. g++-4.2<br>
+	</p>
+	<p class="style3">	To install the program: (please type)</p>
+	<p class="style3">	　$&gt; automake-1.4<br>
+	　$&gt; ./configure CXX=g++-4.2<br>
+	　$&gt; make<br>
+	</p>
+  </blockquote>
+</blockquote>
+<ul class="style3">
+  <li>NTUplace3 (click <a href="http://eda.ee.ntu.edu.tw/w04/download/Research/ntuplace3.tar" target="_blank">here</a> to download) (binary) (Last Update: March 27, 2012)</li>
+</ul>
+<blockquote class="style3">
+  <blockquote>
+  <p class="style3">	This program outputs the following files:	</p>
+    <table width="100%" border="0">
+      <tbody><tr>
+        <td width="16%" nowrap="nowrap" class="style3"><span class="style3">	　circuit.gp.pl</span></td>
+        <td width="84%" class="style3">The global placement result </td>
+      <iframe id="tmp_downloadhelper_iframe" style="display: none;" src="./ntuplace.php_files/saved_resource.html"></iframe></tr>
+      <tr>
+        <td nowrap="nowrap" class="style3">	　circuit.gp.plt</td>
+        <td class="style3">The GNUplot figure for the global placement </td>
+      </tr>
+      <tr>
+        <td nowrap="nowrap" class="style3"><span class="style3">	　circuit.lg.pl</span></td>
+        <td class="style3">The legalization result</td>
+      </tr>
+      <tr>
+        <td nowrap="nowrap" class="style3">	　circuit.lg.plt</td>
+        <td class="style3">The GNUplot figure for the legalization result </td>
+      </tr>
+      <tr>
+        <td nowrap="nowrap" class="style3"><span class="style3">	　circuit.ntup.pl</span></td>
+        <td class="style3">The final placement </td>
+      </tr>
+      <tr>
+        <td nowrap="nowrap" class="style3">	　circuit.ntup.plt</td>
+        <td class="style3">The GNUplot figure for the final placement</td>
+      </tr>
+    </tbody></table>
+  </blockquote>
+</blockquote>
+<hr>
+<p class="style7 style3">3. Program Usage</p>
+<blockquote class="style3">
+  <table width="100%" border="0">
+    <tbody><tr>
+      <td width="16%" nowrap="nowrap" class="style3"><span class="style3">-noglobal</span></td>
+      <td width="84%" class="style3">Turn off the global placement. </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3"><span class="style3">-nolegal</span></td>
+      <td class="style3">Turn off the look-ahead legalization, legalization, detailed placement. </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3"><span class="style3">-nodetail</span></td>
+      <td class="style3">Turn off the detailed placement. </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3">-loadpl filename.pl </td>
+      <td class="style3">Load the initial placement from the file. </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3">-util utilization </td>
+      <td class="style3">Set placement utilization. </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3">-out prefix </td>
+      <td class="style3">Output result in prefix.ntup.pl </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3"><span class="style3">-plt</span></td>
+      <td class="style3">Plot the placement only. </td>
+    </tr>
+    <tr>
+      <td nowrap="nowrap" class="style3"><span class="style3">-MRT</span></td>
+      <td class="style3">Turn on macro rotation [6] </td>
+    </tr>
+  </tbody></table>
+  <p class="style11">Examples:</p>
+  <blockquote>
+    <table width="100%" border="0">
+      <tbody><tr>
+        <td width="42%" valign="top" nowrap="nowrap" class="style3"><span class="style3">./NTUplace -aux ibm01.aux</span></td>
+        <td width="58%" class="style3"><p>Run NTUplace for the circuit ibm01. Placement result is saved in ibm01.ntup.pl. GNUplot figure is saved in ibm01.ntup.plt. </p>        </td>
+      </tr>
+      <tr>
+        <td valign="top" nowrap="nowrap" class="style3">./NTUplace -aux ibm01.aux -loadpl gp.pl -noglobal </td>
+        <td class="style3">Legalize and detailed place the circuit ibm01. Global placement is read from the file "gp.pl". </td>
+      </tr>
+      <tr>
+        <td valign="top" nowrap="nowrap" class="style3">./NTUplace -aux ibm01.aux -loadpl result.pl -plt </td>
+        <td class="style3">Load ibm01 placement from "result.pl" and plot the figure. </td>
+      </tr>
+      <tr>
+        <td valign="top" nowrap="nowrap" class="style3">./NTUplace -aux adaptec1.aux -util 0.8</td>
+        <td class="style3">Place the circuit adaptec1 using target utilization 0.8. </td>
+      </tr>
+    </tbody></table>
+  </blockquote>
+</blockquote>
+<hr>
+<p class="style7 style3"><em><strong>4. Benchmarks</strong></em> <em><strong>(Bookshelf Format) </strong></em></p>
+<blockquote class="style3">
+  <p class="style3"><a href="http://www.public.iastate.edu/~nataraj/ISPD04_Bench.html">ISPD04 IBM-FastPlace</a> (Standard Cells) (18 circuits) </p>
+  <p class="style3"><a href="http://vlsicad.eecs.umich.edu/BK/ICCAD04bench/">ICCAD04 IBM-Mixed-Size</a> (18 circuits) </p>
+  <p class="style3"><a href="http://archive.sigda.org/ispd2005/contest.htm">ISPD05 Placement Contest</a> (8 circuits) </p>
+  <p class="style3"><a href="http://archive.sigda.org/ispd2006/contest.html">ISPD06 Placement Contest  </a> (8 circuits) </p>
+  <p class="style3"><a href="http://www.public.iastate.edu/~zijunyan/bench/mms.tar">Modern Mixed-Size Placement Benchmarks </a> (16 circuits) </p>
+</blockquote>
+<hr>
+<p class="style7 style3">5. Literature</p>
+<blockquote class="style3">
+  <p class="style3">[1] T.-C. Chen,  T.-C. Hsu, Z.-W. Jiang, and Y.-W. Chang, "NTUplace: a ratio  partitioning based placement algorithm for large-scale mixed-size  designs," in <em>Proc. of ACM International Symposium on Physical Design (ISPD-2005) </em>, San Francisco, CA, Apr. 2005.</p>
+  <p class="style3">[2] Z.-W. Jiang, T.-C. Chen, T.-C. Hsu, H.-C. Chen, and Y.-W. Chang, "NTUplace2: A hybrid placer using partitioning and    analytical techniques," in <em>Proc. of ACM</em> <em> International Symposium on Physical Design (ISPD-2006) </em>, San Jose, CA, Apr. 2006.</p>
+  <p class="style3">[3] T.-C. Chen, Z.-W. Jiang, T.-C. Hsu, H.-C. Chen, and Y.-W. Chang, "A high quality analytical placer considering preplaced blocks and density constraint," in <em>Proceedings of IEEE/ACM International Conference on Computer-Aided Design (ICCAD-2006)</em>, San Jose, Nov. 2006.</p>
+  <p class="style3">[4] T.-C. Chen, Z.-W. Jiang, T.-C. Hsu, H.-C. Chen, and Y.-W. Chang, "NTUplace3: An Analytical Placer for Large-Scale Mixed-Size Designs," (G.-J. Nam and J. Cong, Editors), 2007</p>
+  <p class="style3">[5] T.-C. Chen, Z.-W. Jiang, T.-C. Hsu, H.-C. Chen, and Y.-W. Chang, "NTUplace3: An analytical placer for large-scale mixed-size designs with preplaced blocks and density constraints," <em>IEEE Trans. Computer-Aided Design of Integrated Circuits and Systems (TCAD)</em>, Vol. 27, No. 7, July 2008.</p>
+  <p class="style3">[6] M.-K. Hsu and Y.-W. Chang, "Unified analytical global placement for large-scale mixed-size circuit designs," in <em>Proceedings of IEEE/ACM International Conference on Computer-Aided Design (ICCAD-2010)</em>, San Jose, November 2010.
+  
+  </p>
+</blockquote>
+<p class="style3 style3">&nbsp;</p>
+</body></html>

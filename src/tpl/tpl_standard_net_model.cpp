@@ -65,12 +65,12 @@ namespace tpl {
 
 				if (fabs(x-x1) > DELTA) {
 					assert( NWx.count(make_pair(xpins[0].pin, xpins[i].pin)) == 0 );
-					NWx[make_pair(xpins[0].pin, xpins[i].pin)] = 2.0 / (degree - 1) * (fabs(x-x1));
+					NWx[make_pair(xpins[0].pin, xpins[i].pin)] = 2.0 / (degree - 1) / (fabs(x-x1));
 				}
 
 				if (fabs(x-x2) > DELTA) {
 					assert( NWx.count(make_pair(xpins[degree-1].pin, xpins[i].pin)) == 0 );
-					NWx[make_pair(xpins[degree-1].pin, xpins[i].pin)] = 2.0 / (degree - 1) * (fabs(x-x2));
+					NWx[make_pair(xpins[degree-1].pin, xpins[i].pin)] = 2.0 / (degree - 1) / (fabs(x-x2));
 				}
 
 				//process pins by y
@@ -78,12 +78,12 @@ namespace tpl {
 
 				if (fabs(y-y1) > DELTA) {
 					assert( NWy.count(make_pair(ypins[0].pin, ypins[i].pin)) == 0 );
-					NWy[make_pair(ypins[0].pin, ypins[i].pin)] = 2.0 / (degree - 1) * (fabs(y-y1));
+					NWy[make_pair(ypins[0].pin, ypins[i].pin)] = 2.0 / (degree - 1) / (fabs(y-y1));
 				}
 
 				if (fabs(y-y2) > DELTA) {
 					assert( NWy.count(make_pair(ypins[degree-1].pin, ypins[i].pin)) == 0 );
-					NWy[make_pair(ypins[degree-1].pin, ypins[i].pin)] = 2.0 / (degree - 1) * (fabs(y-y2));
+					NWy[make_pair(ypins[degree-1].pin, ypins[i].pin)] = 2.0 / (degree - 1) / (fabs(y-y2));
 				}
 			}
 
