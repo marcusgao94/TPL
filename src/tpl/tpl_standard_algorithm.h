@@ -10,7 +10,6 @@
 #include "tpl_abstract_algorithm.h"
 
 #include <vector>
-#include <algorithm>
 #include <memory>
 
 #include "tpl_abstract_algorithm.h"
@@ -46,7 +45,7 @@ namespace tpl {
         //! standard implementation for interface make_global_placement.
         virtual void make_global_placement();
 
-        //! standard implementation of detail placement using reppledp toolkit
+        //! standard implementation of detail placement using NTUPlacer3
         /*!
          * \param filename name of the global placement result file
          */
@@ -85,85 +84,30 @@ namespace tpl {
         }
     };
 
+	class SegmentNode {
+	public:
+		int low, high, cover;
+		double len;
+	};
+
     class SegmentTree {
     public:
-        void build (const vector<double> &xpos);
+		int m;
 
-        void update(const SegmentEvent &e);
+		inline double get_len() { return nodes[0].len; }
 
-        inline double get_sum() { return sum[1]; }
+		void build(vector<double> xpos);
+		void build(int idx, int l, int h);
 
-    private:
-        void update(int L,int R,int c, int rt, int l,int r);
+		int binsearch(int l, int h, double target);
 
-        int search(double key);
+        void update(int idx, int l, int h, int flag);
 
-        void push_up(int rt,int l,int r);
+        void push_up(int idx);
 
         vector<double> pos;
-        vector<double> sum;
-        vector<int> cov;
+		vector<SegmentNode> nodes;
     };
-
-    // standard implementation of global placement stop condition
-    /*
-    class Terminate {
-    public:
-        class Segment {
-        public:
-            double x1, x2, y;
-            int flag;
-
-            Segment(double a, double b, double c, int f){
-                x1 = a;
-                x2 = b;
-                y = c;
-                flag = f;
-            };
-
-            bool operator < (const Segment &s) const {
-                return y < s.y;
-            }
-
-            bool operator == (const Segment &s) const {
-                return (x1 == s.x1 && x2 == s.x2 && y == s.y && flag == s.flag);
-            }
-        };
-
-        class Node {
-        public:
-            int low, high;
-            int cover;
-            double len;
-
-            Node() {
-                low = high = cover = len = 0;
-            }
-
-            Node(int a, int b, int c, double d) {
-                low = a;
-                high = b;
-                cover = c;
-                len = d;
-            }
-        };
-
-        void pushup(int idx);
-        void update(int l, int h, int flag, int idx);
-        int binarySearch(int low, int high, double target);
-        void build(int low, int high, int idx);
-        bool shouldStop();
-
-
-    private:
-        std::vector<Segment> segments;
-        std::vector<Node> nodes;
-        std::vector<double> pos;
-    };
-<<<<<<< HEAD
-     */
-
-
 
 }//end namespace tpl
 
