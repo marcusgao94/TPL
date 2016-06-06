@@ -10,7 +10,6 @@
 #include "tpl_abstract_algorithm.h"
 
 #include <vector>
-#include <algorithm>
 #include <memory>
 
 #include "tpl_abstract_algorithm.h"
@@ -85,24 +84,29 @@ namespace tpl {
         }
     };
 
+	class SegmentNode {
+	public:
+		int low, high, cover;
+		double len;
+	};
+
     class SegmentTree {
     public:
-        void build (const vector<double> &xpos);
+		int m;
 
-        void update(const SegmentEvent &e);
+		inline double get_len() { return nodes[0].len; }
 
-        inline double get_sum() { return sum[1]; }
+		void build(vector<double> xpos);
+		void build(int idx, int l, int h);
 
-    private:
-        void update(int L,int R,int c, int rt, int l,int r);
+		int binsearch(int l, int h, double target);
 
-        int search(double key);
+        void update(int idx, int l, int h, int flag);
 
-        void push_up(int rt,int l,int r);
+        void push_up(int idx);
 
         vector<double> pos;
-        vector<double> sum;
-        vector<int> cov;
+		vector<SegmentNode> nodes;
     };
 
     // standard implementation of global placement stop condition

@@ -17,7 +17,7 @@
 #include <vector>
 #include <memory>
 
-#include <stxxl/bits/containers/matrix.h>
+//#include <stxxl/bits/containers/matrix.h>
 
 namespace tpl {
 
@@ -27,9 +27,9 @@ namespace tpl {
      * \typedef stxxl::matrix<double, 64> TMat;
      * \brief SpMat type
      */
-    typedef stxxl::matrix<double, 64> TMat;
+    //typedef stxxl::matrix<double, 64> TMat;
 
-    typedef stxxl::block_scheduler<stxxl::matrix_swappable_block<double, 64> > block_schedular_type;
+    //typedef stxxl::block_scheduler<stxxl::matrix_swappable_block<double, 64> > block_schedular_type;
 #endif
 
     using std::vector;
