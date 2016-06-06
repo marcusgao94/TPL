@@ -11,6 +11,13 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <Eigen/Cholesky>
 
+#ifndef NDEBUG
+#include <cstdio>
+#include <cassert>
+#include <ctime>
+#include <iostream>
+#endif
+
 namespace tpl {
 
     using VectorXd = Eigen::VectorXd;

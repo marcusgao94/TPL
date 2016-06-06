@@ -30,6 +30,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
     }
 }//end adaptec1
 
+/*
 SCENARIO("adaptec2", "[adaptec2]") {
 
     GIVEN("A circuit adaptec2") {
@@ -162,5 +163,6 @@ SCENARIO("bigblue4", "[bigblue4]") {
         }
     }
 }//end bigblue4
+ */
 
 

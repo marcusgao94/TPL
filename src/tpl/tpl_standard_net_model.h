@@ -31,6 +31,14 @@ namespace tpl {
         virtual void update_shred_net_weight(NetWeight &NWx, NetWeight &NWy, int i);
     };
 
+    struct PinPos {
+        TplPin *pin;
+        double pos;
+        PinPos(TplPin *p=nullptr, double c=0) : pin(p), pos(c) {}
+    };
+
+    bool compare_pin(const PinPos &lhs, const PinPos &rhs);
+
 }//namespace tpl
 
 #endif //TPL_STANDARD_NET_MODEL_H

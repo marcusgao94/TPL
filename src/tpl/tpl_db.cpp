@@ -12,6 +12,8 @@
 #include "../bookshelf/bookshelf_net_parser.hpp"
 #include "../bookshelf/bookshelf_pl_generator.hpp"
 
+#include "debug.h"
+
 
 namespace tpl {
     using namespace std;
@@ -273,6 +275,9 @@ namespace tpl {
             boost::filesystem::path   benchmark_path(path);
             _benchmark_name = benchmark_path.filename().string();
 
+            ///////////////////////////////////////////////////////////////////
+            Timer t;
+            t.timeit();
             //load modules
             boost::filesystem::path node_file_path(benchmark_path);
             node_file_path /= _benchmark_name + string(".nodes");
@@ -280,12 +285,18 @@ namespace tpl {
             pl_file_path /= _benchmark_name + string(".pl");
 
             initialize_modules(node_file_path.string(), pl_file_path.string());
+            t.timeit("load module");
+            ///////////////////////////////////////////////////////////////////
 
+            ///////////////////////////////////////////////////////////////////
+            t.timeit();
             //load nets
             boost::filesystem::path net_file_path(benchmark_path);
             net_file_path /= _benchmark_name + string(".nets");
 
             initialize_nets(net_file_path.string());
+            t.timeit("load net");
+            ///////////////////////////////////////////////////////////////////
 
             return true;
         } catch(...) {
@@ -320,7 +331,17 @@ namespace tpl {
         ifstream node_stream(node_file);
         node_stream.unsetf(ios::skipws);
 
-        boost::spirit::istream_iterator node_begin(node_stream), node_end;
+        ///////////////////////////////////////////////////////////////
+        //quick but memory eager version
+        string storage;
+        copy(istream_iterator<char>(node_stream),
+             istream_iterator<char>(),
+             back_inserter(storage));
+        string::const_iterator node_begin = storage.begin();
+        string::const_iterator node_end   = storage.end();
+        //slow but memory efficient version
+        //boost::spirit::istream_iterator node_begin(node_stream), node_end;
+        ///////////////////////////////////////////////////////////////
 
         BookshelfNodes bnodes;
         parse_bookshelf_node(node_begin, node_end, bnodes);
@@ -329,7 +350,17 @@ namespace tpl {
         ifstream pl_stream(pl_file);
         pl_stream.unsetf(ios::skipws);
 
-        boost::spirit::istream_iterator pl_begin(pl_stream), pl_end;
+        ///////////////////////////////////////////////////////////////
+        //quick but memory eager version
+        storage.clear();
+        copy(istream_iterator<char>(pl_stream),
+             istream_iterator<char>(),
+             back_inserter(storage));
+        string::const_iterator pl_begin = storage.begin();
+        string::const_iterator pl_end   = storage.end();
+        //slow but memory efficient version
+        //boost::spirit::istream_iterator pl_begin(pl_stream), pl_end;
+        ///////////////////////////////////////////////////////////////
 
         BookshelfPls bpls;
         parse_bookshelf_pl(pl_begin, pl_end, bpls);
@@ -345,7 +376,17 @@ namespace tpl {
         ifstream net_stream(net_file);
         net_stream.unsetf(ios::skipws);
 
-        boost::spirit::istream_iterator net_begin(net_stream), net_end;
+        ///////////////////////////////////////////////////////////////
+        //quick but memory eager version
+        string storage;
+        copy(istream_iterator<char>(net_stream),
+             istream_iterator<char>(),
+             back_inserter(storage));
+        string::const_iterator net_begin = storage.begin();
+        string::const_iterator net_end   = storage.end();
+        //slow but memory efficient version
+        //boost::spirit::istream_iterator net_begin(net_stream), net_end;
+        ///////////////////////////////////////////////////////////////
 
         BookshelfNets bnets;
         parse_bookshelf_net(net_begin, net_end, bnets);

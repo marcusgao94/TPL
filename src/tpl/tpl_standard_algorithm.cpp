@@ -7,11 +7,7 @@
 
 #include <boost/filesystem.hpp>
 
-#define checkStatus(status, message) \
-if (status) { \
-    cout << "error in " << message << endl; \
-    return; \
-}
+
 
 namespace tpl {
     using namespace std;
@@ -33,10 +29,10 @@ namespace tpl {
     }
 
     void TplStandardAlgorithm::control(std::string path, bool mmp) {
-        double t0 = double(clock());
-        TplDB::db().load_circuit(path);
+//        double t0 = double(clock());
+//        TplDB::db().load_circuit(path);
         double t1 = double(clock());
-        printf("load circuit finish, took %.3lf seconds\n", (t1 - t0) / CLOCKS_PER_SEC);
+//        printf("load circuit finish, took %.3lf seconds\n", (t1 - t0) / CLOCKS_PER_SEC);
         if (mmp) {
             shred();
             double t2 = double(clock());
