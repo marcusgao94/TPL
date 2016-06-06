@@ -154,7 +154,7 @@ namespace tpl {
             _id_index_map.erase(iter->first);
             vector<TplModule> cells = iter->second;
             _modules.insert(_modules.end(), cells.begin(), cells.end());
-            for (int i = 0; i < cells.size(); i++) {
+            for (size_t i = 0; i < cells.size(); ++i) {
                 _id_index_map.insert(make_pair(cells[i].id, _modules.size() - 1));
             }
         }
@@ -205,7 +205,7 @@ namespace tpl {
 		_num_modules = _modules.size();
 
 		// add macros back to _id_index_map
-		for (int i = _num_free; i < _num_modules; i++) {
+		for (size_t i = _num_free; i < _num_modules; i++) {
 			_id_index_map[_modules[i].id] = i;
 		}
 	}
