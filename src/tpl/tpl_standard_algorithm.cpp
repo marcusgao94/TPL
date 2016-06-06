@@ -1,4 +1,6 @@
 #include "tpl_standard_algorithm.h"
+#include "debug.h"
+
 #include <ctime>
 #include <cstdlib>
 #include <cstdio>
@@ -30,31 +32,28 @@ namespace tpl {
     }
 
     void TplStandardAlgorithm::control(std::string path, bool mmp) {
-//        double t0 = double(clock());
-//        TplDB::db().load_circuit(path);
-        double t1 = double(clock());
-//        printf("load circuit finish, took %.3lf seconds\n", (t1 - t0) / CLOCKS_PER_SEC);
+		Timer timer;
+		timer.timeit();
         if (mmp) {
+			timer.timeit();
             shred();
-            double t2 = double(clock());
-            printf("shred finish, took %.3lf seconds\n", (t2 - t1) / CLOCKS_PER_SEC);
+			timer.timeit("shred");
         }
-        double t3 = double(clock());
-        //make_initial_placement();
-        double t4 = double(clock());
-        printf("initial placement finish, took %.3lf seconds\n", (t4 - t3) / CLOCKS_PER_SEC);
+		timer.timeit();
+        make_initial_placement();
+		timer.timeit("initial placement");
         if (mmp) {
+			timer.timeit();
             aggregate();
             double t5 = double(clock());
-            printf("aggregate finish, took %.3lf seconds\n", (t5 - t4) / CLOCKS_PER_SEC);
+			timer.timeit("aggregate");
         }
-        double t6 = double(clock());
-        make_global_placement();
-        double t7 = double(clock());
-        printf("global placement finish, took %.3lf seconds\n", (t7 - t6) / CLOCKS_PER_SEC);
+		timer.timeit();
+        //make_global_placement();
+		timer.timeit("global placement");
+		timer.timeit();
         // make_detail_placement(path);
-        double t8 = double(clock());
-        printf("detail placement finish, took %.3lf seconds\n", (t8 - t7) / CLOCKS_PER_SEC);
+		timer.timeit("detail placement");
     }
 
     void TplStandardAlgorithm::initialize_models()
@@ -180,23 +179,56 @@ namespace tpl {
         TplDB::db().nets.delete_net();
     }
 
+	bool TplStandardAlgorithm::should_stop_initial_placement() const {
+		const double DELTA = 0.1;
+		VectorXd<double> x_target = _net_force_model->x_target;
+		VectorXd<double> y_target = _net_force_model->y_target;
+		VectorXd<double> dx = _net_force_model->dx;
+		VectorXd<double> dy = _net_force_model->dy;
+
+		MatrixXd nlx = x_target.transpose() * Cx * x_target + dx.transpose() * x_target;
+		MatrixXd nly = y_target.transpose() * Cy * y_target + dy.transpose() * y_target;
+		assert(nlx.rows() == 1 && nlx.cols() == 1);
+		assert(nly.rows() == 1 && nly.cols() == 1);
+
+		double lnl = _net_force_model->lastNetLength;
+		double nl = sqrt(pow(nlx.coeff(0, 0), 2) + pow(nly.coeff(0, 0), 2));
+		if (lnl > 0 && lnl < nl) {
+			cout << "new net length > last net length" << endl;
+			exit(EXIT_FAILURE);
+		}
+		printf("last net length = %lf\nnet length = %lf\n", lnl, nl);
+		printf("net length enhance ratio = %lf\n", (lnl - nl) / lnl);
+		if (lnl > 0 && (lnl - nl) / lnl < DELTA) {
+			_net_force_model->lastNetLength = nl;
+			return true;
+		}
+		_net_force_model->lastNetLength = nl;
+	}
+
     void TplStandardAlgorithm::make_initial_placement()
     {
         vector<double> x_target, y_target;
         NetWeight NWx, NWy;
 
         _net_model->compute_net_weight(NWx, NWy);
-
-        for(size_t i=0; i<5; ++i) {
+		_net_force_model->compute_net_force_matrix(NWx, NWy,
+												   _net_force_model->Cx, _net_force_model->Cy,
+												   _net_force_model->dx, _net_force_model->dy);
+		do {
             _net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
             TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
+
+			_net_force_model->compute_net_force_matrix(NWx, NWy,
+													   _net_force_model->Cx, _net_force_model->Cy,
+													   _net_force_model->dx, _net_force_model->dy);
 
             x_target.clear();
             x_target.reserve(TplDB::db().modules.num_free());
 
             y_target.clear();
             y_target.reserve(TplDB::db().modules.num_free());
-        }
+        } while(!should_stop_initial_placement());
     }
 
     void TplStandardAlgorithm::make_global_placement()
@@ -219,7 +251,6 @@ namespace tpl {
             VectorXd delta_x = llt.compute(Cx+Cx0).solve(rhsx);
             VectorXd delta_y = llt.compute(Cy+Cy0).solve(rhsy);
 
-
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //the following code breaks the incapsulation, but more quickly, please note!!!
             for (unsigned i=0; i<msize; ++i) {
@@ -229,7 +260,6 @@ namespace tpl {
 
             update_move_force_matrix(delta_x, delta_y, _thermal_force_model->get_mu());//udpate Cx0 and Cy0
         }
-
     }
 
     void TplStandardAlgorithm::initialize_move_force_matrix()

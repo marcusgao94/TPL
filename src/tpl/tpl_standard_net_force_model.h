@@ -16,7 +16,7 @@ namespace tpl {
     public:
 
         //! Default constructor.
-        TplStandardNetForceModel() : TplAbstractNetForceModel() {}
+        TplStandardNetForceModel();
 
         //! Virtual destructor.
         virtual ~TplStandardNetForceModel() {}
@@ -42,6 +42,12 @@ namespace tpl {
          */
         virtual void compute_net_force_target(const NetWeight &NWx, const NetWeight &NWy,
                                               std::vector<double> &x_target, std::vector<double> &y_target);
+
+        double lastNetLength;
+		bool should_stop;
+		VectorXd<double> x_target, y_target;
+		SpMat<double> Cx, Cy;
+		VectorXd<double> dx, dy;
     };
 
 }//namespace tpl

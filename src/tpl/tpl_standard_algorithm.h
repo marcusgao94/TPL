@@ -62,6 +62,7 @@ namespace tpl {
         void initialize_move_force_matrix();
         void update_move_force_matrix(const VectorXd &delta_x, const VectorXd &delta_y, double mu);
         bool should_stop_global_placement() const;
+		bool should_stop_initial_placement() const;
 
         std::shared_ptr<TplStandardNetModel>          _net_model;           //!< Pointer to a TplNetModel.
         std::shared_ptr<TplStandardNetForceModel>     _net_force_model;     //!< Pointer to a TplNetForceModel.

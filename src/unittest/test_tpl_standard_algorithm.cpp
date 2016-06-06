@@ -25,9 +25,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
         cout << "path = " << path << endl;
         TplDB::db().load_circuit(path);
 
-
         TplStandardAlgorithm alg;
-
 
         WHEN("we should stop") {
             alg.control(path, 0);
