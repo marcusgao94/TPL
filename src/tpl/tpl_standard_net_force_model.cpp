@@ -144,7 +144,6 @@ namespace tpl {
         //preconditions
         x_target.clear();
         y_target.clear();
-
         unsigned int num_free = TplDB::db().modules.num_free();
         x_target.resize(num_free);
         y_target.resize(num_free);

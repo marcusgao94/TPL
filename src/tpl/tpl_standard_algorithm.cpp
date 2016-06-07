@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <unistd.h>
 
+#include "debug.h"
+
 #include <boost/filesystem.hpp>
 
 
@@ -72,12 +74,9 @@ namespace tpl {
 												   _net_force_model->Cx, _net_force_model->Cy,
 												   _net_force_model->dx, _net_force_model->dy);
 		while(!should_stop_initial_placement()) {
+			// x_target and y_target will clear and resize in compute_net_force_target
             _net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
             TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
-            x_target.clear();
-            x_target.reserve(TplDB::db().modules.num_free());
-            y_target.clear();
-            y_target.reserve(TplDB::db().modules.num_free());
 
 			_net_force_model->compute_net_force_matrix(NWx, NWy,
 													   _net_force_model->Cx, _net_force_model->Cy,
@@ -199,7 +198,7 @@ namespace tpl {
 
     bool TplStandardAlgorithm::should_stop_global_placement() const
     {
-        SegmentTree segtree;
+       SegmentTree segtree;
         vector<SegmentEvent> events;
 
         vector<double> xpos;
@@ -223,91 +222,81 @@ namespace tpl {
         }
 
         //set up tree and events
+        segtree.build(xpos);
         sort(events.begin(), events.end());
-		sort(xpos.begin(), xpos.end());
-		xpos.erase(unique(xpos.begin(), xpos.end()), xpos.end());
-		segtree.build(xpos);
 
         //feed event to the segtree, and get the total unioned area
         double unioned_area = 0;
         for (size_t i = 0 ; i < events.size()-1 ; ++i) {
-            int l = segtree.binsearch(0, segtree.m - 1, events[i].x1);
-            int h = segtree.binsearch(0, segtree.m - 1, events[i].x2) - 1;
-            if (l == -1 || h == -1 || l > h) {
-                cout << "error event x1 = " << events[i].x1 << " x2 = " << events[i].x2 << endl;
-                break;
-            }
-            segtree.update(0, l, h, events[i].f);
-            unioned_area += segtree.get_len() * (events[i+1].y - events[i].y);
+            segtree.update(events[i]);
+            unioned_area += segtree.get_sum() * (events[i+1].y - events[i].y);
         }
+
+        cout << "unioned area : " << setprecision(8) << unioned_area << endl;
+        cout << "total area: "    << setprecision(8) << total_area << endl;
 
         const double STOP = 0.2;
 
-        printf("union area = %.0lf\ntotal = %.0lf\nratio = %.3lf\n",
-               unioned_area, total_area, 1 - unioned_area / total_area);
+        cout << "ratio is " << (1-unioned_area/total_area) << endl;
+
         return ( (1- unioned_area/total_area) < STOP );
     }
 
-	void SegmentTree::build(vector<double> xpos) {
-		pos.clear();
-		pos = xpos;
-		m = pos.size();
-		nodes.clear();
-		nodes.resize(m * 2 + 10);
-		build(0, 0, m - 1);
-	}
+	void SegmentTree::build (const vector<double> &xpos) {
+        pos = xpos;
+        sort(pos.begin() , pos.end());
+        pos.erase(unique(pos.begin(), pos.end()), pos.end());
 
-    void SegmentTree::build(int idx, int l, int h) {
-        nodes[idx].low = l;
-        nodes[idx].high = h;
-        if (l == h) return ;
-        int mid = (l + h) >> 1;
-        build(idx * 2 + 1, l, mid);
-        build(idx * 2 + 2, mid + 1, h);
-    };
-
-	int SegmentTree::binsearch(int l, int h, double target) {
-		const double DELTA = 0.00001;
-		while (l <= h) {
-			int m = (l + h) >> 1;
-			if (fabs(pos[m] - target) <= DELTA) return m;
-			if (pos[m] < target - DELTA) l = m + 1;
-			else h = m - 1;
-		}
-		return -1;
-	}
-
-    void SegmentTree::update(int idx, int l, int h, int flag) {
-        //l and r for the segtree, and L and R for the event.
-        if (nodes[idx].low == l && nodes[idx].high == h) {
-            nodes[idx].cover += flag;
-            push_up(idx);
-            return ;
-        }
-        int m = (nodes[idx].low + nodes[idx].high) >> 1;
-        if (h <= m)  {
-            update(idx * 2 + 1, l, h, flag);
-        }
-        else if (l > m) {
-            update(idx * 2 + 2, l, h, flag);
-        }
-        else {
-            update(idx * 2 + 1, l, m, flag);
-            update(idx * 2 + 2, m + 1, h, flag);
-        }
-        push_up(idx);
+        sum.resize((pos.size() << 2) + 10);
+        cov.resize((pos.size() << 2) + 10);
     }
 
-    void SegmentTree::push_up(int idx) {
-        if (nodes[idx].cover) {
-            nodes[idx].len = pos[nodes[idx].high + 1] - pos[nodes[idx].low];
+	void SegmentTree::push_up(int rt,int l,int r) {
+		if (cov[rt]) {
+			sum[rt] = pos[r+1] - pos[l];
+		} else if (l == r) {
+			sum[rt] = 0;
+		} else {
+			sum[rt] = sum[rt<<1] + sum[rt<<1|1];
+		}
+	}
+
+    void SegmentTree::update(const SegmentEvent &e) {
+
+        int l = search(e.x1);
+        int r = search(e.x2)-1;
+        if (l <= r) {
+            update(l, r, e.f, 1, 0, pos.size()-1);
         }
-        else if (nodes[idx].high == nodes[idx].low) {
-            nodes[idx].len = 0;
+    }
+
+    void SegmentTree::update(int L,int R,int c, int rt, int l,int r) {
+        //l and r for the segtree, and L and R for the event.
+        if (L <= l && r <= R) {
+            cov[rt] += c;
+            push_up(rt , l , r);
+            return ;
         }
-        else {
-            nodes[idx].len = nodes[idx * 2 + 1].len + nodes[idx * 2 + 2].len;
+
+        int m = (l + r) >> 1;
+        if (L <= m)  {
+            update(L , R , c , rt<<1, l, m);
         }
+        if (m < R) {
+            update(L , R , c , rt<<1|1, m+1, r);
+        }
+        push_up(rt , l , r);
+    }
+
+    int SegmentTree::search(double key) {
+        int l = 0 , r = pos.size()-1;
+        while (l <= r) {
+            int m = (l + r) >> 1;
+            if (pos[m] == key) return m;
+            if (pos[m] < key) l = m + 1;
+            else r = m - 1;
+        }
+        return -1;
     }
 
 	void TplStandardAlgorithm::shred() {
@@ -425,6 +414,7 @@ namespace tpl {
 		TplDB::db().modules.aggregate_cells();
 		TplDB::db().nets.delete_net();
 	}
+
 
 }//end namespace tpl
 
