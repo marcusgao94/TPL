@@ -115,18 +115,29 @@ namespace tpl {
         return _modules.at(_id_index_map.at(id)).fixed;
     }
 
-    void TplModules::set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys)
+    void TplModules::move_to_center() {
+        for (int i = 0; i < _num_free; i++) {
+            _modules[i].x += chip_width() / 2.0;
+            _modules[i].y += chip_height() / 2.0;
+        }
+    }
+
+    double TplModules::set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys)
     {
         assert( xs.size() == _num_free );
         assert( ys.size() == _num_free );
 
+        double moveDis = 0.0;
+
         for(size_t i=0; i<_num_free; ++i) {
             //module x and y denotes lower left corner
-            //_modules[i].x = xs[i] - _modules[i].width/2.0;
-            //_modules[i].y = ys[i] - _modules[i].height/2.0;
-			_modules[i].x = xs[i];
-			_modules[i].y = ys[i];
+            double x_new = xs[i] - _modules[i].width / 2.0;
+            double y_new = ys[i] - _modules[i].height / 2.0;
+            moveDis += pow(x_new - _modules[i].x, 2) + pow(y_new - _modules[i].y, 2);
+            _modules[i].x = x_new;
+            _modules[i].y = y_new;
         }
+        return sqrt(moveDis);
     }
 
     void TplModules::get_bookshelf_pls(thueda::BookshelfPls &bpls) const

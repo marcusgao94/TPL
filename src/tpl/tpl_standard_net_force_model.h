@@ -44,9 +44,6 @@ namespace tpl {
                                               std::vector<double> &x_target, std::vector<double> &y_target);
 
         double lastNetLength;
-		VectorXd x_target, y_target;
-		SpMat Cx, Cy;
-		VectorXd dx, dy;
     };
 
 }//namespace tpl

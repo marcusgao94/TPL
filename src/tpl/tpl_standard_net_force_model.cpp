@@ -16,19 +16,7 @@ namespace tpl {
     using std::endl;
 
     TplStandardNetForceModel::TplStandardNetForceModel() : TplAbstractNetForceModel(){
-        lastNetLength = -1;
-		unsigned int num_free = TplDB::db().modules.num_free();
-		Cx.resize(num_free, num_free);
-		Cy.resize(num_free, num_free);
-		dx.resize(num_free);
-		dy.resize(num_free);
-		x_target.resize(num_free);
-		y_target.resize(num_free);
-        vector<double> xpos, ypos;
-        for (int i = 0; i < num_free; ++i) {
-            x_target(i) = TplDB::db().modules[i].x;
-            y_target(i) = TplDB::db().modules[i].y;
-        }
+        lastNetLength = 0;
     }
 
     void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &NWx, const NetWeight &NWy,
@@ -130,11 +118,6 @@ namespace tpl {
             coefficients.push_back( SpElem(it->first.first, it->first.second, it->second) );
         }
         Cy.setFromTriplets(coefficients.begin(), coefficients.end());
-
-		this->Cx = Cx;
-		this->Cy = Cy;
-        this->dx = dx;
-        this->dy = dy;
     }
 
 
@@ -148,6 +131,16 @@ namespace tpl {
         x_target.resize(num_free);
         y_target.resize(num_free);
 
+        SpMat Cx(num_free, num_free), Cy(num_free, num_free);
+        Cx.setZero();
+        Cy.setZero();
+
+        VectorXd dx(num_free), dy(num_free);
+        dx.setZero();
+        dy.setZero();
+
+        compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);
+
         LLTSolver solver;
         VectorXd x_eigen_target = solver.compute(Cx).solve(dx*-1);
         VectorXd y_eigen_target = solver.compute(Cy).solve(dy*-1);
@@ -157,9 +150,5 @@ namespace tpl {
 
         VectorXd::Map(&x_target[0], x_eigen_target.size()) = x_eigen_target;
         VectorXd::Map(&y_target[0], y_eigen_target.size()) = y_eigen_target;
-
-		// save x_eigen_target and y_eigen_target
-		this->x_target = x_eigen_target;
-		this->y_target = y_eigen_target;
     }
 }//namespace tpl

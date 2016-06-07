@@ -49,7 +49,7 @@ namespace tpl {
 			timer.timeit("shred");
         }
 		timer.timeit();
-        //make_initial_placement();
+        make_initial_placement();
 		timer.timeit("initial placement");
         if (mmp) {
 			timer.timeit();
@@ -57,7 +57,7 @@ namespace tpl {
 			timer.timeit("aggregate");
         }
 		timer.timeit();
-        make_global_placement();
+        // make_global_placement();
 		timer.timeit("global placement");
 		timer.timeit();
         // make_detail_placement(path);
@@ -66,21 +66,16 @@ namespace tpl {
 
     void TplStandardAlgorithm::make_initial_placement()
     {
+        TplDB::db().modules.move_to_center();
         vector<double> x_target, y_target;
         NetWeight NWx, NWy;
-
         _net_model->compute_net_weight(NWx, NWy);
-		_net_force_model->compute_net_force_matrix(NWx, NWy,
-												   _net_force_model->Cx, _net_force_model->Cy,
-												   _net_force_model->dx, _net_force_model->dy);
-		while(!should_stop_initial_placement()) {
+
+        double lmd = -1, cmd = 0.0;
+		while(!should_stop_initial_placement(lmd, cmd)) {
 			// x_target and y_target will clear and resize in compute_net_force_target
             _net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
-            TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
-
-			_net_force_model->compute_net_force_matrix(NWx, NWy,
-													   _net_force_model->Cx, _net_force_model->Cy,
-													   _net_force_model->dx, _net_force_model->dy);
+            cmd = TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
 		}
     }
 
@@ -178,22 +173,20 @@ namespace tpl {
         Cy0 *= k;
     }
 
-	bool TplStandardAlgorithm::should_stop_initial_placement() const {
+	bool TplStandardAlgorithm::should_stop_initial_placement(double &lmd, double &cmd) const {
 		const double DELTA = 0.1;
-		VectorXd x_target = _net_force_model->x_target;
-		VectorXd y_target = _net_force_model->y_target;
-		VectorXd dx = _net_force_model->dx;
-		VectorXd dy = _net_force_model->dy;
 
-		MatrixXd nlx = 0.5 * x_target.transpose() * Cx * x_target + x_target.transpose() * dx;
-		MatrixXd nly = 0.5 * y_target.transpose() * Cy * y_target + y_target.transpose() * dy;
-		assert(nlx.rows() == 1 && nlx.cols() == 1);
-		assert(nly.rows() == 1 && nly.cols() == 1);
-
-		double lnl = _net_force_model->lastNetLength;
-		double nl = nlx.coeff(0, 0) + nly.coeff(0, 0);
-		_net_force_model->lastNetLength = nl;
-		return (lnl > 0.001 && fabs((lnl - nl) / lnl) < DELTA);
+        if (lmd > 0 && cmd > lmd) {
+            cout << "error: current move distance > last move distance" << endl;
+            exit(EXIT_FAILURE);
+        }
+        printf("last move distance = %lf\ncurrent move distance = %lf\n", lmd, cmd);
+        if (lmd > 0) {
+            printf("ratios = %.2lf%%", cmd / lmd * 100);
+        }
+        bool ret =  (lmd > 0 && cmd / lmd < DELTA);
+        lmd = cmd;
+        return ret;
 	}
 
     bool TplStandardAlgorithm::should_stop_global_placement() const

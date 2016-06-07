@@ -6,6 +6,7 @@
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+#include <fstream>
 
 #include "tpl_db.h"
 #include "tpl_standard_net_model.h"
@@ -26,6 +27,7 @@ SCENARIO("adaptec1", "[adaptec1]") {
         TplStandardNetForceModel nfmodel;
 
         WHEN("We compute the net force target") {
+            TplDB::db().modules.move_to_center();
             NetWeight NWx, NWy;
             nmodel.compute_net_weight(NWx, NWy);
 
@@ -36,12 +38,16 @@ SCENARIO("adaptec1", "[adaptec1]") {
             y_target.reserve(num_free);
 
             nfmodel.compute_net_force_target(NWx, NWy, x_target, y_target);
+            TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
 
             THEN("We get the free nodes' new positions") {
                 double width  = TplDB::db().modules.chip_width();
                 double height = TplDB::db().modules.chip_height();
 
+                ofstream fout("/home/gaoy/tem");
+
                 for(auto x : x_target) {
+                    fout << x << endl;
                     REQUIRE(x >= 0);
                     REQUIRE(x <= width);
                 }

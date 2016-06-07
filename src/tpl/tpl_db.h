@@ -146,12 +146,16 @@ namespace tpl {
         ///////////////////////// Modifiers   //////////////////////////////////////////
         //! Clear all the modules' contents.
         void clear();
+
+        //! Move modules at (0, 0) to center
+        void move_to_center();
+
         //! Set the free modules' coordinates.
         /*!
          * \param xs The free modules' x coordinates.
          * \param ys The free modules' y coordinates.
          */
-        void set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys);
+        double set_free_module_coordinates(const std::vector<double> &xs, const std::vector<double> &ys);
 
         //! add shredded cells from macros to modules
         /*!
