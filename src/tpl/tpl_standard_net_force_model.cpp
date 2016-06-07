@@ -22,6 +22,13 @@ namespace tpl {
 		Cy.resize(num_free, num_free);
 		dx.resize(num_free);
 		dy.resize(num_free);
+		x_target.resize(num_free);
+		y_target.resize(num_free);
+        vector<double> xpos, ypos;
+        for (int i = 0; i < num_free; ++i) {
+            x_target(i) = TplDB::db().modules[i].x;
+            y_target(i) = TplDB::db().modules[i].y;
+        }
     }
 
     void TplStandardNetForceModel::compute_net_force_matrix(const NetWeight &NWx, const NetWeight &NWy,
@@ -126,6 +133,8 @@ namespace tpl {
 
 		this->Cx = Cx;
 		this->Cy = Cy;
+        this->dx = dx;
+        this->dy = dy;
     }
 
 

@@ -122,8 +122,10 @@ namespace tpl {
 
         for(size_t i=0; i<_num_free; ++i) {
             //module x and y denotes lower left corner
-            _modules[i].x = xs[i] - _modules[i].width/2.0;
-            _modules[i].y = ys[i] - _modules[i].height/2.0;
+            //_modules[i].x = xs[i] - _modules[i].width/2.0;
+            //_modules[i].y = ys[i] - _modules[i].height/2.0;
+			_modules[i].x = xs[i];
+			_modules[i].y = ys[i];
         }
     }
 
