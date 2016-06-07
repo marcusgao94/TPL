@@ -84,29 +84,24 @@ namespace tpl {
         }
     };
 
-	class SegmentNode {
-	public:
-		int low, high, cover;
-		double len;
-	};
-
     class SegmentTree {
     public:
-		int m;
+        void build (const vector<double> &xpos);
 
-		inline double get_len() { return nodes[0].len; }
+        void update(const SegmentEvent &e);
 
-		void build(vector<double> xpos);
-		void build(int idx, int l, int h);
+        inline double get_sum() { return sum[1]; }
 
-		int binsearch(int l, int h, double target);
+    private:
+        void update(int L,int R,int c, int rt, int l,int r);
 
-        void update(int idx, int l, int h, int flag);
+        int search(double key);
 
-        void push_up(int idx);
+        void push_up(int rt,int l,int r);
 
         vector<double> pos;
-		vector<SegmentNode> nodes;
+        vector<double> sum;
+        vector<int> cov;
     };
 
 }//end namespace tpl
