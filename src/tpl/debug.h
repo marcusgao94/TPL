@@ -8,6 +8,7 @@
 #ifndef NDEBUG
 #include <cassert>
 #include <ctime>
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>

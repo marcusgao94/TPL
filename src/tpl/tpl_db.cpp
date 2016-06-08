@@ -116,7 +116,7 @@ namespace tpl {
     }
 
     void TplModules::move_to_center() {
-        for (int i = 0; i < _num_free; i++) {
+        for (size_t i = 0; i < _num_free; i++) {
             _modules[i].x += chip_width() / 2.0;
             _modules[i].y += chip_height() / 2.0;
         }

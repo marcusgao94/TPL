@@ -125,11 +125,11 @@ namespace tpl {
                                                             std::vector<double> &x_target, std::vector<double> &y_target)
     {
         //preconditions
-        x_target.clear();
-        y_target.clear();
+//        x_target.clear();
+//        y_target.clear();
         unsigned int num_free = TplDB::db().modules.num_free();
-        x_target.resize(num_free);
-        y_target.resize(num_free);
+        x_target.resize(num_free, 0);
+        y_target.resize(num_free, 0);
 
         SpMat Cx(num_free, num_free), Cy(num_free, num_free);
         Cx.setZero();

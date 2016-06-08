@@ -2,18 +2,11 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-#include <iostream>
-#include <iomanip>
-#include <chrono>
-using std::cout;
-using std::endl;
+#include "debug.h"
 
 namespace tpl {
-    using std::shared_ptr;
-    using std::make_shared;
-    using std::map;
-    using std::pair;
-    using std::make_pair;
+    using std::cout;
+    using std::endl;
     using std::vector;
 
 
@@ -28,6 +21,13 @@ namespace tpl {
         BIN_WIDTH  = TplDB::db().modules.chip_width()  * 1.0 / _gw_num;
         BIN_HEIGHT = TplDB::db().modules.chip_height() * 1.0 / _gh_num;
 
+#ifndef NDEBUG
+        _power_density.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
+
+        _xhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
+
+        _yhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
+#else
         _power_density = (double**)malloc( sizeof(double*) * (_gw_num+1) );
         assert(_power_density != nullptr);
         for (int i=0; i<_gw_num+1; ++i) {
@@ -51,13 +51,7 @@ namespace tpl {
             assert(*(_yhf_grid+i) != nullptr);
             memset(*(_yhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
         }
-        /*
-        _power_density.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
-
-        _xhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
-
-        _yhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
-         */
+#endif
 
         ////////////////////////////////////////////////////////////////////////////
         //init green function
@@ -65,6 +59,9 @@ namespace tpl {
         gdy = static_cast<int>( ceil(R2 / BIN_HEIGHT));
 
 
+#ifndef NDEBUG
+        _green_function.resize(gdx, vector<double>(gdy+1, 0));
+#else
         _green_function = (double**)malloc( sizeof(double*) * gdx);
         assert(_green_function != nullptr);
         for (int i=0; i<gdx; ++i) {
@@ -72,8 +69,7 @@ namespace tpl {
             assert(*(_green_function+i) != nullptr);
             memset(*(_green_function+i), 0, sizeof(double) * gdy );
         }
-
-//        _green_function.resize(gdx, vector<double>(gdy+1, 0));
+#endif
 
         double green_func_val = 0;
         double distance_squre = 0;
@@ -100,6 +96,8 @@ namespace tpl {
 
     TplStandardThermalForceModel::~TplStandardThermalForceModel()
     {
+#ifdef NDEBUG
+
         for (int i=0; i<_gw_num+1; ++i) {
             free( *(_power_density+i) );
         }
@@ -119,6 +117,7 @@ namespace tpl {
             free(*(_green_function+i));
         }
         free(_green_function);
+#endif
     }
 
     bool TplStandardThermalForceModel::initialize_model()
@@ -195,13 +194,14 @@ namespace tpl {
     {
         try {
             // reset _power_density
+#ifndef NDEBUG
+            _power_density.clear();
+            _power_density.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
+#else
             for (int i=0; i<_gw_num+1; ++i) {
                 memset(*(_power_density+i), 0, sizeof(double) * (_gh_num+1) );
             }
-            /*
-            _power_density.clear();
-            _power_density.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
-             */
+#endif
 
             ///////////////////////////////////////////////////////////////////////////////////
             //iterate modules to generate the density grid
@@ -269,6 +269,13 @@ namespace tpl {
     {
         try {
 
+#ifndef NDEBUG
+            _xhf_grid.clear();
+            _xhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
+
+            _yhf_grid.clear();
+            _yhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
+#else
             for (int i=0; i<_gw_num+1; ++i) {
                 memset(*(_xhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
             }
@@ -276,14 +283,7 @@ namespace tpl {
             for (int i=0; i<_gw_num+1; ++i) {
                 memset(*(_yhf_grid+i), 0, sizeof(double) * (_gh_num+1) );
             }
-            /*
-            _xhf_grid.clear();
-            _xhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
-
-            _yhf_grid.clear();
-            _yhf_grid.resize(_gw_num+1, vector<double>(_gh_num+1, 0));
-             */
-
+#endif
 
             //hfx[i][j] = (tss[i+1][j] - tss[i-1][j]) / 2
             //tss[i+1][j] : x <- [i+1-(gdx-1), i+1+(gdx-1)] = [i-gdx+2, i+gdx]

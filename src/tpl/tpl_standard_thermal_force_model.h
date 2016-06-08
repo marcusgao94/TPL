@@ -15,7 +15,6 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include <memory>
 
 
 namespace tpl {
@@ -62,17 +61,25 @@ namespace tpl {
 
         int _gw_num;     //!< Number of bin in x direction, g for grid.
         int _gh_num;     //!< Number of bin in y direction, g for grid.
+
+#ifndef NDEBUG
+        vector<vector<double>> _power_density;
+        vector<vector<double>> _xhf_grid;
+        vector<vector<double>> _yhf_grid;
+#else
         double **_power_density; //!< 2 dimentional array of size col:(_gw_num+1), row:(_gh_num+1).
         double **_xhf_grid;      //!< 2 dimentional array of size col:(_gw_num+1), row:(_gh_num+1).
         double **_yhf_grid;      //!< 2 dimentional array of size col:(_gw_num+1), row:(_gh_num+1).
-//        vector<vector<double>> _power_density;
-//        vector<vector<double>> _xhf_grid;
-//        vector<vector<double>> _yhf_grid;
+#endif
 
         int gdx; //!< Number of values of green function in x direction, g for green function.
         int gdy; //!< Number of values of green function in y direction, g for green function.
+
+#ifndef NDEBUG
+        vector<vector<double>> _green_function;
+#else
         double **_green_function; //!< 2 dimentional array of size col:gdx, row:gdy.
-//        vector<vector<double>> _green_function;
+#endif
 
         double BIN_WIDTH;  //!< Algorithm parameter : a grid bin's width.
         double BIN_HEIGHT; //!< Algorithm parameter : a grid bin's height.
