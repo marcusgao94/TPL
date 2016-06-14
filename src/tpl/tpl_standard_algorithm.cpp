@@ -1,6 +1,7 @@
 #include "tpl_standard_algorithm.h"
 #include "debug.h"
 
+#include <cassert>
 #include <ctime>
 #include <cstdlib>
 #include <cstdio>
@@ -42,22 +43,22 @@ namespace tpl {
 
     void TplStandardAlgorithm::control(std::string path, bool mmp) {
 		Timer timer;
-		timer.timeit();
+//		timer.timeit();
         if (mmp) {
 			timer.timeit();
             shred();
 			timer.timeit("shred");
         }
-		timer.timeit();
-        make_initial_placement();
-		timer.timeit("initial placement");
+//		timer.timeit();
+//        make_initial_placement();
+//		timer.timeit("initial placement");
         if (mmp) {
 			timer.timeit();
             aggregate();
 			timer.timeit("aggregate");
         }
 		timer.timeit();
-        // make_global_placement();
+         make_global_placement();
 		timer.timeit("global placement");
 		timer.timeit();
         // make_detail_placement(path);

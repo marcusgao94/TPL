@@ -5,7 +5,6 @@
 #ifndef TPL_TPL_DEBUG_H
 #define TPL_TPL_DEBUG_H
 
-#ifndef NDEBUG
 #include <cassert>
 #include <ctime>
 #include <chrono>
@@ -35,6 +34,5 @@ private:
     std::clock_t t;
 };
 
-#endif
 
 #endif //TPL_TPL_DEBUG_H

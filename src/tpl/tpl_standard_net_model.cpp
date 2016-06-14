@@ -2,8 +2,8 @@
 
 #include <algorithm>
 
-#ifndef NDEBUG
 #include <cassert>
+#ifndef NDEBUG
 #include <iostream>
 #endif
 
