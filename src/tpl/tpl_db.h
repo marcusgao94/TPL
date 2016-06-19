@@ -150,6 +150,9 @@ namespace tpl {
         //! Move modules at (0, 0) to center
         void move_to_center();
 
+        //! set random position for modules
+		void set_random_position();
+
         //! Set the free modules' coordinates.
         /*!
          * \param xs The free modules' x coordinates.

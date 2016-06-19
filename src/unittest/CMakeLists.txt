@@ -56,8 +56,6 @@ add_executable(test_tpl_standard_algorithm
 target_link_libraries(test_tpl_standard_algorithm
 		bookshelf
 		${Boost_LIBRARIES}
-#		${STXXL_LIBRARIES}
-#		pthread
         )
 
 #4.v2. TplStandardThermalForceAlgorithm

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <sstream>
 #include <fstream>
+#include <ctime>
 
 #include <boost/filesystem.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
@@ -119,6 +120,15 @@ namespace tpl {
         for (size_t i = 0; i < _num_free; i++) {
             _modules[i].x += chip_width() / 2.0;
             _modules[i].y += chip_height() / 2.0;
+        }
+    }
+
+    void TplModules::set_random_position() {
+        srand(time(NULL));
+        for (iterator mit = _modules.begin();
+                mit != _modules.end(); ++mit) {
+            mit->x = _chip_width / 4 + rand() % (_chip_width / 2 - mit->width);
+            mit->y = _chip_height / 4 + rand() % (_chip_height / 2 - mit->height);
         }
     }
 

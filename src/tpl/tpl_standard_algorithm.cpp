@@ -50,7 +50,7 @@ namespace tpl {
 			timer.timeit("shred");
         }
 //		timer.timeit();
-//        make_initial_placement();
+        make_initial_placement();
 //		timer.timeit("initial placement");
         if (mmp) {
 			timer.timeit();
@@ -58,7 +58,7 @@ namespace tpl {
 			timer.timeit("aggregate");
         }
 		timer.timeit();
-         make_global_placement();
+//		make_global_placement();
 		timer.timeit("global placement");
 		timer.timeit();
         // make_detail_placement(path);
@@ -67,21 +67,43 @@ namespace tpl {
 
     void TplStandardAlgorithm::make_initial_placement()
     {
-        TplDB::db().modules.move_to_center();
-        vector<double> x_target, y_target;
-        NetWeight NWx, NWy;
+		vector<double> x_target, y_target;
+		NetWeight NWx, NWy;
+
+		//for (int i = 0; i < 5; ++i) {
+
+		TplDB::db().modules.set_random_position();
         _net_model->compute_net_weight(NWx, NWy);
 
         double lmd = -1, cmd = 0.0;
-		while(!should_stop_initial_placement(lmd, cmd)) {
+		//while(!should_stop_initial_placement(lmd, cmd)) {
 			// x_target and y_target will clear and resize in compute_net_force_target
             _net_force_model->compute_net_force_target(NWx, NWy, x_target, y_target);
             cmd = TplDB::db().modules.set_free_module_coordinates(x_target, y_target);
-		}
+
+		/*
+			ofstream fout;
+			string fn = "/Users/user/marcus/testtpl/target";
+			fout.open(fn.c_str(), ofstream::out);
+			for (int j = 0; j < x_target.size(); ++j) {
+				fout << x_target[j] << ", " << y_target[j] << endl;
+			}
+
+			fout.close();
+			cout << "fout finish " << endl;
+		*/
+		//}
+
+		//}
     }
 
     void TplStandardAlgorithm::make_global_placement()
     {
+		TplDB::db().modules.set_random_position();
+
+
+
+
         const unsigned &msize = TplDB::db().modules.num_free();
 
         initialize_move_force_matrix();//compute Cx0 and Cy0
@@ -90,6 +112,11 @@ namespace tpl {
 
         while (!should_stop_global_placement()) {
             _net_model->compute_net_weight(NWx, NWy);
+
+
+
+
+
             _net_force_model->compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);//compute Cx and Cy
             _thermal_force_model->compute_heat_flux_vector(HFx, HFy);//Compute HFx and HFy
 
@@ -183,7 +210,7 @@ namespace tpl {
         }
         printf("last move distance = %lf\ncurrent move distance = %lf\n", lmd, cmd);
         if (lmd > 0) {
-            printf("ratios = %.2lf%%", cmd / lmd * 100);
+            printf("ratios = %.2lf%%\n", cmd / lmd * 100);
         }
         bool ret =  (lmd > 0 && cmd / lmd < DELTA);
         lmd = cmd;
@@ -226,12 +253,12 @@ namespace tpl {
             unioned_area += segtree.get_sum() * (events[i+1].y - events[i].y);
         }
 
-        cout << "unioned area : " << setprecision(8) << unioned_area << endl;
-        cout << "total area: "    << setprecision(8) << total_area << endl;
+        cout << "unioned area = " << setprecision(8) << unioned_area;
+        cout << ", total area = "    << setprecision(8) << total_area;
+		cout << ", ratio = " << (1-unioned_area/total_area) << endl;
 
         const double STOP = 0.2;
 
-        cout << "ratio is " << (1-unioned_area/total_area) << endl;
 
         return ( (1- unioned_area/total_area) < STOP );
     }
