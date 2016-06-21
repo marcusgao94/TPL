@@ -148,21 +148,20 @@ namespace tpl {
                 }
             }
         }
+
+
         ofstream fout;
-        fout.open("/Users/user/marcus/testtpl/Cx_row.txt", ofstream::out);
-        ofstream out("/Users/user/marcus/testtpl/Cx_col.txt", ofstream::out);
+        fout.open("/home/gaoy/testtpl/Cx_row.txt", ofstream::out);
         for (map<int, map<int, double> >::iterator it = m.begin();
                 it != m.end(); ++it) {
             for (map<int, double>::iterator iter = it->second.begin();
                     iter != it->second.end(); ++iter) {
                 fout << it->first << ", " << iter->first << " = " << iter->second << endl;
-                out << iter->first << ", " << it->first << " = " << iter->second << endl;
             }
         }
         fout.close();
-        out.close();
 
-        fout.open("/Users/user/marcus/testtpl/d.txt", ofstream::out);
+        fout.open("/home/gaoy/testtpl/d.txt", ofstream::out);
         for (int i = 0; i < dx.rows(); ++i) {
             fout << i << " = " << dx(i) << endl;
         }
@@ -173,16 +172,11 @@ namespace tpl {
         //LLTSolver solver;
 		Eigen::ConjugateGradient<SpMat, Eigen::Lower|Eigen::Upper> solver;
 
-		clock_t t0 = clock();
 
         VectorXd x_eigen_target = solver.compute(Cx).solve(dx*-1);
 		VectorXd y_eigen_target = solver.compute(Cy).solve(dy*-1);
 
-		clock_t t1 = clock();
-		printf("using %.3lf sec\n", double(t1 - t0) / CLOCKS_PER_SEC);
-
-
-        fout.open("/Users/user/marcus/testtpl/target_nz.txt", ofstream::out);
+        fout.open("/home/gaoy/testtpl/target_nz.txt", ofstream::out);
         for (int i = 0; i < x_eigen_target.size(); ++i) {
             if (fabs(x_eigen_target(i)) > 0.001) {
                 fout << i << " = " << x_eigen_target(i) << endl;

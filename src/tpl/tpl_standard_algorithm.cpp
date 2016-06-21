@@ -42,6 +42,7 @@ namespace tpl {
 	}
 
     void TplStandardAlgorithm::control(std::string path, bool mmp) {
+        clock_t start = clock();
 		Timer timer;
 //		timer.timeit();
         if (mmp) {
@@ -49,20 +50,21 @@ namespace tpl {
             shred();
 			timer.timeit("shred");
         }
-//		timer.timeit();
-        make_initial_placement();
-//		timer.timeit("initial placement");
+		timer.timeit();
+//        make_initial_placement();
+		timer.timeit("initial placement");
         if (mmp) {
 			timer.timeit();
             aggregate();
 			timer.timeit("aggregate");
         }
 		timer.timeit();
-//		make_global_placement();
+		make_global_placement();
 		timer.timeit("global placement");
 		timer.timeit();
         // make_detail_placement(path);
 		timer.timeit("detail placement");
+        printf("total time = %.3lf sec\n", double(clock() - start) / CLOCKS_PER_SEC);
     }
 
     void TplStandardAlgorithm::make_initial_placement()
@@ -99,10 +101,10 @@ namespace tpl {
 
     void TplStandardAlgorithm::make_global_placement()
     {
-		TplDB::db().modules.set_random_position();
+        TplDB::db().modules.set_random_position();
 
 
-
+        using namespace Eigen;
 
         const unsigned &msize = TplDB::db().modules.num_free();
 
@@ -110,22 +112,80 @@ namespace tpl {
         VectorXd dx(msize), dy(msize);
         VectorXd rhsx(msize), rhsy(msize);
 
+        int i = 0;
         while (!should_stop_global_placement()) {
             _net_model->compute_net_weight(NWx, NWy);
-
-
-
-
-
             _net_force_model->compute_net_force_matrix(NWx, NWy, Cx, Cy, dx, dy);//compute Cx and Cy
             _thermal_force_model->compute_heat_flux_vector(HFx, HFy);//Compute HFx and HFy
 
-            LLTSolver llt;
+            map<int, map<int, double> > m;
+            for (int j = 0; j < Cx.outerSize(); ++j) {
+                for (SpMat::InnerIterator iter(Cx, j); iter; ++iter) {
+                    int i = iter.row(), j = iter.col();
+                    if (m.find(i) != m.end()) {
+                        m[i].insert(make_pair(j, iter.value()));
+                    }
+                    else {
+                        map<int, double> rowmap;
+                        rowmap.insert(make_pair(j, iter.value()));
+                        m.insert(make_pair(i, rowmap));
+                    }
+                }
+            }
+            string fn;
+            FILE *fout;
+            fn = "/home/gaoy/testtpl/Cx" + to_string(i) + ".txt";
+            fout = fopen(fn.c_str(), "w");
+            for (map<int, map<int, double> >::iterator it = m.begin();
+                 it != m.end(); ++it) {
+                for (map<int, double>::iterator iter = it->second.begin();
+                     iter != it->second.end(); ++iter) {
+                    fprintf(fout, "%d, %d = %lf\n", it->first, iter->first, iter->second);
+                }
+            }
+            fclose(fout);
+
+            m.clear();
+            for (int j = 0; j < Cx0.outerSize(); ++j) {
+                for (SpMat::InnerIterator iter(Cx0, j); iter; ++iter) {
+                    int i = iter.row(), j = iter.col();
+                    if (m.find(i) != m.end()) {
+                        m[i].insert(make_pair(j, iter.value()));
+                    }
+                    else {
+                        map<int, double> rowmap;
+                        rowmap.insert(make_pair(j, iter.value()));
+                        m.insert(make_pair(i, rowmap));
+                    }
+                }
+            }
+
+            fn = "/home/gaoy/testtpl/cx0" + to_string(i) + ".txt";
+            fout = fopen(fn.c_str(), "w");
+            for (map<int, map<int, double> >::iterator it = m.begin();
+                 it != m.end(); ++it) {
+                for (map<int, double>::iterator iter = it->second.begin();
+                     iter != it->second.end(); ++iter) {
+                    fprintf(fout, "%d, %d = %lf\n", it->first, iter->first, iter->second);
+                }
+            }
+            fclose(fout);
+
+            fn = "/home/gaoy/testtpl/rhsx" + to_string(i) + ".txt";
+            fout = fopen(fn.c_str(), "w");
+            for (int i = 0; i < rhsx.rows(); ++i) {
+                fprintf(fout, "rhsx(%d) = %lf\n", i, rhsx(i));
+            }
+            fclose(fout);
+
+
+            //LLTSolver llt;
+            ConjugateGradient<SpMat, Lower|Upper> solver;
 
             rhsx = Cx0*HFx*-1;
             rhsy = Cy0*HFy*-1;
-            VectorXd delta_x = llt.compute(Cx+Cx0).solve(rhsx);
-            VectorXd delta_y = llt.compute(Cy+Cy0).solve(rhsy);
+            VectorXd delta_x = solver.compute(Cx+Cx0).solve(rhsx);
+            VectorXd delta_y = solver.compute(Cy+Cy0).solve(rhsy);
 
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             //the following code breaks the incapsulation, but more quickly, please note!!!
@@ -133,6 +193,14 @@ namespace tpl {
                 TplDB::db().modules[i].x += delta_x(i);
                 TplDB::db().modules[i].y += delta_y(i);
             }
+
+            fn = "/home/gaoy/testtpl/gp" + to_string(i++) + ".txt";
+            fout = fopen(fn.c_str(), "w");
+            for (int i = 0; i < TplDB::db().modules.size(); ++i) {
+                TplModule module = TplDB::db().modules[i];
+                fprintf(fout, "modules[%d] = (%lf, %lf)", i, module.x, module.y);
+            }
+            fclose(fout);
 
             update_move_force_matrix(delta_x, delta_y, _thermal_force_model->get_mu());//udpate Cx0 and Cy0
         }
